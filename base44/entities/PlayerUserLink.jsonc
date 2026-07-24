@@ -36,6 +36,9 @@
         },
         {
           "data.organization_id": "{{user.data.organization_id}}"
+        },
+        {
+          "data.user_email": "{{user.email}}"
         }
       ]
     },
@@ -43,7 +46,14 @@
       "data.organization_id": "{{user.data.organization_id}}"
     },
     "update": {
-      "data.organization_id": "{{user.data.organization_id}}"
+      "$or": [
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
     },
     "delete": {
       "data.organization_id": "{{user.data.organization_id}}"
