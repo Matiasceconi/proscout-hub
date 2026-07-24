@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { formatDate } from '@/lib/roleUtils';
 import { StatCard, PageHeader, Badge, EmptyState } from '@/components/shared/UIBits';
-import { Building2, Users, Trophy, Activity, Search } from 'lucide-react';
+import { Building2, Users, Activity } from 'lucide-react';
 
 export default function SuperadminDashboard() {
   const [orgs, setOrgs] = useState([]);

@@ -83,11 +83,10 @@ export default function Onboarding() {
     setSubmitting(true);
     setError('');
     try {
-      const player = await base44.entities.Player.get(playerLink.player_id);
       await base44.auth.updateMe({
         app_role: 'player',
         player_id: playerLink.player_id,
-        player_organization_id: player.organization_id,
+        player_organization_id: playerLink.organization_id,
         organization_id: null,
         is_player: true
       });
@@ -95,11 +94,6 @@ export default function Onboarding() {
       await base44.entities.PlayerUserLink.update(playerLink.id, {
         status: 'active',
         user_id: user.id
-      });
-
-      await base44.entities.Player.update(playerLink.player_id, {
-        portal_status: 'active',
-        linked_user_id: user.id
       });
 
       await checkUserAuth();

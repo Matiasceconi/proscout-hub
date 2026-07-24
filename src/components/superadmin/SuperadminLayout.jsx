@@ -1,12 +1,10 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { ShieldCheck, LogOut, Building2, Users, BarChart3 } from 'lucide-react';
+import { ShieldCheck, LogOut, Building2 } from 'lucide-react';
 
 const MENU_ITEMS = [
-  { to: '/superadmin', icon: Building2, label: 'Organizaciones', end: true },
-  { to: '/superadmin/users', icon: Users, label: 'Usuarios' },
-  { to: '/superadmin/stats', icon: BarChart3, label: 'Métricas' }
+  { to: '/superadmin', icon: Building2, label: 'Organizaciones', end: true }
 ];
 
 export default function SuperadminLayout() {
