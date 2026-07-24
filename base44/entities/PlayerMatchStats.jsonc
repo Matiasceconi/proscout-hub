@@ -1,0 +1,88 @@
+{
+  "name": "PlayerMatchStats",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "player_id": {
+      "type": "string"
+    },
+    "match_id": {
+      "type": "string"
+    },
+    "match_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "season": {
+      "type": "string"
+    },
+    "competition": {
+      "type": "string"
+    },
+    "opponent": {
+      "type": "string"
+    },
+    "is_starter": {
+      "type": "boolean",
+      "default": false
+    },
+    "called_up": {
+      "type": "boolean",
+      "default": true
+    },
+    "minutes_played": {
+      "type": "number",
+      "default": 0
+    },
+    "goals": {
+      "type": "number",
+      "default": 0
+    },
+    "assists": {
+      "type": "number",
+      "default": 0
+    },
+    "yellow_cards": {
+      "type": "number",
+      "default": 0
+    },
+    "red_cards": {
+      "type": "number",
+      "default": 0
+    },
+    "rating": {
+      "type": "number"
+    },
+    "extra_stats": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "organization_id",
+    "player_id",
+    "match_date"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.player_id": "{{user.data.player_id}}"
+        },
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        }
+      ]
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "name": "GPSActivity",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "player_id": {
+      "type": "string"
+    },
+    "activity_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "session_type": {
+      "type": "string",
+      "enum": [
+        "match",
+        "training",
+        "custom"
+      ],
+      "default": "training"
+    },
+    "total_distance": {
+      "type": "number"
+    },
+    "meters_per_min": {
+      "type": "number"
+    },
+    "high_speed_distance": {
+      "type": "number"
+    },
+    "distance_over_25kmh": {
+      "type": "number"
+    },
+    "sprints": {
+      "type": "number"
+    },
+    "accelerations": {
+      "type": "number"
+    },
+    "decelerations": {
+      "type": "number"
+    },
+    "player_load": {
+      "type": "number"
+    },
+    "max_speed": {
+      "type": "number"
+    },
+    "rhie": {
+      "type": "number"
+    },
+    "minutes": {
+      "type": "number"
+    },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "catapult",
+        "statsports",
+        "polar",
+        "manual",
+        "other"
+      ],
+      "default": "manual"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "organization_id",
+    "player_id",
+    "activity_date"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.player_id": "{{user.data.player_id}}"
+        },
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        }
+      ]
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}

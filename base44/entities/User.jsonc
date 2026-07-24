@@ -1,0 +1,48 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "description": "Built-in platform role: admin = platform_superadmin, user = everyone else",
+      "enum": [
+        "admin",
+        "user"
+      ]
+    },
+    "app_role": {
+      "type": "string",
+      "description": "Application-specific role within the multi-tenant system",
+      "enum": [
+        "platform_superadmin",
+        "organization_owner",
+        "organization_admin",
+        "representative",
+        "video_analyst",
+        "performance_staff",
+        "medical_staff",
+        "player"
+      ]
+    },
+    "organization_id": {
+      "type": "string",
+      "description": "Organization ID for staff users (null for players)"
+    },
+    "player_id": {
+      "type": "string",
+      "description": "Player ID for player users (null for staff)"
+    },
+    "player_organization_id": {
+      "type": "string",
+      "description": "Organization ID for player users (for branding lookup)"
+    },
+    "is_player": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if this user is a player portal user"
+    }
+  },
+  "required": [
+    "role"
+  ]
+}

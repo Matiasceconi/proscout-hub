@@ -1,0 +1,139 @@
+{
+  "name": "Player",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "birth_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "nationality": {
+      "type": "string"
+    },
+    "position": {
+      "type": "string",
+      "enum": [
+        "GK",
+        "CB",
+        "LB",
+        "RB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ]
+    },
+    "preferred_foot": {
+      "type": "string",
+      "enum": [
+        "left",
+        "right",
+        "both"
+      ]
+    },
+    "club": {
+      "type": "string"
+    },
+    "club_logo_url": {
+      "type": "string"
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "representative_id": {
+      "type": "string"
+    },
+    "representative_name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "height": {
+      "type": "number"
+    },
+    "weight": {
+      "type": "number"
+    },
+    "jersey_number": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "on_loan",
+        "retired"
+      ],
+      "default": "active"
+    },
+    "availability_status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "available_with_restrictions",
+        "rehabilitation",
+        "differentiated_training",
+        "partial_reintegration",
+        "medical_discharge",
+        "sport_discharge",
+        "injured"
+      ],
+      "default": "available"
+    },
+    "linked_user_id": {
+      "type": "string"
+    },
+    "linked_user_email": {
+      "type": "string"
+    },
+    "portal_status": {
+      "type": "string",
+      "enum": [
+        "not_invited",
+        "pending",
+        "active"
+      ],
+      "default": "not_invited"
+    }
+  },
+  "required": [
+    "organization_id",
+    "first_name",
+    "last_name",
+    "position"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "id": "{{user.data.player_id}}"
+        },
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        }
+      ]
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}

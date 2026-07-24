@@ -1,0 +1,188 @@
+{
+  "name": "InjuryRecord",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "player_id": {
+      "type": "string"
+    },
+    "player_name": {
+      "type": "string"
+    },
+    "injury_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "diagnosis": {
+      "type": "string"
+    },
+    "body_zone": {
+      "type": "string",
+      "enum": [
+        "head",
+        "neck",
+        "shoulder",
+        "arm",
+        "elbow",
+        "wrist",
+        "hand",
+        "chest",
+        "back",
+        "abdomen",
+        "hip",
+        "groin",
+        "thigh",
+        "knee",
+        "calf",
+        "ankle",
+        "foot",
+        "other"
+      ]
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "left",
+        "right",
+        "bilateral",
+        "n/a"
+      ]
+    },
+    "injury_type": {
+      "type": "string",
+      "enum": [
+        "muscular",
+        "ligament",
+        "tendon",
+        "bone",
+        "joint",
+        "concussion",
+        "laceration",
+        "other"
+      ]
+    },
+    "mechanism": {
+      "type": "string",
+      "enum": [
+        "contact",
+        "non_contact",
+        "overuse",
+        "gradual",
+        "sudden",
+        "other"
+      ]
+    },
+    "grade": {
+      "type": "string",
+      "enum": [
+        "grade_1",
+        "grade_2",
+        "grade_3",
+        "mild",
+        "moderate",
+        "severe",
+        "n/a"
+      ]
+    },
+    "context": {
+      "type": "string"
+    },
+    "professional": {
+      "type": "string"
+    },
+    "estimated_return_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "medical_discharge_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "return_to_training_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "return_to_competition_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "is_relapse": {
+      "type": "boolean",
+      "default": false
+    },
+    "restrictions": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "attached_documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "available_with_restrictions",
+        "rehabilitation",
+        "differentiated_training",
+        "partial_reintegration",
+        "medical_discharge",
+        "sport_discharge"
+      ],
+      "default": "rehabilitation"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "general",
+        "rehab",
+        "clinical"
+      ],
+      "default": "general"
+    },
+    "shared_with_player": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "organization_id",
+    "player_id",
+    "injury_date",
+    "diagnosis"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.player_id": "{{user.data.player_id}}"
+            },
+            {
+              "data.shared_with_player": true
+            }
+          ]
+        },
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        }
+      ]
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}
