@@ -48,6 +48,9 @@
     "club_logo_url": {
       "type": "string"
     },
+    "competition": {
+      "type": "string"
+    },
     "photo_url": {
       "type": "string"
     },
@@ -58,7 +61,17 @@
       "type": "string"
     },
     "category": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "primera_division",
+        "segunda_division",
+        "ascenso",
+        "reserva",
+        "juveniles",
+        "futbol_femenino",
+        "sin_club"
+      ],
+      "default": "primera_division"
     },
     "height": {
       "type": "number"
@@ -75,7 +88,8 @@
         "active",
         "inactive",
         "on_loan",
-        "retired"
+        "retired",
+        "archived"
       ],
       "default": "active"
     },
@@ -89,7 +103,11 @@
         "partial_reintegration",
         "medical_discharge",
         "sport_discharge",
-        "injured"
+        "injured",
+        "on_loan",
+        "transferred",
+        "no_club",
+        "inactive"
       ],
       "default": "available"
     },
@@ -104,7 +122,8 @@
       "enum": [
         "not_invited",
         "pending",
-        "active"
+        "active",
+        "suspended"
       ],
       "default": "not_invited"
     }

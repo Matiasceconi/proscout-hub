@@ -105,6 +105,103 @@ export const AVAILABILITY_COLORS = {
   injured: 'bg-red-100 text-red-700 border-red-200'
 };
 
+export const PLAYER_CATEGORIES = {
+  primera_division: 'Primera División',
+  segunda_division: 'Segunda División',
+  ascenso: 'Ascenso',
+  reserva: 'Reserva',
+  juveniles: 'Juveniles',
+  futbol_femenino: 'Fútbol femenino',
+  sin_club: 'Sin club'
+};
+
+export const PLAYER_CATEGORY_COLORS = {
+  primera_division: 'bg-slate-800 text-white border-slate-900',
+  segunda_division: 'bg-slate-600 text-white border-slate-700',
+  ascenso: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  reserva: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+  juveniles: 'bg-green-100 text-green-700 border-green-200',
+  futbol_femenino: 'bg-pink-100 text-pink-700 border-pink-200',
+  sin_club: 'bg-slate-100 text-slate-500 border-slate-200'
+};
+
+export const SPORTING_STATUS_LABELS = {
+  available: 'Disponible',
+  injured: 'Lesionado',
+  rehabilitation: 'En recuperación',
+  on_loan: 'Cedido',
+  transferred: 'Transferido',
+  no_club: 'Sin club',
+  inactive: 'Inactivo',
+  available_with_restrictions: 'Disponible c/restricciones',
+  differentiated_training: 'Entrenamiento diferenciado',
+  partial_reintegration: 'Reintegración parcial',
+  medical_discharge: 'Alta médica',
+  sport_discharge: 'Alta deportiva'
+};
+
+export const SPORTING_STATUS_COLORS = {
+  available: 'bg-green-100 text-green-700 border-green-200',
+  injured: 'bg-red-100 text-red-700 border-red-200',
+  rehabilitation: 'bg-orange-100 text-orange-700 border-orange-200',
+  on_loan: 'bg-blue-100 text-blue-700 border-blue-200',
+  transferred: 'bg-purple-100 text-purple-700 border-purple-200',
+  no_club: 'bg-slate-100 text-slate-500 border-slate-200',
+  inactive: 'bg-gray-100 text-gray-500 border-gray-200',
+  available_with_restrictions: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  differentiated_training: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+  partial_reintegration: 'bg-teal-100 text-teal-700 border-teal-200',
+  medical_discharge: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  sport_discharge: 'bg-green-100 text-green-700 border-green-200'
+};
+
+export const PORTAL_STATUS_LABELS = {
+  not_invited: 'Sin invitar',
+  pending: 'Invitación pendiente',
+  active: 'Acceso activo',
+  suspended: 'Acceso suspendido'
+};
+
+export const PORTAL_STATUS_COLORS = {
+  not_invited: 'bg-slate-100 text-slate-500 border-slate-200',
+  pending: 'bg-amber-100 text-amber-700 border-amber-200',
+  active: 'bg-green-100 text-green-700 border-green-200',
+  suspended: 'bg-red-100 text-red-700 border-red-200'
+};
+
+export const DIRECTOR_ROLE_LABELS = {
+  director_tecnico: 'Director Técnico',
+  ayudante_campo: 'Ayudante de campo',
+  preparador_fisico: 'Preparador físico',
+  entrenador_arqueros: 'Entrenador de arqueros',
+  analista_video: 'Analista de video',
+  coordinador_deportivo: 'Coordinador deportivo'
+};
+
+export const DIRECTOR_STATUS_LABELS = {
+  with_club: 'Con club',
+  available: 'Disponible',
+  in_negotiation: 'En negociación',
+  active_project: 'Proyecto activo',
+  inactive: 'Inactivo'
+};
+
+export const DIRECTOR_STATUS_COLORS = {
+  with_club: 'bg-green-100 text-green-700 border-green-200',
+  available: 'bg-blue-100 text-blue-700 border-blue-200',
+  in_negotiation: 'bg-amber-100 text-amber-700 border-amber-200',
+  active_project: 'bg-purple-100 text-purple-700 border-purple-200',
+  inactive: 'bg-slate-100 text-slate-500 border-slate-200'
+};
+
+export const STAFF_ROLE_LABELS = {
+  ayudante_campo: 'Ayudante de campo',
+  preparador_fisico: 'Preparador físico',
+  entrenador_arqueros: 'Entrenador de arqueros',
+  analista_video: 'Analista de video',
+  otro: 'Otro'
+};
+
 export const calculateAge = (birthDate) => {
   if (!birthDate) return null;
   const today = new Date();

@@ -2,15 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { getUserOrgId, calculateAge, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS, formatDate, isOrgAdmin, canEditMedical, canEditPhysical, canEditVideos, canEditStats } from '@/lib/roleUtils';
+import { getUserOrgId, calculateAge, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS, PORTAL_STATUS_LABELS, PORTAL_STATUS_COLORS, PLAYER_CATEGORIES, formatDate, isOrgAdmin, canEditMedical, canEditPhysical, canEditVideos, canEditStats } from '@/lib/roleUtils';
 import { Badge } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Users, BarChart3, Activity, HeartPulse, Calendar, Search, Video, Gift, FileText, History } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { ChevronLeft, Users, BarChart3, Activity, HeartPulse, Calendar, Trophy, Search, Video, Gift, FileText, History, Pencil } from 'lucide-react';
 import PlayerSummary from '@/components/agency/player-tabs/PlayerSummary';
 import PlayerStatsTab from '@/components/agency/player-tabs/PlayerStatsTab';
 import PlayerPhysicalTab from '@/components/agency/player-tabs/PlayerPhysicalTab';
 import PlayerMedicalTab from '@/components/agency/player-tabs/PlayerMedicalTab';
 import PlayerCalendarTab from '@/components/agency/player-tabs/PlayerCalendarTab';
+import PlayerMatchesTab from '@/components/agency/player-tabs/PlayerMatchesTab';
 import PlayerAnalysisTab from '@/components/agency/player-tabs/PlayerAnalysisTab';
 import PlayerVideosTab from '@/components/agency/player-tabs/PlayerVideosTab';
 import PlayerBenefitsTab from '@/components/agency/player-tabs/PlayerBenefitsTab';
@@ -21,13 +26,14 @@ const TABS = [
   { id: 'summary', label: 'Resumen', icon: Users },
   { id: 'stats', label: 'Estadísticas', icon: BarChart3 },
   { id: 'physical', label: 'Rendimiento físico', icon: Activity },
-  { id: 'medical', label: 'Historial médico', icon: HeartPulse },
-  { id: 'calendar', label: 'Calendario y partidos', icon: Calendar },
+  { id: 'medical', label: 'Área médica', icon: HeartPulse },
+  { id: 'calendar', label: 'Calendario', icon: Calendar },
+  { id: 'matches', label: 'Partidos', icon: Trophy },
   { id: 'analysis', label: 'Análisis de rivales', icon: Search },
   { id: 'videos', label: 'Videos', icon: Video },
-  { id: 'benefits', label: 'Beneficios', icon: Gift },
   { id: 'documents', label: 'Documentación', icon: FileText },
-  { id: 'activity', label: 'Historial de actividad', icon: History }
+  { id: 'benefits', label: 'Beneficios', icon: Gift },
+  { id: 'activity', label: 'Actividad', icon: History }
 ];
 
 export default function PlayerProfile() {
@@ -143,6 +149,7 @@ export default function PlayerProfile() {
           {activeTab === 'physical' && <PlayerPhysicalTab player={player} permissions={permissions} />}
           {activeTab === 'medical' && <PlayerMedicalTab player={player} permissions={permissions} />}
           {activeTab === 'calendar' && <PlayerCalendarTab player={player} permissions={permissions} />}
+          {activeTab === 'matches' && <PlayerMatchesTab player={player} permissions={permissions} />}
           {activeTab === 'analysis' && <PlayerAnalysisTab player={player} permissions={permissions} />}
           {activeTab === 'videos' && <PlayerVideosTab player={player} permissions={permissions} />}
           {activeTab === 'benefits' && <PlayerBenefitsTab player={player} permissions={permissions} />}

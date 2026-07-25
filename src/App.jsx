@@ -15,6 +15,8 @@ import Onboarding from '@/pages/Onboarding';
 import AgencyDashboard from '@/pages/agency/AgencyDashboard';
 import Players from '@/pages/agency/Players';
 import PlayerProfile from '@/pages/agency/PlayerProfile';
+import Directors from '@/pages/agency/Directors';
+import DirectorProfile from '@/pages/agency/DirectorProfile';
 import AgencyCalendar from '@/pages/agency/AgencyCalendar';
 import AgencyMatches from '@/pages/agency/AgencyMatches';
 import AgencyStats from '@/pages/agency/AgencyStats';
@@ -75,6 +77,8 @@ const AuthenticatedApp = () => {
         <Route path="/agency" element={<AgencyDashboard />} />
         <Route path="/agency/players" element={<Players />} />
         <Route path="/agency/players/:id" element={<PlayerProfile />} />
+        <Route path="/agency/directors" element={<Directors />} />
+        <Route path="/agency/directors/:id" element={<DirectorProfile />} />
         <Route path="/agency/calendar" element={<AgencyCalendar />} />
         <Route path="/agency/matches" element={<AgencyMatches />} />
         <Route path="/agency/stats" element={<AgencyStats />} />

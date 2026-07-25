@@ -8,6 +8,9 @@
     "player_id": {
       "type": "string"
     },
+    "director_id": {
+      "type": "string"
+    },
     "player_name": {
       "type": "string"
     },
@@ -54,7 +57,6 @@
   },
   "required": [
     "organization_id",
-    "player_id",
     "title",
     "start_date"
   ],

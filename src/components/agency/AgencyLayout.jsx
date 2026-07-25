@@ -8,23 +8,31 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   LayoutDashboard, Users, Calendar, Trophy, BarChart3, Activity,
   HeartPulse, Search, Video, Gift, FileText, UserCog, Settings,
-  LogOut, Menu, X, ChevronLeft
+  LogOut, Menu, X, ChevronLeft, GraduationCap, ClipboardList
 } from 'lucide-react';
 
-const MENU_ITEMS = [
-  { to: '/agency', icon: LayoutDashboard, label: 'Inicio', end: true },
-  { to: '/agency/players', icon: Users, label: 'Jugadores' },
-  { to: '/agency/calendar', icon: Calendar, label: 'Calendario' },
-  { to: '/agency/matches', icon: Trophy, label: 'Partidos' },
-  { to: '/agency/stats', icon: BarChart3, label: 'Estadísticas' },
-  { to: '/agency/physical', icon: Activity, label: 'Rendimiento físico' },
-  { to: '/agency/medical', icon: HeartPulse, label: 'Área médica' },
-  { to: '/agency/analysis', icon: Search, label: 'Análisis de rivales' },
-  { to: '/agency/videos', icon: Video, label: 'Videos' },
-  { to: '/agency/benefits', icon: Gift, label: 'Beneficios' },
-  { to: '/agency/documents', icon: FileText, label: 'Documentación' },
-  { to: '/agency/team', icon: UserCog, label: 'Equipo de trabajo' },
-  { to: '/agency/settings', icon: Settings, label: 'Configuración' }
+const MENU_GROUPS = [
+  { type: 'item', to: '/agency', icon: LayoutDashboard, label: 'Inicio', end: true },
+  {
+    type: 'group',
+    label: 'Representados',
+    icon: ClipboardList,
+    items: [
+      { to: '/agency/players', icon: Users, label: 'Jugadores' },
+      { to: '/agency/directors', icon: GraduationCap, label: 'Directores Técnicos' }
+    ]
+  },
+  { type: 'item', to: '/agency/calendar', icon: Calendar, label: 'Calendario' },
+  { type: 'item', to: '/agency/matches', icon: Trophy, label: 'Partidos' },
+  { type: 'item', to: '/agency/stats', icon: BarChart3, label: 'Estadísticas' },
+  { type: 'item', to: '/agency/physical', icon: Activity, label: 'Rendimiento físico' },
+  { type: 'item', to: '/agency/medical', icon: HeartPulse, label: 'Área médica' },
+  { type: 'item', to: '/agency/analysis', icon: Search, label: 'Análisis de rivales' },
+  { type: 'item', to: '/agency/videos', icon: Video, label: 'Videos' },
+  { type: 'item', to: '/agency/benefits', icon: Gift, label: 'Beneficios' },
+  { type: 'item', to: '/agency/documents', icon: FileText, label: 'Documentación' },
+  { type: 'item', to: '/agency/team', icon: UserCog, label: 'Equipo de trabajo' },
+  { type: 'item', to: '/agency/settings', icon: Settings, label: 'Configuración' }
 ];
 
 export default function AgencyLayout() {
@@ -99,23 +107,49 @@ export default function AgencyLayout() {
 
         {/* Menu */}
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-          {MENU_ITEMS.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  isActive
-                    ? 'bg-white/15 text-white font-medium'
-                    : 'text-white/60 hover:text-white hover:bg-white/10'
-                }`
-              }
-            >
-              <item.icon className="w-4.5 h-4.5 flex-shrink-0" style={{ width: 18, height: 18 }} />
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
+          {MENU_GROUPS.map((entry, idx) => {
+            if (entry.type === 'group') {
+              return (
+                <div key={idx} className="pt-2">
+                  <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-white/30">{entry.label}</p>
+                  {entry.items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      end={item.end}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                          isActive
+                            ? 'bg-white/15 text-white font-medium'
+                            : 'text-white/60 hover:text-white hover:bg-white/10'
+                        }`
+                      }
+                    >
+                      <item.icon className="w-4.5 h-4.5 flex-shrink-0" style={{ width: 18, height: 18 }} />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              );
+            }
+            return (
+              <NavLink
+                key={entry.to}
+                to={entry.to}
+                end={entry.end}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                    isActive
+                      ? 'bg-white/15 text-white font-medium'
+                      : 'text-white/60 hover:text-white hover:bg-white/10'
+                  }`
+                }
+              >
+                <entry.icon className="w-4.5 h-4.5 flex-shrink-0" style={{ width: 18, height: 18 }} />
+                <span>{entry.label}</span>
+              </NavLink>
+            );
+          })}
         </nav>
 
         {/* User */}
