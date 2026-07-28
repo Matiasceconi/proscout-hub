@@ -54,10 +54,9 @@ export const AuthProvider = ({ children }) => {
         if (appError.status === 403 && appError.data?.extra_data?.reason) {
           const reason = appError.data.extra_data.reason;
           if (reason === 'auth_required') {
-            setAuthError({
-              type: 'auth_required',
-              message: 'Authentication required'
-            });
+            // Not authenticated - not an error, just means user needs to log in
+            setIsAuthenticated(false);
+            setAuthChecked(true);
           } else if (reason === 'user_not_registered') {
             setAuthError({
               type: 'user_not_registered',
@@ -104,13 +103,8 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(false);
       setAuthChecked(true);
       
-      // If user auth fails, it might be an expired token
-      if (error.status === 401 || error.status === 403) {
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
-      }
+      // If user auth fails, it might be an expired token - just mark as not authenticated
+      // ProtectedRoute will redirect to /login
     }
   };
 

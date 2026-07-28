@@ -42,10 +42,16 @@ import PortalDocuments from '@/pages/portal/PortalDocuments';
 import PortalNotifications from '@/pages/portal/PortalNotifications';
 import PortalProfile from '@/pages/portal/PortalProfile';
 import SuperadminDashboard from '@/pages/superadmin/SuperadminDashboard';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import ForgotPassword from '@/pages/ForgotPassword';
+import ResetPassword from '@/pages/ResetPassword';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import OrganizationGate from '@/components/OrganizationGate';
 // Add page imports here
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -56,66 +62,73 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
-    }
+  if (authError && authError.type === 'user_not_registered') {
+    return <UserNotRegisteredError />;
   }
 
-  // Render the main app
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/company-access" element={<CompanyAccess />} />
-      <Route path="/company/create" element={<Onboarding />} />
-      <Route path="/onboarding" element={<Navigate to="/company-access" replace />} />
+      {/* Public routes */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
-      {/* Agency panel - organization staff only */}
-      <Route element={<RoleGuard allowedRoles={['organization_owner', 'organization_admin', 'representative', 'video_analyst', 'performance_staff', 'medical_staff']}><AgencyLayout /></RoleGuard>}>
-        <Route path="/agency" element={<AgencyDashboard />} />
-        <Route path="/agency/players" element={<Players />} />
-        <Route path="/agency/players/:id" element={<PlayerProfile />} />
-        <Route path="/agency/directors" element={<Directors />} />
-        <Route path="/agency/directors/:id" element={<DirectorProfile />} />
-        <Route path="/agency/calendar" element={<AgencyCalendar />} />
-        <Route path="/agency/matches" element={<AgencyMatches />} />
-        <Route path="/agency/stats" element={<AgencyStats />} />
-        <Route path="/agency/physical" element={<AgencyPhysical />} />
-        <Route path="/agency/medical" element={<AgencyMedical />} />
-        <Route path="/agency/analysis" element={<AgencyAnalysis />} />
-        <Route path="/agency/videos" element={<AgencyVideos />} />
-        <Route path="/agency/benefits" element={<AgencyBenefits />} />
-        <Route path="/agency/documents" element={<AgencyDocuments />} />
-        <Route path="/agency/team" element={<TeamManagement />} />
-        <Route path="/agency/settings" element={<AgencySettings />} />
+      {/* Auth required, no org required */}
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/company-access" element={<CompanyAccess />} />
+        <Route path="/company/create" element={<Onboarding />} />
+      </Route>
+
+      {/* Agency panel - auth + org required */}
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+        <Route element={<RoleGuard allowedRoles={['organization_owner', 'organization_admin', 'representative', 'video_analyst', 'performance_staff', 'medical_staff']}><OrganizationGate><AgencyLayout /></OrganizationGate></RoleGuard>}>
+          <Route path="/agency" element={<AgencyDashboard />} />
+          <Route path="/agency/players" element={<Players />} />
+          <Route path="/agency/players/:id" element={<PlayerProfile />} />
+          <Route path="/agency/directors" element={<Directors />} />
+          <Route path="/agency/directors/:id" element={<DirectorProfile />} />
+          <Route path="/agency/calendar" element={<AgencyCalendar />} />
+          <Route path="/agency/matches" element={<AgencyMatches />} />
+          <Route path="/agency/stats" element={<AgencyStats />} />
+          <Route path="/agency/physical" element={<AgencyPhysical />} />
+          <Route path="/agency/medical" element={<AgencyMedical />} />
+          <Route path="/agency/analysis" element={<AgencyAnalysis />} />
+          <Route path="/agency/videos" element={<AgencyVideos />} />
+          <Route path="/agency/benefits" element={<AgencyBenefits />} />
+          <Route path="/agency/documents" element={<AgencyDocuments />} />
+          <Route path="/agency/team" element={<TeamManagement />} />
+          <Route path="/agency/settings" element={<AgencySettings />} />
+        </Route>
       </Route>
 
       {/* Player portal - players only */}
-      <Route element={<RoleGuard allowedRoles={['player']}><PlayerLayout /></RoleGuard>}>
-        <Route path="/portal" element={<PlayerPortalHome />} />
-        <Route path="/portal/calendar" element={<PortalCalendar />} />
-        <Route path="/portal/matches" element={<PortalMatches />} />
-        <Route path="/portal/stats" element={<PortalStats />} />
-        <Route path="/portal/physical" element={<PortalPhysical />} />
-        <Route path="/portal/opponent" element={<PortalOpponent />} />
-        <Route path="/portal/videos" element={<PortalVideos />} />
-        <Route path="/portal/medical" element={<PortalMedical />} />
-        <Route path="/portal/benefits" element={<PortalBenefits />} />
-        <Route path="/portal/documents" element={<PortalDocuments />} />
-        <Route path="/portal/notifications" element={<PortalNotifications />} />
-        <Route path="/portal/profile" element={<PortalProfile />} />
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+        <Route element={<RoleGuard allowedRoles={['player']}><PlayerLayout /></RoleGuard>}>
+          <Route path="/portal" element={<PlayerPortalHome />} />
+          <Route path="/portal/calendar" element={<PortalCalendar />} />
+          <Route path="/portal/matches" element={<PortalMatches />} />
+          <Route path="/portal/stats" element={<PortalStats />} />
+          <Route path="/portal/physical" element={<PortalPhysical />} />
+          <Route path="/portal/opponent" element={<PortalOpponent />} />
+          <Route path="/portal/videos" element={<PortalVideos />} />
+          <Route path="/portal/medical" element={<PortalMedical />} />
+          <Route path="/portal/benefits" element={<PortalBenefits />} />
+          <Route path="/portal/documents" element={<PortalDocuments />} />
+          <Route path="/portal/notifications" element={<PortalNotifications />} />
+          <Route path="/portal/profile" element={<PortalProfile />} />
+        </Route>
       </Route>
 
       {/* Superadmin panel - platform admin only */}
-      <Route element={<RoleGuard allowedRoles={['platform_superadmin']}><SuperadminLayout /></RoleGuard>}>
-        <Route path="/superadmin" element={<SuperadminDashboard />} />
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+        <Route element={<RoleGuard allowedRoles={['platform_superadmin']}><SuperadminLayout /></RoleGuard>}>
+          <Route path="/superadmin" element={<SuperadminDashboard />} />
+        </Route>
       </Route>
 
+      <Route path="/onboarding" element={<Navigate to="/company-access" replace />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
