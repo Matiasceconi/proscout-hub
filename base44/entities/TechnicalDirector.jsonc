@@ -14,6 +14,27 @@
     "photo_url": {
       "type": "string"
     },
+    "photo_source_url": {
+      "type": "string"
+    },
+    "photo_source_name": {
+      "type": "string"
+    },
+    "photo_verified_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "photo_rights_status": {
+      "type": "string"
+    },
+    "photo_status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "pending"
+      ],
+      "default": "pending"
+    },
     "birth_date": {
       "type": "string",
       "format": "date"
@@ -37,6 +58,8 @@
       "type": "string",
       "enum": [
         "director_tecnico",
+        "entrenador_asistente",
+        "director_deportivo",
         "ayudante_campo",
         "preparador_fisico",
         "entrenador_arqueros",
@@ -105,6 +128,23 @@
         "suspended"
       ],
       "default": "not_invited"
+    },
+    "external_source": {
+      "type": "string"
+    },
+    "external_id": {
+      "type": "string"
+    },
+    "source_profile_url": {
+      "type": "string"
+    },
+    "data_verified_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [

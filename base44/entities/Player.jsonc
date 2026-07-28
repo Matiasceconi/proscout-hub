@@ -18,6 +18,9 @@
     "nationality": {
       "type": "string"
     },
+    "second_nationality": {
+      "type": "string"
+    },
     "position": {
       "type": "string",
       "enum": [
@@ -48,11 +51,35 @@
     "club_logo_url": {
       "type": "string"
     },
+    "club_country": {
+      "type": "string"
+    },
     "competition": {
       "type": "string"
     },
     "photo_url": {
       "type": "string"
+    },
+    "photo_source_url": {
+      "type": "string"
+    },
+    "photo_source_name": {
+      "type": "string"
+    },
+    "photo_verified_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "photo_rights_status": {
+      "type": "string"
+    },
+    "photo_status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "pending"
+      ],
+      "default": "pending"
     },
     "representative_id": {
       "type": "string"
@@ -126,6 +153,30 @@
         "suspended"
       ],
       "default": "not_invited"
+    },
+    "external_source": {
+      "type": "string"
+    },
+    "external_id": {
+      "type": "string"
+    },
+    "source_profile_url": {
+      "type": "string"
+    },
+    "data_verified_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": false
+    },
+    "contract_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "market_value": {
+      "type": "string"
     }
   },
   "required": [

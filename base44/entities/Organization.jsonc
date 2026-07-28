@@ -51,6 +51,33 @@
     },
     "owner_user_id": {
       "type": "string"
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": false
+    },
+    "account_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "demo",
+        "suspended",
+        "trial"
+      ],
+      "default": "active"
+    },
+    "founded_year": {
+      "type": "number"
+    },
+    "external_source": {
+      "type": "string"
+    },
+    "external_id": {
+      "type": "string"
+    },
+    "data_verified_at": {
+      "type": "string",
+      "format": "date"
     }
   },
   "required": [
