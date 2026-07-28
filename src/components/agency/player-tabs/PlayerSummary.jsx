@@ -131,8 +131,8 @@ export default function PlayerSummary({ player, onTabChange, permissions }) {
       {/* Pending content */}
       <InfoCard title="Contenidos pendientes">
         <div className="flex flex-wrap gap-3">
-          <ContentPill icon={Video} label="Videos publicados" value={data.pendingVideos} onClick={() => onTabChange('videos')} />
-          <ContentPill icon={Search} label="Análisis publicados" value={data.pendingAnalysis} onClick={() => onTabChange('analysis')} />
+          <ContentPill icon={Video} label="Videos publicados" value={data.pendingVideos} onClick={() => onTabChange('video', 'own')} />
+          <ContentPill icon={Search} label="Análisis publicados" value={data.pendingAnalysis} onClick={() => onTabChange('video', 'opponent')} />
         </div>
       </InfoCard>
     </div>
