@@ -27,6 +27,12 @@
     "opponent_player_position": {
       "type": "string"
     },
+    "competition": {
+      "type": "string"
+    },
+    "season": {
+      "type": "string"
+    },
     "strengths": {
       "type": "string"
     },
@@ -75,7 +81,14 @@
     "read": {
       "$or": [
         {
-          "data.player_id": "{{user.data.player_id}}"
+          "$and": [
+            {
+              "data.player_id": "{{user.data.player_id}}"
+            },
+            {
+              "data.status": "published"
+            }
+          ]
         },
         {
           "data.organization_id": "{{user.data.organization_id}}"
