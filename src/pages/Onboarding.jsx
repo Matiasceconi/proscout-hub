@@ -28,6 +28,29 @@ export default function Onboarding() {
         setLoading(false);
         return;
       }
+
+      // Guard: si el usuario ya tiene organización activa, redirigir a /agency
+      const role = user.app_role || user.data?.app_role;
+      const userOrgId = user.organization_id || user.data?.organization_id;
+      if (role && role !== 'player' && userOrgId) {
+        navigate('/agency', { replace: true });
+        return;
+      }
+
+      // Guard: si el usuario es jugador con player_id, redirigir a /portal
+      const playerId = user.player_id || user.data?.player_id;
+      if (role === 'player' && playerId) {
+        navigate('/portal', { replace: true });
+        return;
+      }
+
+      // Verificar OrganizationMember activas
+      const members = await base44.entities.OrganizationMember.filter({ user_id: user.id, status: 'active' });
+      if (members.length > 0 && role && role !== 'player') {
+        navigate('/agency', { replace: true });
+        return;
+      }
+
       const links = await base44.entities.PlayerUserLink.filter({ user_email: user.email, status: 'pending' });
       if (links.length > 0) {
         setPlayerLink(links[0]);

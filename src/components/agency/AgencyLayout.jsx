@@ -8,8 +8,12 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   LayoutDashboard, Users, Calendar, Trophy, BarChart3, Activity,
   HeartPulse, Search, Video, Gift, FileText, UserCog, Settings,
-  LogOut, Menu, X, ChevronLeft, GraduationCap, ClipboardList
+  LogOut, Menu, X, ChevronLeft, GraduationCap, ClipboardList, User, Building2, ChevronUp
 } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 const MENU_GROUPS = [
   { type: 'item', to: '/agency', icon: LayoutDashboard, label: 'Inicio', end: true },
@@ -41,6 +45,7 @@ export default function AgencyLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [org, setOrg] = useState(null);
+  const [orgCount, setOrgCount] = useState(1);
 
   const orgId = getUserOrgId(user);
   const role = getUserRole(user);
@@ -50,6 +55,14 @@ export default function AgencyLayout() {
       base44.entities.Organization.get(orgId).then(setOrg).catch(() => {});
     }
   }, [orgId]);
+
+  useEffect(() => {
+    if (user?.id) {
+      base44.entities.OrganizationMember.filter({ user_id: user.id, status: 'active' })
+        .then(members => setOrgCount(members.length))
+        .catch(() => setOrgCount(1));
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -154,18 +167,44 @@ export default function AgencyLayout() {
 
         {/* User */}
         <div className="px-3 py-3 border-t border-white/10">
-          <div className="flex items-center gap-3 px-2 py-2">
-            <Avatar className="w-8 h-8 border border-white/20">
-              <AvatarFallback className="bg-white/10 text-white text-xs">{initials}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <p className="text-white text-sm font-medium truncate">{user?.full_name || user?.email}</p>
-              <p className="text-white/40 text-xs capitalize">{role?.replace('_', ' ')}</p>
-            </div>
-            <button onClick={handleLogout} className="text-white/40 hover:text-white" title="Cerrar sesión">
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-3 px-2 py-2 w-full rounded-lg hover:bg-white/10 transition-colors">
+                <Avatar className="w-8 h-8 border border-white/20">
+                  <AvatarFallback className="bg-white/10 text-white text-xs">{initials}</AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="text-white text-sm font-medium truncate">{user?.full_name || user?.email}</p>
+                  <p className="text-white/40 text-xs capitalize">{role?.replace('_', ' ')}</p>
+                </div>
+                <ChevronUp className="w-4 h-4 text-white/40" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" className="w-56 mb-2">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium text-slate-900">{user?.full_name || user?.email}</p>
+                  <p className="text-xs text-slate-400">{user?.email}</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/agency/settings')}>
+                <User className="w-4 h-4 mr-2" /> Mi perfil
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/agency/settings')}>
+                <Settings className="w-4 h-4 mr-2" /> Configuración de la agencia
+              </DropdownMenuItem>
+              {orgCount > 1 && (
+                <DropdownMenuItem onClick={() => navigate('/onboarding')}>
+                  <Building2 className="w-4 h-4 mr-2" /> Cambiar de organización
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                <LogOut className="w-4 h-4 mr-2" /> Cerrar sesión
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </aside>
 
