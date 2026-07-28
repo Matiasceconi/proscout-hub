@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { getPlayerId, formatDate, formatDateTime, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS, daysUntil } from '@/lib/roleUtils';
 import { Badge } from '@/components/shared/UIBits';
 import { Trophy, Video, Search, Activity, Gift, Calendar, HeartPulse, Bell, ChevronRight, TrendingUp } from 'lucide-react';
+import ProfileAvatar from '@/components/shared/ProfileAvatar';
 
 export default function PlayerPortalHome() {
   const { user } = useAuth();
@@ -71,11 +72,15 @@ export default function PlayerPortalHome() {
     <div className="space-y-5">
       {/* Greeting */}
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-slate-200 overflow-hidden flex-shrink-0">
-          {player.photo_url ? <img src={player.photo_url} alt="" className="w-full h-full object-cover" /> : (
-            <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-xl">{initials}</div>
-          )}
-        </div>
+        <ProfileAvatar
+          photoUrl={player.photo_url}
+          photoSourceUrl={player.photo_source_url}
+          firstName={player.first_name}
+          lastName={player.last_name}
+          size="lg"
+          shape="rounded-2xl"
+          className="flex-shrink-0"
+        />
         <div>
           <p className="text-sm text-slate-400">{greeting},</p>
           <h1 className="text-xl font-bold text-slate-900">{player.first_name} {player.last_name}</h1>

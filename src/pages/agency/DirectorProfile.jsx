@@ -20,6 +20,7 @@ import DirectorVideosTab from '@/components/agency/director-tabs/DirectorVideosT
 import DirectorCalendarTab from '@/components/agency/director-tabs/DirectorCalendarTab';
 import DirectorDocumentsTab from '@/components/agency/director-tabs/DirectorDocumentsTab';
 import DirectorActivityTab from '@/components/agency/director-tabs/DirectorActivityTab';
+import ProfileAvatar from '@/components/shared/ProfileAvatar';
 
 const TABS = [
   { id: 'summary', label: 'Resumen', icon: GraduationCap },
@@ -79,13 +80,15 @@ export default function DirectorProfile() {
 
       <div className="bg-white rounded-xl border border-slate-200 p-5 mb-4">
         <div className="flex flex-col sm:flex-row items-start gap-4">
-          <div className="w-20 h-20 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0">
-            {director.photo_url ? (
-              <img src={director.photo_url} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-300"><GraduationCap className="w-10 h-10" /></div>
-            )}
-          </div>
+          <ProfileAvatar
+            photoUrl={director.photo_url}
+            photoSourceUrl={director.photo_source_url}
+            firstName={director.first_name}
+            lastName={director.last_name}
+            size="lg"
+            shape="rounded-2xl"
+            className="flex-shrink-0"
+          />
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-3 flex-wrap">
               <div>

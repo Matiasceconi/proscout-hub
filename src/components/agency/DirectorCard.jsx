@@ -5,6 +5,7 @@ import { Badge } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
 import { GraduationCap, MoreVertical, MapPin, Grid3x3 } from 'lucide-react';
 import DirectorActionsMenu from './DirectorActionsMenu';
+import ProfileAvatar from '@/components/shared/ProfileAvatar';
 
 export default function DirectorCard({ director, primaryColor, canManage, onAction }) {
   const navigate = useNavigate();
@@ -14,13 +15,17 @@ export default function DirectorCard({ director, primaryColor, canManage, onActi
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:border-slate-300 transition-all flex flex-col">
       <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
-        {director.photo_url ? (
-          <img src={director.photo_url} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-300">
-            <GraduationCap className="w-12 h-12" />
-          </div>
-        )}
+        <ProfileAvatar
+          photoUrl={director.photo_url}
+          photoSourceUrl={director.photo_source_url}
+          firstName={director.first_name}
+          lastName={director.last_name}
+          size="full"
+          shape="rounded-none"
+          className="w-full h-full"
+          fallbackBgClassName="bg-slate-100"
+          fallbackTextClassName="text-slate-300 text-4xl"
+        />
         <div className="absolute top-2 left-2">
           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${DIRECTOR_STATUS_COLORS[director.professional_status] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
             {DIRECTOR_STATUS_LABELS[director.professional_status] || 'Disponible'}

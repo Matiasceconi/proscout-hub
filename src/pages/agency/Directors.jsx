@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { GraduationCap, Search, LayoutGrid, Table as TableIcon, Plus, X, Loader2 } from 'lucide-react';
 import DirectorCard from '@/components/agency/DirectorCard';
 import NewDirectorDialog from '@/components/agency/NewDirectorDialog';
+import ProfileAvatar from '@/components/shared/ProfileAvatar';
 
 export default function Directors() {
   const { user } = useAuth();
@@ -179,9 +180,14 @@ export default function Directors() {
                 <tr key={director.id} onClick={() => navigate(`/agency/directors/${director.id}`)} className="hover:bg-slate-50 cursor-pointer">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
-                        {director.photo_url && <img src={director.photo_url} alt="" className="w-full h-full object-cover" />}
-                      </div>
+                      <ProfileAvatar
+                        photoUrl={director.photo_url}
+                        photoSourceUrl={director.photo_source_url}
+                        firstName={director.first_name}
+                        lastName={director.last_name}
+                        size="sm"
+                        className="flex-shrink-0"
+                      />
                       <div>
                         <p className="font-medium text-slate-800">{director.first_name} {director.last_name}</p>
                         <p className="text-xs text-slate-400">{calculateAge(director.birth_date)} años · {director.nationality || '—'}</p>

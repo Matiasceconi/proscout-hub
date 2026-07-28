@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { getPlayerId, calculateAge, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS, formatDate } from '@/lib/roleUtils';
 import { PageHeader, Badge } from '@/components/shared/UIBits';
+import ProfileAvatar from '@/components/shared/ProfileAvatar';
 import { Loader2 } from 'lucide-react';
 
 export default function PortalProfile() {
@@ -31,11 +32,15 @@ export default function PortalProfile() {
     <div className="space-y-4">
       <PageHeader title="Mi perfil" />
       <div className="bg-white rounded-xl border border-slate-200 p-5 text-center">
-        <div className="w-20 h-20 rounded-2xl bg-slate-100 overflow-hidden mx-auto mb-3">
-          {player.photo_url ? <img src={player.photo_url} alt="" className="w-full h-full object-cover" /> : (
-            <div className="w-full h-full flex items-center justify-center text-slate-300 font-bold text-2xl">{initials}</div>
-          )}
-        </div>
+        <ProfileAvatar
+          photoUrl={player.photo_url}
+          photoSourceUrl={player.photo_source_url}
+          firstName={player.first_name}
+          lastName={player.last_name}
+          size="lg"
+          shape="rounded-2xl"
+          className="mx-auto mb-3"
+        />
         <p className="text-lg font-bold text-slate-900">{player.first_name} {player.last_name}</p>
         <p className="text-sm text-slate-400">{age ? `${age} años` : ''} {player.nationality ? `· ${player.nationality}` : ''}</p>
         <div className="mt-2">

@@ -5,6 +5,7 @@ import { Badge } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
 import { Users, MoreVertical, MapPin } from 'lucide-react';
 import PlayerActionsMenu from './PlayerActionsMenu';
+import ProfileAvatar from '@/components/shared/ProfileAvatar';
 
 export default function PlayerCard({ player, primaryColor, canManage, onAction }) {
   const navigate = useNavigate();
@@ -17,13 +18,17 @@ export default function PlayerCard({ player, primaryColor, canManage, onAction }
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:border-slate-300 transition-all flex flex-col">
       {/* Photo with category badge */}
       <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
-        {player.photo_url ? (
-          <img src={player.photo_url} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-300">
-            <Users className="w-12 h-12" />
-          </div>
-        )}
+        <ProfileAvatar
+          photoUrl={player.photo_url}
+          photoSourceUrl={player.photo_source_url}
+          firstName={player.first_name}
+          lastName={player.last_name}
+          size="full"
+          shape="rounded-none"
+          className="w-full h-full"
+          fallbackBgClassName="bg-slate-100"
+          fallbackTextClassName="text-slate-300 text-4xl"
+        />
         <div className="absolute top-2 left-2">
           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${categoryColor}`}>
             {PLAYER_CATEGORIES[player.category] || 'Sin categoría'}

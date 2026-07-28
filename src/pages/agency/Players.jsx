@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Users, Search, LayoutGrid, Table as TableIcon, Plus, Filter, X, Loader2 } from 'lucide-react';
 import PlayerCard from '@/components/agency/PlayerCard';
 import NewPlayerDialog from '@/components/agency/NewPlayerDialog';
+import ProfileAvatar from '@/components/shared/ProfileAvatar';
 
 const SPORTING_STATUS_OPTIONS = ['available', 'injured', 'rehabilitation', 'on_loan', 'transferred', 'no_club', 'inactive', 'available_with_restrictions', 'differentiated_training', 'partial_reintegration', 'medical_discharge', 'sport_discharge'];
 
@@ -212,9 +213,14 @@ export default function Players() {
                 <tr key={player.id} onClick={() => navigate(`/agency/players/${player.id}`)} className="hover:bg-slate-50 cursor-pointer">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
-                        {player.photo_url && <img src={player.photo_url} alt="" className="w-full h-full object-cover" />}
-                      </div>
+                      <ProfileAvatar
+                        photoUrl={player.photo_url}
+                        photoSourceUrl={player.photo_source_url}
+                        firstName={player.first_name}
+                        lastName={player.last_name}
+                        size="sm"
+                        className="flex-shrink-0"
+                      />
                       <div>
                         <p className="font-medium text-slate-800">{player.first_name} {player.last_name}</p>
                         <p className="text-xs text-slate-400">{calculateAge(player.birth_date)} años · {player.nationality || '—'}</p>
