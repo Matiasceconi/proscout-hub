@@ -20,6 +20,16 @@
     "photo_source_name": {
       "type": "string"
     },
+    "photo_source_type": {
+      "type": "string",
+      "enum": [
+        "authorized",
+        "official_club",
+        "league_federation",
+        "verified_channel",
+        "public_reference"
+      ]
+    },
     "photo_verified_at": {
       "type": "string",
       "format": "date-time"

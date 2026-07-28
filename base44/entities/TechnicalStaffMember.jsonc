@@ -8,7 +8,13 @@
     "director_id": {
       "type": "string"
     },
+    "linked_technical_director_id": {
+      "type": "string"
+    },
     "full_name": {
+      "type": "string"
+    },
+    "photo_url": {
       "type": "string"
     },
     "role": {
@@ -18,9 +24,34 @@
         "preparador_fisico",
         "entrenador_arqueros",
         "analista_video",
+        "medico",
+        "kinesiologo",
+        "nutricionista",
+        "psicologo_deportivo",
+        "coordinador",
         "otro"
       ],
       "default": "ayudante_campo"
+    },
+    "club": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "historical"
+      ],
+      "default": "active"
     },
     "nationality": {
       "type": "string"

@@ -199,7 +199,38 @@ export const STAFF_ROLE_LABELS = {
   preparador_fisico: 'Preparador físico',
   entrenador_arqueros: 'Entrenador de arqueros',
   analista_video: 'Analista de video',
+  medico: 'Médico',
+  kinesiologo: 'Kinesiólogo',
+  nutricionista: 'Nutricionista',
+  psicologo_deportivo: 'Psicólogo deportivo',
+  coordinador: 'Coordinador',
   otro: 'Otro'
+};
+
+export const STAFF_STATUS_LABELS = {
+  active: 'Activo',
+  inactive: 'Inactivo',
+  historical: 'Histórico'
+};
+
+export const STAFF_STATUS_COLORS = {
+  active: 'bg-green-100 text-green-700 border-green-200',
+  inactive: 'bg-slate-100 text-slate-500 border-slate-200',
+  historical: 'bg-amber-100 text-amber-700 border-amber-200'
+};
+
+export const CAREER_OPERATION_LABELS = {
+  formacion: 'Formación',
+  libre: 'Libre',
+  prestamo: 'Préstamo',
+  transferencia: 'Transferencia'
+};
+
+export const CAREER_OPERATION_COLORS = {
+  formacion: 'bg-blue-100 text-blue-700 border-blue-200',
+  libre: 'bg-green-100 text-green-700 border-green-200',
+  prestamo: 'bg-amber-100 text-amber-700 border-amber-200',
+  transferencia: 'bg-purple-100 text-purple-700 border-purple-200'
 };
 
 export const calculateAge = (birthDate) => {

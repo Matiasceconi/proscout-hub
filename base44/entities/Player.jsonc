@@ -37,6 +37,22 @@
         "CF"
       ]
     },
+    "secondary_position": {
+      "type": "string",
+      "enum": [
+        "GK",
+        "CB",
+        "LB",
+        "RB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ]
+    },
     "preferred_foot": {
       "type": "string",
       "enum": [
@@ -65,6 +81,16 @@
     },
     "photo_source_name": {
       "type": "string"
+    },
+    "photo_source_type": {
+      "type": "string",
+      "enum": [
+        "authorized",
+        "official_club",
+        "league_federation",
+        "verified_channel",
+        "public_reference"
+      ]
     },
     "photo_verified_at": {
       "type": "string",

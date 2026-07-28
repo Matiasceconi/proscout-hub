@@ -1,0 +1,104 @@
+{
+  "name": "PlayerCareerEntry",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "player_id": {
+      "type": "string"
+    },
+    "club": {
+      "type": "string"
+    },
+    "club_logo_url": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "competition": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "season": {
+      "type": "string"
+    },
+    "operation_type": {
+      "type": "string",
+      "enum": [
+        "formacion",
+        "libre",
+        "prestamo",
+        "transferencia"
+      ],
+      "default": "formacion"
+    },
+    "matches": {
+      "type": "number",
+      "default": 0
+    },
+    "minutes": {
+      "type": "number",
+      "default": 0
+    },
+    "goals": {
+      "type": "number",
+      "default": 0
+    },
+    "assists": {
+      "type": "number",
+      "default": 0
+    },
+    "achievements": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "is_current": {
+      "type": "boolean",
+      "default": false
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "organization_id",
+    "player_id",
+    "club"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.player_id": "{{user.data.player_id}}"
+        },
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        }
+      ]
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}

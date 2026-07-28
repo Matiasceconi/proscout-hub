@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { getUserOrgId, calculateAge, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS, formatDate, isOrgAdmin, canEditMedical, canEditPhysical, canEditVideos, canEditStats } from '@/lib/roleUtils';
+import { getUserOrgId, calculateAge, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS, PLAYER_CATEGORIES, PORTAL_STATUS_LABELS, PORTAL_STATUS_COLORS, formatDate, isOrgAdmin, canEditMedical, canEditPhysical, canEditVideos, canEditStats } from '@/lib/roleUtils';
 import { Badge } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Users, BarChart3, Calendar, Video } from 'lucide-react';
+import { ChevronLeft, Users, BarChart3, Calendar, Video, ClipboardList, Pencil, UserPlus, Share2 } from 'lucide-react';
 import PlayerSummary from '@/components/agency/player-tabs/PlayerSummary';
+import PlayerCareerTab from '@/components/agency/player-tabs/PlayerCareerTab';
 import PlayerStatsTab from '@/components/agency/player-tabs/PlayerStatsTab';
 import PlayerCalendarTab from '@/components/agency/player-tabs/PlayerCalendarTab';
 import PlayerVideoTab from '@/components/agency/player-tabs/PlayerVideoTab';
@@ -14,9 +15,10 @@ import ProfileAvatar from '@/components/shared/ProfileAvatar';
 
 const TABS = [
   { id: 'summary', label: 'Resumen', icon: Users },
+  { id: 'career', label: 'Trayectoria', icon: ClipboardList },
   { id: 'calendar', label: 'Calendario', icon: Calendar },
   { id: 'stats', label: 'Estadísticas', icon: BarChart3 },
-  { id: 'video', label: 'Video', icon: Video }
+  { id: 'video', label: 'Videos', icon: Video }
 ];
 
 export default function PlayerProfile() {
@@ -52,6 +54,16 @@ export default function PlayerProfile() {
     if (subtab) setVideoSubtab(subtab);
   };
 
+  const handleShare = () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: `${player.first_name} ${player.last_name}`, url });
+    } else {
+      navigator.clipboard.writeText(url);
+      alert('Enlace copiado al portapapeles');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-20">
@@ -77,6 +89,7 @@ export default function PlayerProfile() {
     canEditVideos: canEditVideos(user),
     isOrgAdmin: isOrgAdmin(user)
   };
+  const canManage = isOrgAdmin(user);
 
   return (
     <div className="p-4 lg:p-6 max-w-6xl mx-auto">
@@ -92,29 +105,48 @@ export default function PlayerProfile() {
             photoSourceUrl={player.photo_source_url}
             firstName={player.first_name}
             lastName={player.last_name}
-            size="lg"
+            size="xl"
             shape="rounded-2xl"
             className="flex-shrink-0"
           />
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 w-full">
             <div className="flex items-start justify-between gap-3 flex-wrap">
-              <div>
+              <div className="min-w-0">
                 <h1 className="text-xl font-bold text-slate-900">{player.first_name} {player.last_name}</h1>
                 <p className="text-sm text-slate-400">
                   {age ? `${age} años` : ''} {player.nationality ? `· ${player.nationality}` : ''} · {POSITION_LABELS[player.position] || player.position}
+                  {player.secondary_position && ` / ${POSITION_LABELS[player.secondary_position] || player.secondary_position}`}
                 </p>
-                <p className="text-sm text-slate-500 mt-1">{player.club || 'Sin club'} {player.jersey_number ? `· #${player.jersey_number}` : ''}</p>
+                <p className="text-sm text-slate-500 mt-1">
+                  {player.club || 'Sin club'} {player.jersey_number ? `· #${player.jersey_number}` : ''}
+                  {player.competition ? ` · ${player.competition}` : ''}
+                </p>
               </div>
-              <Badge className={AVAILABILITY_COLORS[player.availability_status] || 'bg-slate-100 text-slate-600 border-slate-200'}>
-                {AVAILABILITY_LABELS[player.availability_status] || 'Disponible'}
-              </Badge>
+              <div className="flex flex-col items-end gap-1.5">
+                <Badge className={AVAILABILITY_COLORS[player.availability_status] || 'bg-slate-100 text-slate-600 border-slate-200'}>
+                  {AVAILABILITY_LABELS[player.availability_status] || 'Disponible'}
+                </Badge>
+                <Badge className={PORTAL_STATUS_COLORS[player.portal_status] || 'bg-slate-100 text-slate-500 border-slate-200'}>
+                  {PORTAL_STATUS_LABELS[player.portal_status] || 'Sin invitar'}
+                </Badge>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-3 text-xs text-slate-400">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs text-slate-400">
               {player.preferred_foot && <span>Pierna: {player.preferred_foot === 'left' ? 'Izquierda' : player.preferred_foot === 'right' ? 'Derecha' : 'Ambidiestro'}</span>}
               {player.height && <span>Altura: {player.height}cm</span>}
               {player.weight && <span>Peso: {player.weight}kg</span>}
+              {player.category && <span>Categoría: {PLAYER_CATEGORIES[player.category] || player.category}</span>}
+              {player.contract_end && <span>Contrato hasta: {formatDate(player.contract_end)}</span>}
+              {player.market_value && <span>Valor: {player.market_value}</span>}
               {player.representative_name && <span>Representante: {player.representative_name}</span>}
             </div>
+            {canManage && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                <Button size="sm" variant="outline" onClick={() => navigate(`/agency/players/${player.id}?edit=1`)}><Pencil className="w-3.5 h-3.5 mr-1" /> Editar</Button>
+                <Button size="sm" variant="outline"><UserPlus className="w-3.5 h-3.5 mr-1" /> Invitar jugador</Button>
+                <Button size="sm" variant="outline" onClick={handleShare}><Share2 className="w-3.5 h-3.5 mr-1" /> Compartir perfil</Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -139,6 +171,7 @@ export default function PlayerProfile() {
         </div>
         <div className="p-4 lg:p-5">
           {activeTab === 'summary' && <PlayerSummary player={player} onTabChange={handleTabChange} permissions={permissions} />}
+          {activeTab === 'career' && <PlayerCareerTab player={player} permissions={permissions} />}
           {activeTab === 'calendar' && <PlayerCalendarTab player={player} permissions={permissions} />}
           {activeTab === 'stats' && <PlayerStatsTab player={player} permissions={permissions} />}
           {activeTab === 'video' && <PlayerVideoTab player={player} permissions={permissions} initialSubtab={videoSubtab} />}
