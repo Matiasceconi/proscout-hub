@@ -37,6 +37,14 @@
     "has_full_squad_access": {
       "type": "boolean",
       "default": false
+    },
+    "is_owner": {
+      "type": "boolean",
+      "default": false
+    },
+    "membership_key": {
+      "type": "string",
+      "description": "Unique key: organization_id:user_id"
     }
   },
   "required": [
@@ -45,13 +53,37 @@
   ],
   "rls": {
     "read": {
-      "data.organization_id": "{{user.data.organization_id}}"
+      "$or": [
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
     },
     "create": {
-      "data.organization_id": "{{user.data.organization_id}}"
+      "$or": [
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        }
+      ]
     },
     "update": {
-      "data.organization_id": "{{user.data.organization_id}}"
+      "$or": [
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        }
+      ]
     },
     "delete": {
       "data.organization_id": "{{user.data.organization_id}}"
