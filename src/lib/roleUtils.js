@@ -63,7 +63,7 @@ export const canEditStats = (user) => {
 
 export const getHomeRoute = (user) => {
   const role = getUserRole(user);
-  if (!role) return '/onboarding';
+  if (!role) return '/company-access';
   if (role === 'platform_superadmin') return '/superadmin';
   if (role === 'player') return '/portal';
   return '/agency';

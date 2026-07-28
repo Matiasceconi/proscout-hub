@@ -29,28 +29,21 @@ export default function Onboarding() {
         return;
       }
 
-      // Guard: si el usuario ya tiene organización activa, redirigir a /agency
-      const role = user.app_role || user.data?.app_role;
-      const userOrgId = user.organization_id || user.data?.organization_id;
-      if (role && role !== 'player' && userOrgId) {
-        navigate('/agency', { replace: true });
+      // Guard: si el usuario ya tiene membresías activas, redirigir a /company-access
+      const members = await base44.entities.OrganizationMember.filter({
+        $or: [
+          { user_id: user.id },
+          { user_email: user.email }
+        ],
+        status: 'active'
+      });
+
+      if (members.length > 0) {
+        navigate('/company-access', { replace: true });
         return;
       }
 
-      // Guard: si el usuario es jugador con player_id, redirigir a /portal
-      const playerId = user.player_id || user.data?.player_id;
-      if (role === 'player' && playerId) {
-        navigate('/portal', { replace: true });
-        return;
-      }
-
-      // Verificar OrganizationMember activas
-      const members = await base44.entities.OrganizationMember.filter({ user_id: user.id, status: 'active' });
-      if (members.length > 0 && role && role !== 'player') {
-        navigate('/agency', { replace: true });
-        return;
-      }
-
+      // Check for pending player links
       const links = await base44.entities.PlayerUserLink.filter({ user_email: user.email, status: 'pending' });
       if (links.length > 0) {
         setPlayerLink(links[0]);
@@ -70,18 +63,22 @@ export default function Onboarding() {
     setSubmitting(true);
     setError('');
     try {
+      const slug = orgName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       const org = await base44.entities.Organization.create({
         name: orgName.trim(),
+        slug,
         status: 'active',
         plan: 'free',
         owner_user_id: user.id,
         primary_color: '#0F172A',
-        secondary_color: '#3B82F6'
+        secondary_color: '#3B82F6',
+        onboarding_completed: true
       });
 
       await base44.auth.updateMe({
         app_role: 'organization_owner',
         organization_id: org.id,
+        active_organization_id: org.id,
         is_player: false
       });
 
@@ -91,7 +88,9 @@ export default function Onboarding() {
         user_email: user.email,
         full_name: user.full_name || user.email,
         app_role: 'organization_owner',
-        status: 'active'
+        status: 'active',
+        is_owner: true,
+        membership_key: `${org.id}:${user.id}`
       });
 
       await checkUserAuth();
@@ -142,7 +141,7 @@ export default function Onboarding() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-900 mb-4">
             <ShieldCheck className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Bienvenido a FootAgency Pro</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Configuración inicial de la agencia</h1>
           <p className="text-slate-500 mt-2 text-sm">
             {mode === 'player_link'
               ? 'Activá tu portal de jugador para acceder a tu información.'
@@ -176,7 +175,7 @@ export default function Onboarding() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Building2 className="w-5 h-5 text-blue-600" />
-                Crear Agencia
+                Crear empresa
               </CardTitle>
             </CardHeader>
             <CardContent>

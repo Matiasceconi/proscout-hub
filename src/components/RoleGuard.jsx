@@ -15,7 +15,7 @@ export default function RoleGuard({ allowedRoles, children }) {
   }
 
   const role = getUserRole(user);
-  if (!role) return <Navigate to="/onboarding" replace />;
+  if (!role) return <Navigate to="/company-access" replace />;
   if (!allowedRoles.includes(role)) return <Navigate to={getHomeRoute(user)} replace />;
 
   return children;

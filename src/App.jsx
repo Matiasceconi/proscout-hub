@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -12,6 +12,7 @@ import PlayerLayout from '@/components/player/PlayerLayout';
 import SuperadminLayout from '@/components/superadmin/SuperadminLayout';
 import Home from '@/pages/Home';
 import Onboarding from '@/pages/Onboarding';
+import CompanyAccess from '@/pages/CompanyAccess';
 import AgencyDashboard from '@/pages/agency/AgencyDashboard';
 import Players from '@/pages/agency/Players';
 import PlayerProfile from '@/pages/agency/PlayerProfile';
@@ -70,7 +71,9 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/company-access" element={<CompanyAccess />} />
+      <Route path="/company/create" element={<Onboarding />} />
+      <Route path="/onboarding" element={<Navigate to="/company-access" replace />} />
 
       {/* Agency panel - organization staff only */}
       <Route element={<RoleGuard allowedRoles={['organization_owner', 'organization_admin', 'representative', 'video_analyst', 'performance_staff', 'medical_staff']}><AgencyLayout /></RoleGuard>}>

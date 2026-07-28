@@ -195,7 +195,7 @@ export default function AgencyLayout() {
                 <Settings className="w-4 h-4 mr-2" /> Configuración de la agencia
               </DropdownMenuItem>
               {orgCount > 1 && (
-                <DropdownMenuItem onClick={() => navigate('/onboarding')}>
+                <DropdownMenuItem onClick={() => navigate('/company-access')}>
                   <Building2 className="w-4 h-4 mr-2" /> Cambiar de organización
                 </DropdownMenuItem>
               )}
