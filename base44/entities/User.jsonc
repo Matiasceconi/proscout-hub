@@ -28,6 +28,10 @@
       "type": "string",
       "description": "Organization ID for staff users (null for players)"
     },
+    "active_organization_id": {
+      "type": "string",
+      "description": "Currently selected organization ID for multi-org users"
+    },
     "player_id": {
       "type": "string",
       "description": "Player ID for player users (null for staff)"
