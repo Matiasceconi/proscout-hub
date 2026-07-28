@@ -32,10 +32,16 @@
     "category": {
       "type": "string",
       "enum": [
+        "full_match",
+        "highlights",
         "match_highlight",
-        "training",
+        "individual_actions",
         "technical_analysis",
         "tactical",
+        "tactical_analysis",
+        "goals_assists",
+        "defensive_actions",
+        "training",
         "individual",
         "presentation",
         "other"
@@ -43,6 +49,19 @@
       "default": "individual"
     },
     "match_id": {
+      "type": "string"
+    },
+    "match_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "competition": {
+      "type": "string"
+    },
+    "season": {
+      "type": "string"
+    },
+    "opponent": {
       "type": "string"
     },
     "status": {
@@ -77,7 +96,14 @@
     "read": {
       "$or": [
         {
-          "data.player_id": "{{user.data.player_id}}"
+          "$and": [
+            {
+              "data.player_id": "{{user.data.player_id}}"
+            },
+            {
+              "data.status": "published"
+            }
+          ]
         },
         {
           "data.organization_id": "{{user.data.organization_id}}"
