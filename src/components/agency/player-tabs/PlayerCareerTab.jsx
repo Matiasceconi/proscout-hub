@@ -68,6 +68,7 @@ export default function PlayerCareerTab({ player, permissions }) {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
+                        {entry.club_logo_url && <img src={entry.club_logo_url} alt="" className="w-6 h-6 object-contain rounded" />}
                         <p className="font-semibold text-slate-800">{entry.club}</p>
                         {entry.is_current && <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs">Actual</Badge>}
                         {entry.operation_type && <Badge className={`${CAREER_OPERATION_COLORS[entry.operation_type] || 'bg-slate-100 text-slate-600 border-slate-200'} text-xs`}>{CAREER_OPERATION_LABELS[entry.operation_type] || entry.operation_type}</Badge>}
