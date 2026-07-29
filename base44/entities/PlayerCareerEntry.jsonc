@@ -8,7 +8,14 @@
     "player_id": {
       "type": "string"
     },
+    "career_key": {
+      "type": "string",
+      "description": "Unique key for upsert: org_id + player_id + career_key"
+    },
     "club": {
+      "type": "string"
+    },
+    "club_key": {
       "type": "string"
     },
     "club_logo_url": {
@@ -44,7 +51,15 @@
       ],
       "default": "formacion"
     },
+    "current_stage": {
+      "type": "string",
+      "description": "ACTUAL or FINALIZADA"
+    },
     "matches": {
+      "type": "number",
+      "default": 0
+    },
+    "starts": {
       "type": "number",
       "default": 0
     },
@@ -61,6 +76,15 @@
       "default": 0
     },
     "achievements": {
+      "type": "string"
+    },
+    "source_name": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "verification_status": {
       "type": "string"
     },
     "notes": {

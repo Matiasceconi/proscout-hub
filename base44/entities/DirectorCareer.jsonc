@@ -8,7 +8,17 @@
     "director_id": {
       "type": "string"
     },
+    "career_key": {
+      "type": "string",
+      "description": "Unique key for upsert: org_id + director_id + career_key"
+    },
     "club": {
+      "type": "string"
+    },
+    "club_key": {
+      "type": "string"
+    },
+    "club_logo_url": {
       "type": "string"
     },
     "role": {
@@ -20,6 +30,12 @@
     "competition": {
       "type": "string"
     },
+    "category": {
+      "type": "string"
+    },
+    "season": {
+      "type": "string"
+    },
     "start_date": {
       "type": "string",
       "format": "date"
@@ -27,6 +43,10 @@
     "end_date": {
       "type": "string",
       "format": "date"
+    },
+    "current_stage": {
+      "type": "string",
+      "description": "ACTUAL or FINALIZADA"
     },
     "matches_managed": {
       "type": "number",
@@ -44,8 +64,34 @@
       "type": "number",
       "default": 0
     },
+    "points_per_match": {
+      "type": "number"
+    },
+    "tactical_system": {
+      "type": "string"
+    },
     "achievements": {
       "type": "string"
+    },
+    "end_reason": {
+      "type": "string"
+    },
+    "source_name": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "verification_status": {
+      "type": "string"
+    },
+    "is_current": {
+      "type": "boolean",
+      "default": false
+    },
+    "order": {
+      "type": "number",
+      "default": 0
     }
   },
   "required": [
