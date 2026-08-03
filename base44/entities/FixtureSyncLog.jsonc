@@ -1,0 +1,77 @@
+{
+  "name": "FixtureSyncLog",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "club_id": {
+      "type": "string"
+    },
+    "club_name": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string",
+      "default": "api_football"
+    },
+    "sync_type": {
+      "type": "string",
+      "enum": [
+        "automated",
+        "manual"
+      ]
+    },
+    "queries_consumed": {
+      "type": "number"
+    },
+    "queries_remaining": {
+      "type": "number"
+    },
+    "rate_limit": {
+      "type": "string"
+    },
+    "fixtures_imported": {
+      "type": "number"
+    },
+    "fixtures_updated": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "error",
+        "partial"
+      ]
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sync_date": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "organization_id",
+    "sync_date"
+  ],
+  "rls": {
+    "read": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}

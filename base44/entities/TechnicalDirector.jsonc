@@ -155,6 +155,9 @@
     "is_demo": {
       "type": "boolean",
       "default": false
+    },
+    "current_club_id": {
+      "type": "string"
     }
   },
   "required": [

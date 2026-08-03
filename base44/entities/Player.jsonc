@@ -203,6 +203,9 @@
     },
     "market_value": {
       "type": "string"
+    },
+    "current_club_id": {
+      "type": "string"
     }
   },
   "required": [

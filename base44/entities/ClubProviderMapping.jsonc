@@ -1,0 +1,78 @@
+{
+  "name": "ClubProviderMapping",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "club_id": {
+      "type": "string"
+    },
+    "club_name": {
+      "type": "string"
+    },
+    "club_key": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string",
+      "default": "api_football"
+    },
+    "provider_team_id": {
+      "type": "string"
+    },
+    "provider_team_name": {
+      "type": "string"
+    },
+    "provider_team_logo": {
+      "type": "string"
+    },
+    "mapping_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "verified",
+        "ambiguous",
+        "not_found"
+      ],
+      "default": "pending"
+    },
+    "verified_by": {
+      "type": "string"
+    },
+    "verified_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_sync_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "organization_id",
+    "club_id",
+    "provider"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        },
+        {
+          "data.organization_id": "{{user.data.player_organization_id}}"
+        }
+      ]
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}

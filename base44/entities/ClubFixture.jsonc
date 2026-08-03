@@ -1,0 +1,108 @@
+{
+  "name": "ClubFixture",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "provider_fixture_id": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string",
+      "default": "api_football"
+    },
+    "home_provider_team_id": {
+      "type": "string"
+    },
+    "away_provider_team_id": {
+      "type": "string"
+    },
+    "home_team_name": {
+      "type": "string"
+    },
+    "away_team_name": {
+      "type": "string"
+    },
+    "home_team_logo": {
+      "type": "string"
+    },
+    "away_team_logo": {
+      "type": "string"
+    },
+    "competition_name": {
+      "type": "string"
+    },
+    "competition_logo": {
+      "type": "string"
+    },
+    "competition_id": {
+      "type": "string"
+    },
+    "season": {
+      "type": "string"
+    },
+    "round": {
+      "type": "string"
+    },
+    "fixture_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stadium": {
+      "type": "string"
+    },
+    "fixture_city": {
+      "type": "string"
+    },
+    "fixture_status": {
+      "type": "string"
+    },
+    "fixture_status_long": {
+      "type": "string"
+    },
+    "home_score": {
+      "type": "number"
+    },
+    "away_score": {
+      "type": "number"
+    },
+    "mapped_club_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "last_sync_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "organization_id",
+    "provider_fixture_id",
+    "provider",
+    "fixture_date"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        },
+        {
+          "data.organization_id": "{{user.data.player_organization_id}}"
+        }
+      ]
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}
