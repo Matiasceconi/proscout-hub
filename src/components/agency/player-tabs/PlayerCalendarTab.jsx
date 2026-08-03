@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Plus, Trophy, Activity, HeartPulse, Plane, Camera, Users, Calendar, ChevronLeft, ChevronRight, LayoutGrid, List, MapPin, Filter, X } from 'lucide-react';
+import ApiFootballCalendarSection from '@/components/agency/shared/ApiFootballCalendarSection';
 
 const EVENT_TYPES = {
   match: { label: 'Partido', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500', icon: Trophy },
@@ -16,7 +17,8 @@ const EVENT_TYPES = {
   travel: { label: 'Viaje', color: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500', icon: Plane },
   media: { label: 'Prensa', color: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500', icon: Camera },
   meeting: { label: 'Reunión', color: 'bg-cyan-50 text-cyan-700 border-cyan-200', dot: 'bg-cyan-500', icon: Users },
-  other: { label: 'Otro', color: 'bg-slate-50 text-slate-700 border-slate-200', dot: 'bg-slate-500', icon: Calendar }
+  other: { label: 'Otro', color: 'bg-slate-50 text-slate-700 border-slate-200', dot: 'bg-slate-500', icon: Calendar },
+  api_match: { label: 'Partido API', color: 'bg-indigo-50 text-indigo-700 border-indigo-200', dot: 'bg-indigo-500', icon: Trophy }
 };
 
 const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -28,6 +30,7 @@ export default function PlayerCalendarTab({ player, permissions }) {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('agenda');
   const [showAdd, setShowAdd] = useState(false);
+  const [apiCalendar, setApiCalendar] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [filters, setFilters] = useState({ type: 'all', competition: 'all', season: 'all', date_from: '', date_to: '', time: 'all' });
   const [filtersExpanded, setFiltersExpanded] = useState(false);
@@ -37,12 +40,14 @@ export default function PlayerCalendarTab({ player, permissions }) {
 
   const loadData = async () => {
     try {
-      const [m, e] = await Promise.all([
+      const [m, e, apiRes] = await Promise.all([
         base44.entities.Match.filter({ organization_id: player.organization_id, player_id: player.id }, 'match_date', 100),
-        base44.entities.CalendarEvent.filter({ organization_id: player.organization_id, player_id: player.id }, 'start_date', 100)
+        base44.entities.CalendarEvent.filter({ organization_id: player.organization_id, player_id: player.id }, 'start_date', 100),
+        base44.functions.invoke('getPersonCalendar', { person_type: 'player', person_id: player.id, organization_id: player.organization_id }).catch(() => null)
       ]);
       setMatches(m);
       setEvents(e);
+      setApiCalendar(apiRes?.data || null);
     } catch (err) { console.error(err); }
     setLoading(false);
   };
@@ -50,8 +55,9 @@ export default function PlayerCalendarTab({ player, permissions }) {
   const allItems = useMemo(() => {
     const matchItems = matches.map(m => ({ ...m, _type: 'match', _date: m.match_date, _title: `vs ${m.opponent}`, _etype: 'match', _comp: m.competition, _season: m.season }));
     const eventItems = events.map(e => ({ ...e, _type: 'event', _date: e.start_date, _title: e.title, _etype: e.event_type || 'other', _comp: '', _season: '' }));
-    return [...matchItems, ...eventItems];
-  }, [matches, events]);
+    const apiItems = (apiCalendar?.all_fixtures || []).map(f => ({ ...f, id: f.id || `api-${f.provider_fixture_id}`, _type: 'api_fixture', _date: f.fixture_date, _title: `${f.home_team_name} vs ${f.away_team_name}`, _etype: 'api_match', _comp: f.competition_name, _season: f.season }));
+    return [...matchItems, ...eventItems, ...apiItems];
+  }, [matches, events, apiCalendar]);
 
   const competitions = [...new Set(matches.map(m => m.competition).filter(Boolean))].sort();
   const seasons = [...new Set(matches.map(m => m.season).filter(Boolean))].sort().reverse();
@@ -80,6 +86,7 @@ export default function PlayerCalendarTab({ player, permissions }) {
 
   return (
     <div className="space-y-4">
+      {apiCalendar && <ApiFootballCalendarSection calendarData={apiCalendar} canManage={permissions?.isOrgAdmin} />}
       {nextMatch && <NextMatchCard match={nextMatch} />}
 
       {/* Filters */}
@@ -308,6 +315,7 @@ function AgendaItem({ item, past, onClick }) {
 
 function ItemDetailDialog({ item, onClose }) {
   const isMatch = item._type === 'match';
+  const isApiFixture = item._type === 'api_fixture';
   const etype = EVENT_TYPES[item._etype] || EVENT_TYPES.other;
   return (
     <Dialog open onOpenChange={onClose}>
@@ -329,6 +337,15 @@ function ItemDetailDialog({ item, onClose }) {
               {item.home_away && <DetailRow label="Local/Visitante" value={item.home_away === 'home' ? 'Local' : item.home_away === 'away' ? 'Visitante' : 'Neutral'} />}
               {item.venue && <DetailRow label="Estadio" value={item.venue} />}
               {item.status === 'finished' && item.score && <DetailRow label="Resultado" value={item.score} />}
+            </>
+          ) : isApiFixture ? (
+            <>
+              {item.competition_name && <DetailRow label="Campeonato" value={item.competition_name} />}
+              {item.season && <DetailRow label="Temporada" value={item.season} />}
+              {item.role && <DetailRow label="Local/Visitante" value={item.role === 'local' ? 'Local' : 'Visitante'} />}
+              {item.stadium && <DetailRow label="Estadio" value={item.stadium} />}
+              {item.result && <DetailRow label="Resultado" value={item.result} />}
+              {item.fixture_status && <DetailRow label="Estado" value={item.fixture_status} />}
             </>
           ) : (
             <>

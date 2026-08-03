@@ -9,23 +9,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Calendar, Plus } from 'lucide-react';
+import ApiFootballCalendarSection from '@/components/agency/shared/ApiFootballCalendarSection';
 
 const EVENT_TYPES = {
   match: 'Partido', training: 'Entrenamiento', medical: 'Médico',
-  travel: 'Viaje', media: 'Media', meeting: 'Reunión', other: 'Otro'
+  travel: 'Viaje', media: 'Media', meeting: 'Reunión', other: 'Otro',
+  api_match: 'Partido API'
 };
 
 export default function DirectorCalendarTab({ director, canManage }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
+  const [apiCalendar, setApiCalendar] = useState(null);
 
   useEffect(() => { load(); }, [director.id]);
 
   const load = async () => {
     try {
-      const data = await base44.entities.CalendarEvent.filter({ organization_id: director.organization_id, director_id: director.id }, 'start_date', 50);
+      const [data, apiRes] = await Promise.all([
+        base44.entities.CalendarEvent.filter({ organization_id: director.organization_id, director_id: director.id }, 'start_date', 50),
+        base44.functions.invoke('getPersonCalendar', { person_type: 'director', person_id: director.id, organization_id: director.organization_id }).catch(() => null)
+      ]);
       setEvents(data);
+      setApiCalendar(apiRes?.data || null);
     } catch (err) { console.error(err); }
     setLoading(false);
   };
@@ -33,11 +40,14 @@ export default function DirectorCalendarTab({ director, canManage }) {
   if (loading) return <div className="py-8 text-center text-sm text-slate-400">Cargando calendario...</div>;
 
   const now = new Date();
-  const upcoming = events.filter(e => new Date(e.start_date) >= now);
-  const past = events.filter(e => new Date(e.start_date) < now).reverse();
+  const apiFixtures = (apiCalendar?.all_fixtures || []).map(f => ({ ...f, id: f.id || `api-${f.provider_fixture_id}`, start_date: f.fixture_date, title: `${f.home_team_name} vs ${f.away_team_name}`, event_type: 'api_match', location: f.stadium }));
+  const allEvents = [...events, ...apiFixtures];
+  const upcoming = allEvents.filter(e => new Date(e.start_date) >= now);
+  const past = allEvents.filter(e => new Date(e.start_date) < now).reverse();
 
   return (
     <div className="space-y-4">
+      {apiCalendar && <ApiFootballCalendarSection calendarData={apiCalendar} canManage={canManage} />}
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-500">{upcoming.length} próximos eventos</p>
         {canManage && <Button size="sm" onClick={() => setShowNew(true)} className="bg-slate-900 hover:bg-slate-800"><Plus className="w-3.5 h-3.5 mr-1" /> Agregar</Button>}
