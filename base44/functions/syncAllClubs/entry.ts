@@ -16,23 +16,43 @@ export default async function(req: Request): Promise<Response> {
     const mappings = await asAdmin.entities.ClubProviderMapping.filter({ organization_id, provider: "api_football", mapping_status: "verified" });
     if (mappings.length === 0) return Response.json({ success: true, message: "No hay clubes verificados para sincronizar", synced_clubs: 0 });
 
+    // Skip clubs that already have fixtures (unless force=true)
+    const force = body?.force === true;
+    const existingFixtures = force ? [] : await asAdmin.entities.ClubFixture.filter({ organization_id, provider: "api_football" });
+    const clubsWithFixtures = new Set<string>();
+    for (const f of existingFixtures) {
+      for (const cid of f.mapped_club_ids || []) clubsWithFixtures.add(cid);
+    }
+    const toSync = mappings.filter((m: any) => !clubsWithFixtures.has(m.club_id));
+    const skipped = mappings.length - toSync.length;
+    if (toSync.length === 0) return Response.json({ success: true, synced_clubs: 0, skipped, message: "Todos los clubes ya tienen fixtures", total_queries: 0, total_fixtures: 0, total_errors: 0, results: [] });
+
     const results: any[] = [];
     let totalQueries = 0, totalFixtures = 0, totalErrors = 0;
+    let rateLimitRemaining: number | null = null;
+    let stopped = false;
 
-    for (const mapping of mappings) {
+    for (const mapping of toSync) {
+      if (stopped) break;
       try {
         const syncRes = await syncSingleClub(base44, organization_id, mapping.club_id, mapping.provider_team_id, sync_type || "automated");
         results.push({ club_id: mapping.club_id, club_name: mapping.club_name, ...syncRes });
         totalQueries += syncRes.queries_used || 0;
         totalFixtures += (syncRes.fixtures_imported || 0) + (syncRes.fixtures_updated || 0);
         if (!syncRes.success) totalErrors++;
+        rateLimitRemaining = syncRes.queries_remaining ?? rateLimitRemaining;
+        // Stop if rate limit is low or exhausted
+        if (rateLimitRemaining !== null && rateLimitRemaining < 10) { stopped = true; break; }
+        if (syncRes.errors?.some((e: any) => e.status === 429)) { stopped = true; break; }
+        // Delay between clubs to avoid rate limiting
+        await new Promise(r => setTimeout(r, 1500));
       } catch (err: any) {
         results.push({ club_id: mapping.club_id, club_name: mapping.club_name, success: false, error: sanitizeError(err.message) });
         totalErrors++;
       }
     }
 
-    return Response.json({ success: totalErrors === 0, synced_clubs: mappings.length, total_queries: totalQueries, total_fixtures: totalFixtures, total_errors: totalErrors, results });
+    return Response.json({ success: totalErrors === 0, synced_clubs: results.length, skipped, stopped, total_queries: totalQueries, total_fixtures: totalFixtures, total_errors: totalErrors, results });
   } catch (error: any) {
     return Response.json({ error: sanitizeError(error.message) }, { status: 500 });
   }
