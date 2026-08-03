@@ -186,6 +186,10 @@
     "external_id": {
       "type": "string"
     },
+    "provider_player_id": {
+      "type": "string",
+      "description": "API-Football player ID for stats linking"
+    },
     "source_profile_url": {
       "type": "string"
     },

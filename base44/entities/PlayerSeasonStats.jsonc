@@ -8,11 +8,37 @@
     "player_id": {
       "type": "string"
     },
+    "provider": {
+      "type": "string",
+      "default": "api_football",
+      "description": "Stats provider identifier"
+    },
+    "provider_player_id": {
+      "type": "string",
+      "description": "API-Football player ID"
+    },
+    "provider_team_id": {
+      "type": "string",
+      "description": "API-Football team ID (links to ClubProviderMapping)"
+    },
+    "provider_league_id": {
+      "type": "string",
+      "description": "API-Football league ID for deduplication"
+    },
+    "club_id": {
+      "type": "string",
+      "description": "Internal Club entity ID"
+    },
     "season": {
       "type": "string"
     },
     "competition": {
       "type": "string"
+    },
+    "has_coverage": {
+      "type": "boolean",
+      "default": true,
+      "description": "False when the competition does not offer individual stats"
     },
     "matches": {
       "type": "number",

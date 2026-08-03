@@ -36,12 +36,14 @@ export default function Players() {
   const [editPlayer, setEditPlayer] = useState(null);
   const [statusPlayer, setStatusPlayer] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [statsData, setStatsData] = useState({ players: {}, season_display: '' });
 
   const primaryColor = org?.primary_color || '#0F172A';
 
   useEffect(() => {
     if (orgId) {
       loadPlayers();
+      loadStats();
       base44.entities.Organization.get(orgId).then(setOrg).catch(() => {});
     }
   }, [orgId]);
@@ -52,6 +54,13 @@ export default function Players() {
       setPlayers(data.filter(p => p.status !== 'archived'));
     } catch (err) { console.error(err); }
     setLoading(false);
+  };
+
+  const loadStats = async () => {
+    try {
+      const response = await base44.functions.invoke('getPlayerCardsStats', { organization_id: orgId });
+      setStatsData(response.data || { players: {}, season_display: '' });
+    } catch (err) { console.error(err); }
   };
 
   const clubs = useMemo(() => Array.from(new Set(players.map(p => p.club).filter(Boolean))).sort(), [players]);
@@ -112,6 +121,7 @@ export default function Players() {
         await base44.entities.Player.update(player.id, { status: 'archived' });
       }
       await loadPlayers();
+      loadStats();
     } catch (err) { console.error(err); }
     setActionLoading(false);
   };
@@ -191,7 +201,7 @@ export default function Players() {
       ) : view === 'cards' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {filtered.map(player => (
-            <PlayerCard key={player.id} player={player} primaryColor={primaryColor} canManage={canManage} onAction={handleAction} />
+            <PlayerCard key={player.id} player={player} primaryColor={primaryColor} canManage={canManage} onAction={handleAction} statsData={statsData.players[player.id]} seasonDisplay={statsData.season_display} />
           ))}
         </div>
       ) : (
