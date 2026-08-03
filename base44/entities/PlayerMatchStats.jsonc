@@ -11,6 +11,10 @@
     "match_id": {
       "type": "string"
     },
+    "club_fixture_id": {
+      "type": "string",
+      "description": "Reference to ClubFixture ID"
+    },
     "match_date": {
       "type": "string",
       "format": "date"
@@ -31,6 +35,20 @@
     "called_up": {
       "type": "boolean",
       "default": true
+    },
+    "callup_status": {
+      "type": "string",
+      "enum": [
+        "called_up",
+        "starter",
+        "substitute",
+        "not_called",
+        "unconfirmed"
+      ],
+      "default": "unconfirmed"
+    },
+    "match_position": {
+      "type": "string"
     },
     "minutes_played": {
       "type": "number",
@@ -54,6 +72,27 @@
     },
     "rating": {
       "type": "number"
+    },
+    "injury_or_incident": {
+      "type": "string"
+    },
+    "agent_observations": {
+      "type": "string"
+    },
+    "follow_up_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "not_required"
+      ],
+      "default": "pending"
+    },
+    "next_action": {
+      "type": "string"
+    },
+    "responsible_agent": {
+      "type": "string"
     },
     "extra_stats": {
       "type": "object"
