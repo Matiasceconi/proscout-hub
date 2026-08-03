@@ -34,8 +34,17 @@ export default async function(req: Request): Promise<Response> {
       }
       const verifiedCurrent = careerRecords.filter((r: any) => r.current_stage === "ACTUAL");
 
-      if (verifiedCurrent.length === 1) {
-        const career = verifiedCurrent[0];
+      // Skip "Without Club" / free agent entries — treat as no club
+      const realCurrent = verifiedCurrent.filter((r: any) =>
+        r.club && !/without club|sin club|free agent|libre|unattached/i.test(r.club)
+      );
+
+      if (realCurrent.length === 0 && verifiedCurrent.length > 0) {
+        return Response.json({ ...base, status: "sin_club", club: null, fixtures: [], last_results: [], next_fixtures: [], last_sync: null, message: "Esta persona no tiene un club actual vinculado" });
+      }
+
+      if (realCurrent.length === 1) {
+        const career = realCurrent[0];
         if (career.club_key) {
           const clubs = await asAdmin.entities.Club.filter({ club_key: career.club_key });
           if (clubs.length > 0) {
