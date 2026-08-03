@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Users, Search, LayoutGrid, Table as TableIcon, Plus, Filter, X, Loader2 } from 'lucide-react';
+import { Users, Search, LayoutGrid, Table as TableIcon, Plus, Filter, X, Loader2, Download } from 'lucide-react';
 import PlayerCard from '@/components/agency/PlayerCard';
 import NewPlayerDialog from '@/components/agency/NewPlayerDialog';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
@@ -36,6 +36,7 @@ export default function Players() {
   const [editPlayer, setEditPlayer] = useState(null);
   const [statusPlayer, setStatusPlayer] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [statsData, setStatsData] = useState({ players: {}, season_display: '' });
 
   const primaryColor = org?.primary_color || '#0F172A';
@@ -97,6 +98,24 @@ export default function Players() {
     localStorage.setItem('playersView', v);
   };
 
+  const handleExportCsv = async () => {
+    setExporting(true);
+    try {
+      const response = await base44.functions.invoke('exportPlayersCsv', { organization_id: orgId });
+      const csv = response.data?.csv || '';
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `jugadores_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) { console.error(err); }
+    setExporting(false);
+  };
+
   const handleAction = async (action, player) => {
     if (action === 'view') { navigate(`/agency/players/${player.id}`); return; }
     if (action === 'edit') { setEditPlayer(player); return; }
@@ -131,10 +150,18 @@ export default function Players() {
       <PageHeader
         title="Jugadores"
         subtitle={`${filtered.length} de ${players.length} jugadores encontrados`}
-        actions={canManage && (
-          <Button onClick={() => setShowNew(true)} style={{ backgroundColor: primaryColor }} className="hover:opacity-90">
-            <Plus className="w-4 h-4 mr-1" /> Agregar jugador
-          </Button>
+        actions={(
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleExportCsv} disabled={exporting || players.length === 0}>
+              {exporting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Download className="w-4 h-4 mr-1" />}
+              {exporting ? 'Exportando...' : 'Exportar CSV'}
+            </Button>
+            {canManage && (
+              <Button onClick={() => setShowNew(true)} style={{ backgroundColor: primaryColor }} className="hover:opacity-90">
+                <Plus className="w-4 h-4 mr-1" /> Agregar jugador
+              </Button>
+            )}
+          </div>
         )}
       />
 
