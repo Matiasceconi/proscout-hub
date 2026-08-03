@@ -11,7 +11,7 @@ import PlayerCareerTab from '@/components/agency/player-tabs/PlayerCareerTab';
 import PlayerStatsTab from '@/components/agency/player-tabs/PlayerStatsTab';
 import PlayerCalendarTab from '@/components/agency/player-tabs/PlayerCalendarTab';
 import PlayerVideoTab from '@/components/agency/player-tabs/PlayerVideoTab';
-import ProfileAvatar from '@/components/shared/ProfileAvatar';
+import ProfileCoverHeader from '@/components/shared/ProfileCoverHeader';
 
 const TABS = [
   { id: 'summary', label: 'Resumen', icon: Users },
@@ -26,6 +26,7 @@ export default function PlayerProfile() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [player, setPlayer] = useState(null);
+  const [clubData, setClubData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('summary');
   const [videoSubtab, setVideoSubtab] = useState('own');
@@ -42,6 +43,11 @@ export default function PlayerProfile() {
         setPlayer(null);
       } else {
         setPlayer(data);
+        if (data.current_club_id) {
+          base44.entities.Club.get(data.current_club_id)
+            .then(setClubData)
+            .catch(() => setClubData(null));
+        }
       }
     } catch (err) {
       console.error(err);
@@ -97,59 +103,43 @@ export default function PlayerProfile() {
         <ChevronLeft className="w-4 h-4" /> Volver a jugadores
       </button>
 
-      {/* Header */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5 mb-4">
-        <div className="flex flex-col sm:flex-row items-start gap-4">
-          <ProfileAvatar
-            photoUrl={player.photo_url}
-            photoSourceUrl={player.photo_source_url}
-            firstName={player.first_name}
-            lastName={player.last_name}
-            size="xl"
-            shape="rounded-2xl"
-            className="flex-shrink-0"
-          />
-          <div className="flex-1 min-w-0 w-full">
-            <div className="flex items-start justify-between gap-3 flex-wrap">
-              <div className="min-w-0">
-                <h1 className="text-xl font-bold text-slate-900">{player.first_name} {player.last_name}</h1>
-                <p className="text-sm text-slate-400">
-                  {age ? `${age} años` : ''} {player.nationality ? `· ${player.nationality}` : ''} · {POSITION_LABELS[player.position] || player.position}
-                  {player.secondary_position && ` / ${POSITION_LABELS[player.secondary_position] || player.secondary_position}`}
-                </p>
-                <p className="text-sm text-slate-500 mt-1">
-                  {player.club || 'Sin club'} {player.jersey_number ? `· #${player.jersey_number}` : ''}
-                  {player.competition ? ` · ${player.competition}` : ''}
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-1.5">
-                <Badge className={AVAILABILITY_COLORS[player.availability_status] || 'bg-slate-100 text-slate-600 border-slate-200'}>
-                  {AVAILABILITY_LABELS[player.availability_status] || 'Disponible'}
-                </Badge>
-                <Badge className={PORTAL_STATUS_COLORS[player.portal_status] || 'bg-slate-100 text-slate-500 border-slate-200'}>
-                  {PORTAL_STATUS_LABELS[player.portal_status] || 'Sin invitar'}
-                </Badge>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs text-slate-400">
-              {player.preferred_foot && <span>Pierna: {player.preferred_foot === 'left' ? 'Izquierda' : player.preferred_foot === 'right' ? 'Derecha' : 'Ambidiestro'}</span>}
-              {player.height && <span>Altura: {player.height}cm</span>}
-              {player.weight && <span>Peso: {player.weight}kg</span>}
-              {player.category && <span>Categoría: {PLAYER_CATEGORIES[player.category] || player.category}</span>}
-              {player.contract_end && <span>Contrato hasta: {formatDate(player.contract_end)}</span>}
-              {player.market_value && <span>Valor: {player.market_value}</span>}
-              {player.representative_name && <span>Representante: {player.representative_name}</span>}
-            </div>
-            {canManage && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                <Button size="sm" variant="outline" onClick={() => navigate(`/agency/players/${player.id}?edit=1`)}><Pencil className="w-3.5 h-3.5 mr-1" /> Editar</Button>
-                <Button size="sm" variant="outline"><UserPlus className="w-3.5 h-3.5 mr-1" /> Invitar jugador</Button>
-                <Button size="sm" variant="outline" onClick={handleShare}><Share2 className="w-3.5 h-3.5 mr-1" /> Compartir perfil</Button>
-              </div>
-            )}
-          </div>
+      {/* Header con portada */}
+      <ProfileCoverHeader
+        photoUrl={player.photo_url}
+        photoSourceUrl={player.photo_source_url}
+        firstName={player.first_name}
+        lastName={player.last_name}
+        clubLogoUrl={clubData?.internal_logo_url || clubData?.official_logo_url || player.club_logo_url}
+        clubName={clubData?.club_name || player.club || 'Sin club'}
+        subtitle={`${age ? `${age} años` : ''} ${player.nationality ? `· ${player.nationality}` : ''} · ${POSITION_LABELS[player.position] || player.position}${player.secondary_position ? ` / ${POSITION_LABELS[player.secondary_position] || player.secondary_position}` : ''}${player.jersey_number ? ` · #${player.jersey_number}` : ''}${player.competition ? ` · ${player.competition}` : ''}`}
+        badges={
+          <>
+            <Badge className={AVAILABILITY_COLORS[player.availability_status] || 'bg-slate-100 text-slate-600 border-slate-200'}>
+              {AVAILABILITY_LABELS[player.availability_status] || 'Disponible'}
+            </Badge>
+            <Badge className={PORTAL_STATUS_COLORS[player.portal_status] || 'bg-slate-100 text-slate-500 border-slate-200'}>
+              {PORTAL_STATUS_LABELS[player.portal_status] || 'Sin invitar'}
+            </Badge>
+          </>
+        }
+        actions={canManage ? (
+          <>
+            <Button size="sm" variant="outline" onClick={() => navigate(`/agency/players/${player.id}?edit=1`)}><Pencil className="w-3.5 h-3.5 mr-1" /> Editar</Button>
+            <Button size="sm" variant="outline"><UserPlus className="w-3.5 h-3.5 mr-1" /> Invitar jugador</Button>
+            <Button size="sm" variant="outline" onClick={handleShare}><Share2 className="w-3.5 h-3.5 mr-1" /> Compartir perfil</Button>
+          </>
+        ) : undefined}
+      >
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-400">
+          {player.preferred_foot && <span>Pierna: {player.preferred_foot === 'left' ? 'Izquierda' : player.preferred_foot === 'right' ? 'Derecha' : 'Ambidiestro'}</span>}
+          {player.height && <span>Altura: {player.height}cm</span>}
+          {player.weight && <span>Peso: {player.weight}kg</span>}
+          {player.category && <span>Categoría: {PLAYER_CATEGORIES[player.category] || player.category}</span>}
+          {player.contract_end && <span>Contrato hasta: {formatDate(player.contract_end)}</span>}
+          {player.market_value && <span>Valor: {player.market_value}</span>}
+          {player.representative_name && <span>Representante: {player.representative_name}</span>}
         </div>
-      </div>
+      </ProfileCoverHeader>
 
       {/* Tabs */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">

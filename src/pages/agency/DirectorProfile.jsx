@@ -20,7 +20,7 @@ import DirectorVideosTab from '@/components/agency/director-tabs/DirectorVideosT
 import DirectorCalendarTab from '@/components/agency/director-tabs/DirectorCalendarTab';
 import DirectorDocumentsTab from '@/components/agency/director-tabs/DirectorDocumentsTab';
 import DirectorActivityTab from '@/components/agency/director-tabs/DirectorActivityTab';
-import ProfileAvatar from '@/components/shared/ProfileAvatar';
+import ProfileCoverHeader from '@/components/shared/ProfileCoverHeader';
 
 const TABS = [
   { id: 'summary', label: 'Resumen', icon: GraduationCap },
@@ -40,6 +40,7 @@ export default function DirectorProfile() {
   const { user } = useAuth();
   const orgId = getUserOrgId(user);
   const [director, setDirector] = useState(null);
+  const [clubData, setClubData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('summary');
   const [editing, setEditing] = useState(false);
@@ -52,6 +53,11 @@ export default function DirectorProfile() {
     try {
       const data = await base44.entities.TechnicalDirector.get(id);
       setDirector(data);
+      if (data.current_club_id) {
+        base44.entities.Club.get(data.current_club_id)
+          .then(setClubData)
+          .catch(() => setClubData(null));
+      }
     } catch (err) { console.error(err); }
     setLoading(false);
   };
@@ -78,49 +84,37 @@ export default function DirectorProfile() {
         <ChevronLeft className="w-4 h-4" /> Volver a directores
       </button>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-5 mb-4">
-        <div className="flex flex-col sm:flex-row items-start gap-4">
-          <ProfileAvatar
-            photoUrl={director.photo_url}
-            photoSourceUrl={director.photo_source_url}
-            firstName={director.first_name}
-            lastName={director.last_name}
-            size="lg"
-            shape="rounded-2xl"
-            className="flex-shrink-0"
-          />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-3 flex-wrap">
-              <div>
-                <h1 className="text-xl font-bold text-slate-900">{director.first_name} {director.last_name}</h1>
-                <p className="text-sm text-slate-400">
-                  {age ? `${age} años` : ''} {director.nationality ? `· ${director.nationality}` : ''} · {DIRECTOR_ROLE_LABELS[director.primary_role] || 'Director Técnico'}
-                </p>
-                <p className="text-sm text-slate-500 mt-1">{director.current_club || director.last_club || 'Sin club'} {director.competition ? `· ${director.competition}` : ''}</p>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <Badge className={DIRECTOR_STATUS_COLORS[director.professional_status] || 'bg-slate-100 text-slate-600 border-slate-200'}>
-                  {DIRECTOR_STATUS_LABELS[director.professional_status] || 'Disponible'}
-                </Badge>
-                <Badge className={PORTAL_STATUS_COLORS[director.portal_status] || 'bg-slate-100 text-slate-500 border-slate-200'}>
-                  {PORTAL_STATUS_LABELS[director.portal_status] || 'Sin invitar'}
-                </Badge>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 mt-3 text-xs text-slate-400">
-              {director.coaching_license && <span>Licencia: {director.coaching_license}</span>}
-              {director.preferred_tactical_system && <span>Sistema: {director.preferred_tactical_system}</span>}
-              {director.representative_name && <span>Representante: {director.representative_name}</span>}
-              {director.joined_date && <span>Ingreso: {formatDate(director.joined_date)}</span>}
-            </div>
-          </div>
-          {canManage && (
-            <Button variant="outline" onClick={() => setEditing(true)} className="flex-shrink-0">
-              <Pencil className="w-4 h-4 mr-1" /> Editar
-            </Button>
-          )}
+      <ProfileCoverHeader
+        photoUrl={director.photo_url}
+        photoSourceUrl={director.photo_source_url}
+        firstName={director.first_name}
+        lastName={director.last_name}
+        clubLogoUrl={clubData?.internal_logo_url || clubData?.official_logo_url}
+        clubName={clubData?.club_name || director.current_club || director.last_club || 'Sin club'}
+        subtitle={`${age ? `${age} años` : ''} ${director.nationality ? `· ${director.nationality}` : ''} · ${DIRECTOR_ROLE_LABELS[director.primary_role] || 'Director Técnico'}${director.competition ? ` · ${director.competition}` : ''}`}
+        badges={
+          <>
+            <Badge className={DIRECTOR_STATUS_COLORS[director.professional_status] || 'bg-slate-100 text-slate-600 border-slate-200'}>
+              {DIRECTOR_STATUS_LABELS[director.professional_status] || 'Disponible'}
+            </Badge>
+            <Badge className={PORTAL_STATUS_COLORS[director.portal_status] || 'bg-slate-100 text-slate-500 border-slate-200'}>
+              {PORTAL_STATUS_LABELS[director.portal_status] || 'Sin invitar'}
+            </Badge>
+          </>
+        }
+        actions={canManage ? (
+          <Button variant="outline" onClick={() => setEditing(true)}>
+            <Pencil className="w-4 h-4 mr-1" /> Editar
+          </Button>
+        ) : undefined}
+      >
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-400">
+          {director.coaching_license && <span>Licencia: {director.coaching_license}</span>}
+          {director.preferred_tactical_system && <span>Sistema: {director.preferred_tactical_system}</span>}
+          {director.representative_name && <span>Representante: {director.representative_name}</span>}
+          {director.joined_date && <span>Ingreso: {formatDate(director.joined_date)}</span>}
         </div>
-      </div>
+      </ProfileCoverHeader>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="flex overflow-x-auto border-b border-slate-200 scrollbar-thin">
