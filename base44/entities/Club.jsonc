@@ -9,11 +9,28 @@
     "club_name": {
       "type": "string"
     },
+    "short_name": {
+      "type": "string"
+    },
     "aliases": {
       "type": "string"
     },
     "country": {
       "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "team_type": {
+      "type": "string",
+      "enum": [
+        "primera",
+        "reserva",
+        "juvenil",
+        "femenino",
+        "otro"
+      ],
+      "default": "primera"
     },
     "official_logo_url": {
       "type": "string",
@@ -37,6 +54,9 @@
       "type": "string"
     },
     "club_profile_url": {
+      "type": "string"
+    },
+    "official_site": {
       "type": "string"
     },
     "notes": {

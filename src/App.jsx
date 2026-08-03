@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -47,8 +47,14 @@ import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import ApiFootballClubMapping from '@/pages/agency/ApiFootballClubMapping';
 import OrganizationGate from '@/components/OrganizationGate';
 // Add page imports here
+
+function AdminClubMappingRedirect() {
+  const location = useLocation();
+  return <Navigate to={`/agency/settings/integrations/api-football/clubs${location.search}`} replace />;
+}
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -100,6 +106,7 @@ const AuthenticatedApp = () => {
           <Route path="/agency/documents" element={<AgencyDocuments />} />
           <Route path="/agency/team" element={<TeamManagement />} />
           <Route path="/agency/settings" element={<AgencySettings />} />
+          <Route path="/agency/settings/integrations/api-football/clubs" element={<ApiFootballClubMapping />} />
         </Route>
       </Route>
 
@@ -128,6 +135,7 @@ const AuthenticatedApp = () => {
         </Route>
       </Route>
 
+      <Route path="/admin/club-mapping" element={<AdminClubMappingRedirect />} />
       <Route path="/onboarding" element={<Navigate to="/company-access" replace />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>

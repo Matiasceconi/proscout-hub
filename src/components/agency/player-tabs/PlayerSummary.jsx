@@ -12,7 +12,8 @@ export default function PlayerSummary({ player, onTabChange, permissions }) {
     lastAssessment: null,
     latestInjury: null,
     pendingVideos: 0,
-    pendingAnalysis: 0
+    pendingAnalysis: 0,
+    clubName: null
   });
   const [loading, setLoading] = useState(true);
 
@@ -22,13 +23,17 @@ export default function PlayerSummary({ player, onTabChange, permissions }) {
 
   const loadData = async () => {
     try {
-      const [matches, stats, assessments, injuries, videos, analyses] = await Promise.all([
+      const clubPromise = player.current_club_id
+        ? base44.entities.Club.get(player.current_club_id).catch(() => null)
+        : Promise.resolve(null);
+      const [matches, stats, assessments, injuries, videos, analyses, clubData] = await Promise.all([
         base44.entities.Match.filter({ organization_id: player.organization_id, player_id: player.id }, 'match_date', 50),
         base44.entities.PlayerSeasonStats.filter({ organization_id: player.organization_id, player_id: player.id }, '-season', 10),
         base44.entities.PhysicalAssessment.filter({ organization_id: player.organization_id, player_id: player.id }, '-assessment_date', 5),
         base44.entities.InjuryRecord.filter({ organization_id: player.organization_id, player_id: player.id, shared_with_player: true }, '-injury_date', 5),
         base44.entities.VideoContent.filter({ organization_id: player.organization_id, player_id: player.id, status: 'published' }, '-published_date', 10),
-        base44.entities.OpponentAnalysis.filter({ organization_id: player.organization_id, player_id: player.id, status: 'published' }, '-published_date', 10)
+        base44.entities.OpponentAnalysis.filter({ organization_id: player.organization_id, player_id: player.id, status: 'published' }, '-published_date', 10),
+        clubPromise
       ]);
 
       const now = new Date();
@@ -42,7 +47,8 @@ export default function PlayerSummary({ player, onTabChange, permissions }) {
         lastAssessment: assessments[0] || null,
         latestInjury: injuries[0] || null,
         pendingVideos: videos.length,
-        pendingAnalysis: analyses.length
+        pendingAnalysis: analyses.length,
+        clubName: clubData?.club_name || null
       });
     } catch (err) {
       console.error(err);
@@ -64,7 +70,7 @@ export default function PlayerSummary({ player, onTabChange, permissions }) {
           <InfoRow label="Pierna hábil" value={player.preferred_foot === 'left' ? 'Izquierda' : player.preferred_foot === 'right' ? 'Derecha' : 'Ambidiestro'} />
         </InfoCard>
         <InfoCard title="Club y representación">
-          <InfoRow label="Club actual" value={player.club || '—'} />
+          <InfoRow label="Club actual" value={data.clubName || player.club || 'Sin club'} />
           <InfoRow label="Número de camiseta" value={player.jersey_number ? `#${player.jersey_number}` : '—'} />
           <InfoRow label="Categoría" value={player.category || '—'} />
           <InfoRow label="Representante" value={player.representative_name || '—'} />

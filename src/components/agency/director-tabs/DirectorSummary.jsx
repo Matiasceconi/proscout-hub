@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 import { DIRECTOR_ROLE_LABELS, DIRECTOR_STATUS_LABELS, DIRECTOR_STATUS_COLORS, PORTAL_STATUS_LABELS, PORTAL_STATUS_COLORS, formatDate, calculateAge } from '@/lib/roleUtils';
 import { Badge } from '@/components/shared/UIBits';
 
 export default function DirectorSummary({ director }) {
   const age = calculateAge(director.birth_date);
+  const [clubName, setClubName] = useState(null);
+
+  useEffect(() => {
+    if (director.current_club_id) {
+      base44.entities.Club.get(director.current_club_id)
+        .then(c => setClubName(c?.club_name || null))
+        .catch(() => setClubName(null));
+    }
+  }, [director.current_club_id]);
 
   return (
     <div className="space-y-5">
@@ -18,7 +28,7 @@ export default function DirectorSummary({ director }) {
         <InfoCard title="Información profesional">
           <InfoRow label="Rol principal" value={DIRECTOR_ROLE_LABELS[director.primary_role] || '—'} />
           <InfoRow label="Licencia" value={director.coaching_license || '—'} />
-          <InfoRow label="Club actual" value={director.current_club || '—'} />
+          <InfoRow label="Club actual" value={clubName || director.current_club || '—'} />
           <InfoRow label="Último club" value={director.last_club || '—'} />
           <InfoRow label="Competencia" value={director.competition || '—'} />
           <InfoRow label="Ingreso a la agencia" value={director.joined_date ? formatDate(director.joined_date) : '—'} />
