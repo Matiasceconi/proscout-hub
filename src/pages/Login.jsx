@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
+import { safeReturnTo } from '@/lib/authReturnTo';
 
 export default function Login() {
   const { isAuthenticated, authChecked } = useAuth();
@@ -16,8 +17,10 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const returnTo = safeReturnTo();
+
   if (authChecked && isAuthenticated) {
-    return <Navigate to="/company-access" replace />;
+    return <Navigate to={returnTo} replace />;
   }
 
   const handleSubmit = async (e) => {
@@ -26,7 +29,7 @@ export default function Login() {
     setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
-      window.location.href = "/company-access";
+      window.location.href = returnTo;
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -35,7 +38,7 @@ export default function Login() {
   };
 
   const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", "/");
+    base44.auth.loginWithProvider("google", returnTo);
   };
 
   return (
@@ -46,7 +49,7 @@ export default function Login() {
       footer={
         <>
           Don't have an account?{" "}
-          <Link to="/register" className="text-primary font-medium hover:underline">
+          <Link to={`/register?returnTo=${encodeURIComponent(returnTo)}`} className="text-primary font-medium hover:underline">
             Create one
           </Link>
         </>

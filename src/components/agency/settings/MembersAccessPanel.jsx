@@ -36,15 +36,10 @@ export default function MembersAccessPanel({ organizationId, canManage }) {
 
   const handleInvite = async ({ email, appRole, permissions }) => {
     try {
-      await manage({ action: 'invite', organizationId, email, appRole, permissions });
-      try {
-        await base44.users.inviteUser(email, 'user');
-      } catch (error) {
-        // A registered app user does not need a second invitation.
-      }
-      toast({ title: 'Invitación enviada', description: `${email} ya puede activar su acceso.` });
-      setInviteOpen(false);
+      const result = await manage({ action: 'invite', organizationId, email, appRole, permissions });
+      toast({ title: 'Enlace de invitación creado', description: 'Copialo y compartilo con la persona invitada.' });
       loadMembers();
+      return result;
     } catch (error) {
       toast({ title: 'No se pudo enviar la invitación', description: error.response?.data?.error || error.message, variant: 'destructive' });
     }
@@ -94,8 +89,8 @@ export default function MembersAccessPanel({ organizationId, canManage }) {
               </div>
               <div className="hidden sm:flex items-center gap-1.5 flex-wrap justify-end">
                 <Badge className="bg-slate-100 text-slate-600 border-slate-200">{getRoleLabel(member.app_role)}</Badge>
-                <Badge className={member.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : member.status === 'disabled' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-amber-100 text-amber-700 border-amber-200'}>
-                  {member.status === 'active' ? 'Activo' : member.status === 'disabled' ? 'Suspendido' : 'Pendiente'}
+                <Badge className={member.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : ['disabled', 'revoked'].includes(member.status) ? 'bg-red-100 text-red-700 border-red-200' : 'bg-amber-100 text-amber-700 border-amber-200'}>
+                  {member.status === 'active' ? 'Activo' : member.status === 'disabled' ? 'Suspendido' : member.status === 'revoked' ? 'Revocado' : 'Pendiente'}
                 </Badge>
               </div>
               {canManage && !member.is_owner && (

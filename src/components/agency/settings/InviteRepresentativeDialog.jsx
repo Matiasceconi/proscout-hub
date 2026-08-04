@@ -3,28 +3,36 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail } from 'lucide-react';
+import { Copy, Mail } from 'lucide-react';
 import { ROLES, getDefaultPermissions } from './accessPermissions';
 
 export default function InviteRepresentativeDialog({ open, onClose, onInvite }) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('representative');
   const [saving, setSaving] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState('');
+
+  const handleClose = () => {
+    setInviteUrl('');
+    setSaving(false);
+    onClose();
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSaving(true);
-    await onInvite({ email, appRole: role, permissions: getDefaultPermissions(role) });
+    const result = await onInvite({ email, appRole: role, permissions: getDefaultPermissions(role) });
+    if (result?.invitation?.token) setInviteUrl(`${window.location.origin}/invite?token=${result.invitation.token}`);
     setSaving(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Invitar representante</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {inviteUrl ? <div className="space-y-3"><p className="text-sm text-slate-600">Compartí este enlace con la persona invitada. Vence en 7 días.</p><Input value={inviteUrl} readOnly /><Button type="button" className="w-full" onClick={() => navigator.clipboard.writeText(inviteUrl)}><Copy className="w-4 h-4 mr-1" /> Copiar enlace</Button><DialogFooter><Button type="button" onClick={handleClose}>Listo</Button></DialogFooter></div> : <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label>Email</Label>
             <Input type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="colega@agencia.com" required className="mt-1" />
@@ -37,10 +45,10 @@ export default function InviteRepresentativeDialog({ open, onClose, onInvite }) 
             </select>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={handleClose}>Cancelar</Button>
             <Button type="submit" disabled={saving}><Mail className="w-4 h-4 mr-1" />{saving ? 'Enviando...' : 'Enviar invitación'}</Button>
           </DialogFooter>
-        </form>
+        </form>}
       </DialogContent>
     </Dialog>
   );

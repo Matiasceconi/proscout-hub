@@ -22,6 +22,7 @@ export default async function(req: Request): Promise<Response> {
     }
 
     if (action === 'validateInvitation') {
+      if (!token || typeof token !== 'string') return Response.json({ valid: false, error: 'El enlace de invitación es inválido.' }, { status: 400 });
       const invitations = await base44.asServiceRole.entities.OrganizationInvitation.filter({ token }, '-created_date', 1);
       const invitation = invitations[0];
       if (!isInvitationUsable(invitation)) {

@@ -57,6 +57,7 @@ export default async function(req: Request): Promise<Response> {
       const membership = existing[0]
         ? await base44.asServiceRole.entities.OrganizationMember.update(existing[0].id, memberData)
         : await base44.asServiceRole.entities.OrganizationMember.create({ organization_id: organizationId, ...memberData });
+      await Promise.all(existing.filter(member => member.id !== membership.id).map(member => base44.asServiceRole.entities.OrganizationMember.delete(member.id)));
 
       const invitations = await base44.asServiceRole.entities.OrganizationInvitation.filter({
         organization_id: organizationId,

@@ -27,6 +27,10 @@ export default function Home() {
       const ctx = await getMyOrganizationContext();
       if (ctx.activeOrg) {
         setRedirect('/agency');
+      } else if (ctx.activeItems?.length === 1) {
+        const { setActiveOrganization } = await import('@/lib/organizationUtils');
+        await setActiveOrganization(ctx.activeItems[0].organization.id);
+        setRedirect('/agency');
       } else {
         setRedirect('/company-access');
       }

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { getDefaultPermissions } from '@/components/agency/settings/accessPermissions';
+import InviteRepresentativeDialog from '@/components/agency/settings/InviteRepresentativeDialog';
 import { UserCog, Plus, Mail, Shield } from 'lucide-react';
 
 const ROLES = [
@@ -32,27 +33,20 @@ export default function TeamManagement() {
 
   const loadMembers = async () => {
     try {
-      const data = await base44.entities.OrganizationMember.filter({ organization_id: orgId }, '-created_date', 100);
-      setMembers(data);
+      const response = await base44.functions.invoke('manageOrganizationMembers', { action: 'list', organizationId: orgId });
+      setMembers(response.data.members || []);
     } catch (err) { console.error(err); }
     setLoading(false);
   };
 
-  const handleInvite = async (email, role) => {
+  const handleInvite = async ({ email, appRole, permissions }) => {
     try {
-      await base44.functions.invoke('manageOrganizationMembers', {
-        action: 'invite',
-        organizationId: orgId,
-        email,
-        appRole: role,
-        permissions: getDefaultPermissions(role)
+      const response = await base44.functions.invoke('manageOrganizationMembers', {
+        action: 'invite', organizationId: orgId, email, appRole, permissions
       });
-      try {
-        await base44.users.inviteUser(email, 'user');
-      } catch (e) { /* The user may already be registered. */ }
-      toast({ title: 'Invitación enviada', description: `${email} podrá activar su acceso al ingresar.` });
-      setShowInvite(false);
+      toast({ title: 'Enlace de invitación creado', description: 'Copialo y compartilo con la persona invitada.' });
       loadMembers();
+      return response.data;
     } catch (err) {
       toast({ title: 'Error', description: err.response?.data?.error || err.message, variant: 'destructive' });
     }
@@ -63,7 +57,7 @@ export default function TeamManagement() {
   return (
     <div className="p-4 lg:p-6 max-w-5xl mx-auto">
       <PageHeader
-        title="Equipo de trabajo"
+        title="Usuarios"
         subtitle={`${members.length} miembros`}
         actions={isOrgAdmin(user) && <Button onClick={() => setShowInvite(true)} className="bg-slate-900"><Plus className="w-4 h-4 mr-1" /> Invitar</Button>}
       />
@@ -85,8 +79,8 @@ export default function TeamManagement() {
                 <Badge className="bg-slate-100 text-slate-600 border-slate-200">
                   {ROLES.find(r => r.value === m.app_role)?.label || m.app_role}
                 </Badge>
-                <Badge className={m.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-amber-100 text-amber-700 border-amber-200'}>
-                  {m.status === 'active' ? 'Activo' : 'Pendiente'}
+                <Badge className={m.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : ['disabled', 'revoked'].includes(m.status) ? 'bg-red-100 text-red-700 border-red-200' : 'bg-amber-100 text-amber-700 border-amber-200'}>
+                  {m.status === 'active' ? 'Activo' : m.status === 'disabled' ? 'Suspendido' : m.status === 'revoked' ? 'Revocado' : 'Pendiente'}
                 </Badge>
               </div>
             ))}
@@ -94,7 +88,7 @@ export default function TeamManagement() {
         </div>
       )}
 
-      {showInvite && <InviteDialog onClose={() => setShowInvite(false)} onInvite={handleInvite} />}
+      {showInvite && <InviteRepresentativeDialog open={showInvite} onClose={() => setShowInvite(false)} onInvite={handleInvite} />}
     </div>
   );
 }
