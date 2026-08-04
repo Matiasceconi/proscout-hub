@@ -1,7 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-
-const MANAGER_ROLES = ['organization_owner', 'organization_admin'];
-const VALID_ROLES = ['organization_admin', 'representative', 'video_analyst', 'performance_staff', 'medical_staff'];
+import { MANAGER_ROLES, VALID_MEMBER_ROLES, normalizeEmail } from '../../shared/organizationMembership.ts';
 
 async function getCallerMembership(base44, user, organizationId) {
   const memberships = await base44.asServiceRole.entities.OrganizationMember.filter({
@@ -25,21 +23,7 @@ export default async function(req: Request): Promise<Response> {
     }
 
     if (action === 'activate') {
-      const memberships = await base44.asServiceRole.entities.OrganizationMember.filter({
-        organization_id: organizationId,
-        user_email: user.email,
-        status: { $in: ['pending', 'active'] }
-      }, '-created_date', 10);
-      const membership = memberships[0];
-      if (!membership) return Response.json({ error: 'No existe una invitación activa para esta organización' }, { status: 404 });
-
-      const updated = await base44.asServiceRole.entities.OrganizationMember.update(membership.id, {
-        user_id: user.id,
-        full_name: membership.full_name || user.full_name || user.email,
-        status: 'active',
-        membership_key: `${organizationId}:${user.id}`
-      });
-      return Response.json({ membership: updated });
+      return Response.json({ error: 'El acceso debe activarse desde un enlace de invitación válido.' }, { status: 403 });
     }
 
     const callerMembership = await getCallerMembership(base44, user, organizationId);
@@ -47,31 +31,53 @@ export default async function(req: Request): Promise<Response> {
 
     if (action === 'invite') {
       const { email, appRole, permissions = [], hasFullSquadAccess = false } = payload;
-      if (!email || !VALID_ROLES.includes(appRole)) {
+      const normalizedEmail = normalizeEmail(email);
+      if (!normalizedEmail || !VALID_MEMBER_ROLES.includes(appRole)) {
         return Response.json({ error: 'Email o rol inválido' }, { status: 400 });
       }
 
       const existing = await base44.asServiceRole.entities.OrganizationMember.filter({
         organization_id: organizationId,
-        user_email: email
-      }, '-created_date', 10);
+        user_email: normalizedEmail
+      }, '-updated_date', 10);
+      if (existing.some(member => member.status === 'active')) {
+        return Response.json({ error: 'Esta persona ya tiene una membresía activa en la empresa.' }, { status: 409 });
+      }
 
       const memberData = {
-        user_email: email.toLowerCase().trim(),
-        full_name: email.split('@')[0],
+        user_email: normalizedEmail,
+        full_name: normalizedEmail.split('@')[0],
         app_role: appRole,
         permissions,
         has_full_squad_access: hasFullSquadAccess,
         status: 'pending',
         is_owner: false,
-        membership_key: `${organizationId}:${email.toLowerCase().trim()}`
+        membership_key: `${organizationId}:${normalizedEmail}`
       };
-
       const membership = existing[0]
         ? await base44.asServiceRole.entities.OrganizationMember.update(existing[0].id, memberData)
         : await base44.asServiceRole.entities.OrganizationMember.create({ organization_id: organizationId, ...memberData });
 
-      return Response.json({ membership });
+      const invitations = await base44.asServiceRole.entities.OrganizationInvitation.filter({
+        organization_id: organizationId,
+        email: normalizedEmail,
+        status: 'pending'
+      }, '-created_date', 50);
+      await Promise.all(invitations.map(invitation => base44.asServiceRole.entities.OrganizationInvitation.update(invitation.id, { status: 'revoked' })));
+      const invitation = await base44.asServiceRole.entities.OrganizationInvitation.create({
+        organization_id: organizationId,
+        membership_id: membership.id,
+        email: normalizedEmail,
+        token: crypto.randomUUID(),
+        status: 'pending',
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      });
+      return Response.json({ membership, invitation });
+    }
+
+    if (action === 'list') {
+      const members = await base44.asServiceRole.entities.OrganizationMember.filter({ organization_id: organizationId }, '-created_date', 100);
+      return Response.json({ members });
     }
 
     if (action === 'update') {
@@ -83,7 +89,7 @@ export default async function(req: Request): Promise<Response> {
       if (membership.is_owner) {
         return Response.json({ error: 'No se puede modificar al propietario de la agencia' }, { status: 403 });
       }
-      if (appRole && !VALID_ROLES.includes(appRole)) {
+      if (appRole && !VALID_MEMBER_ROLES.includes(appRole)) {
         return Response.json({ error: 'Rol inválido' }, { status: 400 });
       }
 
@@ -91,7 +97,7 @@ export default async function(req: Request): Promise<Response> {
       if (appRole) changes.app_role = appRole;
       if (Array.isArray(permissions)) changes.permissions = permissions;
       if (typeof hasFullSquadAccess === 'boolean') changes.has_full_squad_access = hasFullSquadAccess;
-      if (['pending', 'active', 'disabled'].includes(status)) changes.status = status;
+      if (['pending', 'active', 'disabled', 'revoked'].includes(status)) changes.status = status;
       const updated = await base44.asServiceRole.entities.OrganizationMember.update(membershipId, changes);
       return Response.json({ membership: updated });
     }

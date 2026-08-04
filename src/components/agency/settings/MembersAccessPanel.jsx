@@ -17,8 +17,8 @@ export default function MembersAccessPanel({ organizationId, canManage }) {
 
   const loadMembers = async () => {
     try {
-      const data = await base44.entities.OrganizationMember.filter({ organization_id: organizationId }, '-created_date', 100);
-      setMembers(data);
+      const response = await base44.functions.invoke('manageOrganizationMembers', { action: 'list', organizationId });
+      setMembers(response.data.members || []);
     } catch (error) {
       console.error(error);
     }
