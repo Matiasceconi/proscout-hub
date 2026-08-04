@@ -49,6 +49,7 @@ import ResetPassword from '@/pages/ResetPassword';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ApiFootballClubMapping from '@/pages/agency/ApiFootballClubMapping';
 import OrganizationGate from '@/components/OrganizationGate';
+import ModulePermissionGuard from '@/components/ModulePermissionGuard';
 // Add page imports here
 
 function AdminClubMappingRedirect() {
@@ -91,22 +92,22 @@ const AuthenticatedApp = () => {
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<RoleGuard allowedRoles={['organization_owner', 'organization_admin', 'representative', 'video_analyst', 'performance_staff', 'medical_staff']}><OrganizationGate><AgencyLayout /></OrganizationGate></RoleGuard>}>
           <Route path="/agency" element={<AgencyDashboard />} />
-          <Route path="/agency/players" element={<Players />} />
-          <Route path="/agency/players/:id" element={<PlayerProfile />} />
-          <Route path="/agency/directors" element={<Directors />} />
-          <Route path="/agency/directors/:id" element={<DirectorProfile />} />
-          <Route path="/agency/calendar" element={<AgencyCalendar />} />
-          <Route path="/agency/matches" element={<AgencyMatches />} />
-          <Route path="/agency/stats" element={<AgencyStats />} />
-          <Route path="/agency/physical" element={<AgencyPhysical />} />
-          <Route path="/agency/medical" element={<AgencyMedical />} />
-          <Route path="/agency/analysis" element={<AgencyAnalysis />} />
-          <Route path="/agency/videos" element={<AgencyVideos />} />
-          <Route path="/agency/benefits" element={<AgencyBenefits />} />
-          <Route path="/agency/documents" element={<AgencyDocuments />} />
-          <Route path="/agency/team" element={<TeamManagement />} />
-          <Route path="/agency/settings" element={<AgencySettings />} />
-          <Route path="/agency/settings/integrations/api-football/clubs" element={<ApiFootballClubMapping />} />
+          <Route path="/agency/players" element={<ModulePermissionGuard permission="players"><Players /></ModulePermissionGuard>} />
+          <Route path="/agency/players/:id" element={<ModulePermissionGuard permission="players"><PlayerProfile /></ModulePermissionGuard>} />
+          <Route path="/agency/directors" element={<ModulePermissionGuard permission="players"><Directors /></ModulePermissionGuard>} />
+          <Route path="/agency/directors/:id" element={<ModulePermissionGuard permission="players"><DirectorProfile /></ModulePermissionGuard>} />
+          <Route path="/agency/calendar" element={<ModulePermissionGuard permission="calendar"><AgencyCalendar /></ModulePermissionGuard>} />
+          <Route path="/agency/matches" element={<ModulePermissionGuard permission="matches"><AgencyMatches /></ModulePermissionGuard>} />
+          <Route path="/agency/stats" element={<ModulePermissionGuard permission="statistics"><AgencyStats /></ModulePermissionGuard>} />
+          <Route path="/agency/physical" element={<ModulePermissionGuard permission="physical"><AgencyPhysical /></ModulePermissionGuard>} />
+          <Route path="/agency/medical" element={<ModulePermissionGuard permission="medical"><AgencyMedical /></ModulePermissionGuard>} />
+          <Route path="/agency/analysis" element={<ModulePermissionGuard permission="analysis"><AgencyAnalysis /></ModulePermissionGuard>} />
+          <Route path="/agency/videos" element={<ModulePermissionGuard permission="videos"><AgencyVideos /></ModulePermissionGuard>} />
+          <Route path="/agency/benefits" element={<ModulePermissionGuard permission="benefits"><AgencyBenefits /></ModulePermissionGuard>} />
+          <Route path="/agency/documents" element={<ModulePermissionGuard permission="documents"><AgencyDocuments /></ModulePermissionGuard>} />
+          <Route path="/agency/team" element={<RoleGuard allowedRoles={['organization_owner', 'organization_admin']}><TeamManagement /></RoleGuard>} />
+          <Route path="/agency/settings" element={<RoleGuard allowedRoles={['organization_owner', 'organization_admin']}><AgencySettings /></RoleGuard>} />
+          <Route path="/agency/settings/integrations/api-football/clubs" element={<RoleGuard allowedRoles={['organization_owner', 'organization_admin']}><ApiFootballClubMapping /></RoleGuard>} />
         </Route>
       </Route>
 

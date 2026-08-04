@@ -8,7 +8,7 @@ export async function getMyOrganizationContext() {
         { user_id: me.id },
         { user_email: me.email }
       ],
-      status: 'active'
+      status: { $in: ['pending', 'active', 'disabled'] }
     });
 
     if (members.length === 0) {
@@ -45,10 +45,11 @@ export async function getMyOrganizationContext() {
   }
 }
 
-export async function setActiveOrganization(orgId) {
+export async function setActiveOrganization(orgId, appRole) {
   await base44.auth.updateMe({
     active_organization_id: orgId,
-    organization_id: orgId
+    organization_id: orgId,
+    ...(appRole ? { app_role: appRole, is_player: false } : {})
   });
   localStorage.setItem('active_organization_id', orgId);
 }

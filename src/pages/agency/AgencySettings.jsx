@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { getUserOrgId } from '@/lib/roleUtils';
+import { getUserOrgId, isOrgAdmin } from '@/lib/roleUtils';
+import MembersAccessPanel from '@/components/agency/settings/MembersAccessPanel';
 import { PageHeader } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -126,6 +127,9 @@ export default function AgencySettings() {
           </Button>
         </div>
       </form>
+      <div className="mt-5">
+        <MembersAccessPanel organizationId={orgId} canManage={isOrgAdmin(user)} />
+      </div>
     </div>
   );
 }

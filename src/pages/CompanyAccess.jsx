@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
+import { base44 } from '@/api/base44Client';
 import { getMyOrganizationContext, setActiveOrganization } from '@/lib/organizationUtils';
 import { Button } from '@/components/ui/button';
 import { Building2, Plus, LogIn, Loader2, ShieldCheck } from 'lucide-react';
@@ -34,7 +35,16 @@ export default function CompanyAccess() {
   const handleEnter = async (orgId) => {
     setEntering(orgId);
     try {
-      await setActiveOrganization(orgId);
+      let membership = memberships.find(item => item.organization_id === orgId);
+      if (membership?.status === 'disabled') {
+        setEntering(null);
+        return;
+      }
+      if (membership?.status === 'pending') {
+        const response = await base44.functions.invoke('manageOrganizationMembers', { action: 'activate', organizationId: orgId });
+        membership = response.data.membership;
+      }
+      await setActiveOrganization(orgId, membership?.app_role);
       window.location.href = '/agency';
     } catch (err) {
       console.error(err);
@@ -84,16 +94,16 @@ export default function CompanyAccess() {
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-slate-900 truncate">{org.name}</p>
                     <p className="text-sm text-slate-400">
-                      {ROLE_LABELS[membership?.app_role] || 'Miembro'} · {membership?.status === 'active' ? 'Activo' : 'Pendiente'}
+                      {ROLE_LABELS[membership?.app_role] || 'Miembro'} · {membership?.status === 'active' ? 'Activo' : membership?.status === 'disabled' ? 'Acceso suspendido' : 'Invitación pendiente'}
                     </p>
                   </div>
                   <Button
                     onClick={() => handleEnter(org.id)}
-                    disabled={entering === org.id}
+                    disabled={entering === org.id || membership?.status === 'disabled'}
                     className="flex-shrink-0"
                   >
                     {entering === org.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogIn className="w-4 h-4 mr-2" />}
-                    Ingresar
+                    {membership?.status === 'pending' ? 'Activar acceso' : 'Ingresar'}
                   </Button>
                 </div>
               );

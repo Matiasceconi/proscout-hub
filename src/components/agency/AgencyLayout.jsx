@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { getUserOrgId, getUserRole, isOrgAdmin } from '@/lib/roleUtils';
+import { getDefaultPermissions } from '@/components/agency/settings/accessPermissions';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -22,21 +23,21 @@ const MENU_GROUPS = [
     label: 'Representados',
     icon: ClipboardList,
     items: [
-      { to: '/agency/players', icon: Users, label: 'Jugadores' },
-      { to: '/agency/directors', icon: GraduationCap, label: 'Directores Técnicos' }
+      { to: '/agency/players', icon: Users, label: 'Jugadores', permission: 'players' },
+      { to: '/agency/directors', icon: GraduationCap, label: 'Directores Técnicos', permission: 'players' }
     ]
   },
-  { type: 'item', to: '/agency/calendar', icon: Calendar, label: 'Calendario' },
-  { type: 'item', to: '/agency/matches', icon: Trophy, label: 'Partidos' },
-  { type: 'item', to: '/agency/stats', icon: BarChart3, label: 'Estadísticas' },
-  { type: 'item', to: '/agency/physical', icon: Activity, label: 'Rendimiento físico' },
-  { type: 'item', to: '/agency/medical', icon: HeartPulse, label: 'Área médica' },
-  { type: 'item', to: '/agency/analysis', icon: Search, label: 'Análisis de rivales' },
-  { type: 'item', to: '/agency/videos', icon: Video, label: 'Videos' },
-  { type: 'item', to: '/agency/benefits', icon: Gift, label: 'Beneficios' },
-  { type: 'item', to: '/agency/documents', icon: FileText, label: 'Documentación' },
-  { type: 'item', to: '/agency/team', icon: UserCog, label: 'Equipo de trabajo' },
-  { type: 'item', to: '/agency/settings', icon: Settings, label: 'Configuración' }
+  { type: 'item', to: '/agency/calendar', icon: Calendar, label: 'Calendario', permission: 'calendar' },
+  { type: 'item', to: '/agency/matches', icon: Trophy, label: 'Partidos', permission: 'matches' },
+  { type: 'item', to: '/agency/stats', icon: BarChart3, label: 'Estadísticas', permission: 'statistics' },
+  { type: 'item', to: '/agency/physical', icon: Activity, label: 'Rendimiento físico', permission: 'physical' },
+  { type: 'item', to: '/agency/medical', icon: HeartPulse, label: 'Área médica', permission: 'medical' },
+  { type: 'item', to: '/agency/analysis', icon: Search, label: 'Análisis de rivales', permission: 'analysis' },
+  { type: 'item', to: '/agency/videos', icon: Video, label: 'Videos', permission: 'videos' },
+  { type: 'item', to: '/agency/benefits', icon: Gift, label: 'Beneficios', permission: 'benefits' },
+  { type: 'item', to: '/agency/documents', icon: FileText, label: 'Documentación', permission: 'documents' },
+  { type: 'item', to: '/agency/team', icon: UserCog, label: 'Equipo de trabajo', adminOnly: true },
+  { type: 'item', to: '/agency/settings', icon: Settings, label: 'Configuración', adminOnly: true }
 ];
 
 export default function AgencyLayout() {
@@ -46,6 +47,7 @@ export default function AgencyLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [org, setOrg] = useState(null);
   const [orgCount, setOrgCount] = useState(1);
+  const [memberPermissions, setMemberPermissions] = useState([]);
 
   const orgId = getUserOrgId(user);
   const role = getUserRole(user);
@@ -65,6 +67,20 @@ export default function AgencyLayout() {
   }, [user?.id]);
 
   useEffect(() => {
+    if (!user?.id || !orgId) return;
+    if (['organization_owner', 'organization_admin'].includes(role)) {
+      setMemberPermissions(getDefaultPermissions('organization_admin'));
+      return;
+    }
+    base44.entities.OrganizationMember.filter({ organization_id: orgId, user_id: user.id, status: 'active' }, '-updated_date', 1)
+      .then(members => {
+        const member = members[0];
+        setMemberPermissions(member?.permissions?.length ? member.permissions : getDefaultPermissions(member?.app_role || role));
+      })
+      .catch(() => setMemberPermissions([]));
+  }, [orgId, role, user?.id]);
+
+  useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
 
@@ -80,6 +96,10 @@ export default function AgencyLayout() {
     .toUpperCase();
 
   const primaryColor = org?.primary_color || '#0F172A';
+  const canAccess = (entry) => {
+    if (entry.adminOnly) return isOrgAdmin(user);
+    return !entry.permission || memberPermissions.includes(entry.permission);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -122,10 +142,12 @@ export default function AgencyLayout() {
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
           {MENU_GROUPS.map((entry, idx) => {
             if (entry.type === 'group') {
+              const visibleItems = entry.items.filter(canAccess);
+              if (visibleItems.length === 0) return null;
               return (
                 <div key={idx} className="pt-2">
                   <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-white/30">{entry.label}</p>
-                  {entry.items.map((item) => (
+                  {visibleItems.map((item) => (
                     <NavLink
                       key={item.to}
                       to={item.to}
@@ -145,6 +167,7 @@ export default function AgencyLayout() {
                 </div>
               );
             }
+            if (!canAccess(entry)) return null;
             return (
               <NavLink
                 key={entry.to}

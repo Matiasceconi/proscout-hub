@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
+import { getDefaultPermissions } from '@/components/agency/settings/accessPermissions';
 import { UserCog, Plus, Mail, Shield } from 'lucide-react';
 
 const ROLES = [
@@ -39,21 +40,21 @@ export default function TeamManagement() {
 
   const handleInvite = async (email, role) => {
     try {
-      await base44.entities.OrganizationMember.create({
-        organization_id: orgId,
-        user_email: email,
-        full_name: email.split('@')[0],
-        app_role: role,
-        status: 'pending'
+      await base44.functions.invoke('manageOrganizationMembers', {
+        action: 'invite',
+        organizationId: orgId,
+        email,
+        appRole: role,
+        permissions: getDefaultPermissions(role)
       });
       try {
         await base44.users.inviteUser(email, 'user');
-      } catch (e) { /* user might already exist */ }
-      toast({ title: 'Invitación enviada', description: `${email} recibirá acceso una vez que se registre.` });
+      } catch (e) { /* The user may already be registered. */ }
+      toast({ title: 'Invitación enviada', description: `${email} podrá activar su acceso al ingresar.` });
       setShowInvite(false);
       loadMembers();
     } catch (err) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: 'Error', description: err.response?.data?.error || err.message, variant: 'destructive' });
     }
   };
 
