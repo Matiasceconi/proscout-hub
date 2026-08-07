@@ -4,17 +4,20 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { getUserOrgId } from '@/lib/roleUtils';
 import { Button } from '@/components/ui/button';
-import { Plus, Trophy } from 'lucide-react';
-import DashboardSummary from '@/components/agency/dashboard/DashboardSummary';
-import DashboardFilters from '@/components/agency/dashboard/DashboardFilters';
-import MatchCard from '@/components/agency/dashboard/MatchCard';
-import UpcomingMatchRow from '@/components/agency/dashboard/UpcomingMatchRow';
+import { Plus, Trophy, CalendarDays, AlertCircle } from 'lucide-react';
+import DashboardHero from '@/components/agency/dashboard/DashboardHero';
+import TodayMatchCard from '@/components/agency/dashboard/TodayMatchCard';
+import UpcomingMatchRowNew from '@/components/agency/dashboard/UpcomingMatchRowNew';
+import DayAgenda from '@/components/agency/dashboard/DayAgenda';
+import PendingActions from '@/components/agency/dashboard/PendingActions';
+import EmptyActivity from '@/components/agency/dashboard/EmptyActivity';
+import DashboardSkeleton from '@/components/agency/dashboard/DashboardSkeleton';
 import FollowUpModal from '@/components/agency/dashboard/FollowUpModal';
 import ObservationModal from '@/components/agency/dashboard/ObservationModal';
 import ManualFixtureDialog from '@/components/agency/dashboard/ManualFixtureDialog';
 import {
-  getFixtureStatus, isToday, isFuture, isWithinDays,
-  isFixtureFinished, needsConfirmation, formatDateLong, getDateKey
+  isToday, isWithinDays, isFuture, isFixtureFinished, needsConfirmation,
+  startOfToday, daysFromNow
 } from '@/components/agency/dashboard/dashboardUtils';
 
 export default function AgencyDashboard() {
@@ -23,41 +26,51 @@ export default function AgencyDashboard() {
   const orgId = getUserOrgId(user);
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [organization, setOrganization] = useState(null);
   const [fixtures, setFixtures] = useState([]);
   const [players, setPlayers] = useState([]);
+  const [directors, setDirectors] = useState([]);
   const [matchStats, setMatchStats] = useState([]);
   const [clubs, setClubs] = useState([]);
   const [providerToClub, setProviderToClub] = useState({});
-  const [filters, setFilters] = useState({
-    dateFrom: '', dateTo: '', playerId: '', clubId: '', category: '',
-    competition: '', agent: '', matchStatus: '', followUpStatus: '', homeAway: ''
-  });
-  const [rangeDays, setRangeDays] = useState(7);
+  const [calendarEvents, setCalendarEvents] = useState([]);
   const [showManual, setShowManual] = useState(false);
   const [followUpState, setFollowUpState] = useState(null);
   const [observationState, setObservationState] = useState(null);
 
   const loadData = async () => {
+    if (!orgId) { setLoading(false); return; }
     try {
-      const now = new Date();
-      const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      const future60 = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+      setError(false);
+      const past7 = daysFromNow(-7);
+      const future7 = daysFromNow(7);
+      const future7End = new Date(future7.getTime() + 24 * 60 * 60 * 1000 - 1);
 
-      const [fixs, pls, stats, cls, mappings] = await Promise.all([
+      const [fixs, pls, dirs, stats, cls, mappings, events, org] = await Promise.all([
         base44.entities.ClubFixture.filter({
           organization_id: orgId,
-          fixture_date: { $gte: past30.toISOString(), $lte: future60.toISOString() }
+          fixture_date: { $gte: past7.toISOString(), $lte: future7End.toISOString() }
         }, 'fixture_date', 1000),
         base44.entities.Player.filter({ organization_id: orgId, status: { $ne: 'archived' } }, '-updated_date', 300),
+        base44.entities.TechnicalDirector.filter({ organization_id: orgId }, '-updated_date', 200),
         base44.entities.PlayerMatchStats.filter({ organization_id: orgId }, '-match_date', 500),
         base44.entities.Club.list('-club_name', 500),
         base44.entities.ClubProviderMapping.filter({ organization_id: orgId }),
+        base44.entities.CalendarEvent.filter({
+          organization_id: orgId,
+          start_date: { $gte: startOfToday().toISOString(), $lte: future7End.toISOString() }
+        }, 'start_date', 200),
+        base44.entities.Organization.get(orgId),
       ]);
 
       setFixtures(fixs);
       setPlayers(pls);
+      setDirectors(dirs);
       setMatchStats(stats);
       setClubs(cls);
+      setCalendarEvents(events);
+      setOrganization(org);
 
       const pMap = {};
       for (const m of mappings) {
@@ -66,272 +79,326 @@ export default function AgencyDashboard() {
       setProviderToClub(pMap);
     } catch (err) {
       console.error('Dashboard load error:', err);
+      setError(true);
     }
     setLoading(false);
   };
 
   useEffect(() => {
-    if (orgId) loadData();
+    loadData();
   }, [orgId]);
 
-  // Build fixtures with represented players and their stats
-  const fixturesWithPlayers = useMemo(() => {
+  // Clubs lookup map
+  const clubsById = useMemo(() => {
+    const map = {};
+    for (const c of clubs) map[c.id] = c;
+    return map;
+  }, [clubs]);
+
+  // Unified represented list (players + directors)
+  const representedAll = useMemo(() => {
+    const playerList = players.map(p => ({
+      id: p.id, type: 'player', _raw: p,
+      first_name: p.first_name, last_name: p.last_name, photo_url: p.photo_url,
+      current_club_id: p.current_club_id,
+      clubName: clubsById[p.current_club_id]?.club_name || p.club || '',
+      position: p.position, primary_role: null,
+      contract_end: p.contract_end, birth_date: p.birth_date,
+    }));
+    const directorList = directors.map(d => ({
+      id: d.id, type: 'director', _raw: d,
+      first_name: d.first_name, last_name: d.last_name, photo_url: d.photo_url,
+      current_club_id: d.current_club_id,
+      clubName: clubsById[d.current_club_id]?.club_name || d.current_club || '',
+      position: null, primary_role: d.primary_role,
+      contract_end: null, birth_date: d.birth_date,
+    }));
+    return [...playerList, ...directorList];
+  }, [players, directors, clubsById]);
+
+  // Fixtures with represented people (players + directors) linked via current_club_id → mapped_club_ids
+  const fixturesWithRepresented = useMemo(() => {
     return fixtures.map(f => {
-      const representedPlayers = players.filter(p =>
-        p.current_club_id && f.mapped_club_ids?.includes(p.current_club_id)
+      const represented = representedAll.filter(r =>
+        r.current_club_id && f.mapped_club_ids?.includes(r.current_club_id)
       );
       const statsForFixture = matchStats.filter(s => s.club_fixture_id === f.id);
-      return { ...f, representedPlayers, statsForFixture };
+      return { ...f, represented, statsForFixture };
     });
-  }, [fixtures, players, matchStats]);
+  }, [fixtures, representedAll, matchStats]);
 
-  // Summary stats
+  // Only fixtures with at least one represented person
+  const fixturesWithOurPeople = useMemo(() =>
+    fixturesWithRepresented.filter(f => f.represented.length > 0),
+    [fixturesWithRepresented]
+  );
+
+  // Today's matches
+  const todayMatches = useMemo(() =>
+    fixturesWithOurPeople
+      .filter(f => isToday(f.fixture_date))
+      .sort((a, b) => new Date(a.fixture_date) - new Date(b.fixture_date)),
+    [fixturesWithOurPeople]
+  );
+
+  // Upcoming 7 days (not today)
+  const upcomingMatches = useMemo(() =>
+    fixturesWithOurPeople
+      .filter(f => isFuture(f.fixture_date) && !isToday(f.fixture_date) && isWithinDays(f.fixture_date, 7))
+      .sort((a, b) => new Date(a.fixture_date) - new Date(b.fixture_date)),
+    [fixturesWithOurPeople]
+  );
+
+  // Today's represented set (from matches + events)
+  const todayRepresentedIds = useMemo(() => {
+    const ids = new Set();
+    todayMatches.forEach(f => f.represented.forEach(r => ids.add(`${r.type}-${r.id}`)));
+    return ids;
+  }, [todayMatches]);
+
+  // Today's non-match calendar events
+  const todayEvents = useMemo(() => {
+    return calendarEvents
+      .filter(ev => isToday(ev.start_date) && ev.event_type !== 'match')
+      .map(ev => {
+        const person = ev.player_id
+          ? representedAll.find(r => r.id === ev.player_id && r.type === 'player')
+          : ev.director_id
+            ? representedAll.find(r => r.id === ev.director_id && r.type === 'director')
+            : null;
+        return { ...ev, _person: person };
+      });
+  }, [calendarEvents, representedAll]);
+
+  // Contract expirations within 7 days + birthdays today
+  const extraAgenda = useMemo(() => {
+    const items = [];
+    const now = startOfToday();
+    const in7 = daysFromNow(7);
+
+    // Contract expirations
+    representedAll.forEach(r => {
+      if (!r.contract_end) return;
+      const d = new Date(r.contract_end);
+      if (d >= now && d <= in7) {
+        items.push({
+          id: `contract-${r.type}-${r.id}`,
+          title: `Vencimiento de contrato · ${r.first_name} ${r.last_name}`,
+          start_date: r.contract_end,
+          event_type: 'meeting',
+          status: 'scheduled',
+          player_name: `${r.first_name} ${r.last_name}`,
+          _isExpiring: true,
+          _person: r,
+        });
+      }
+    });
+
+    // Birthdays today
+    const today = new Date();
+    representedAll.forEach(r => {
+      if (!r.birth_date) return;
+      const b = new Date(r.birth_date);
+      if (b.getDate() === today.getDate() && b.getMonth() === today.getMonth()) {
+        items.push({
+          id: `birthday-${r.type}-${r.id}`,
+          title: `Cumpleaños de ${r.first_name} ${r.last_name}`,
+          start_date: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0).toISOString(),
+          event_type: 'other',
+          status: 'confirmed',
+          player_name: `${r.first_name} ${r.last_name}`,
+          _isBirthday: true,
+          _person: r,
+        });
+      }
+    });
+
+    return items;
+  }, [representedAll]);
+
+  const todayAgenda = useMemo(() =>
+    [...todayEvents, ...extraAgenda].sort((a, b) => new Date(a.start_date) - new Date(b.start_date)),
+    [todayEvents, extraAgenda]
+  );
+
+  // Pending actions summary
   const summary = useMemo(() => {
-    const todayFixs = fixturesWithPlayers.filter(f => isToday(f.fixture_date) && f.representedPlayers.length > 0);
-    const todayPlayerIds = new Set(todayFixs.flatMap(f => f.representedPlayers.map(p => p.id)));
-    const upcoming7 = fixturesWithPlayers.filter(f => isWithinDays(f.fixture_date, 7) && f.representedPlayers.length > 0);
-    const toConfirm = fixturesWithPlayers.filter(f => needsConfirmation(f) && f.representedPlayers.length > 0);
+    const toConfirm = todayMatches.filter(f =>
+      f.represented.some(r => {
+        if (r.type !== 'player') return false;
+        const s = f.statsForFixture.find(st => st.player_id === r.id);
+        return !s || s.callup_status === 'unconfirmed' || needsConfirmation(f);
+      })
+    ).length;
+
     const pendingFollowUps = matchStats.filter(s =>
       s.follow_up_status === 'pending' &&
-      fixtures.some(f => f.id === s.club_fixture_id && isFixtureFinished(f.fixture_status))
-    );
+      fixturesWithRepresented.some(f => f.id === s.club_fixture_id && isFixtureFinished(f.fixture_status))
+    ).length;
+
+    const expiringSoon = extraAgenda.filter(e => e._isExpiring).length;
+
     return {
-      todayFixtures: todayFixs.length,
-      todayPlayers: todayPlayerIds.size,
-      upcoming7: upcoming7.length,
-      toConfirm: toConfirm.length,
-      pendingFollowUps: pendingFollowUps.length,
+      todayFixtures: todayMatches.length,
+      todayPlayers: todayRepresentedIds.size,
+      toConfirm,
+      pendingFollowUps,
+      expiringSoon,
     };
-  }, [fixturesWithPlayers, matchStats, fixtures]);
+  }, [todayMatches, matchStats, fixturesWithRepresented, todayRepresentedIds, extraAgenda]);
 
-  // Apply filters
-  const filteredFixtures = useMemo(() => {
-    return fixturesWithPlayers.filter(f => {
-      if (filters.dateFrom) {
-        const from = new Date(filters.dateFrom);
-        from.setHours(0, 0, 0, 0);
-        if (new Date(f.fixture_date) < from) return false;
-      }
-      if (filters.dateTo) {
-        const to = new Date(filters.dateTo);
-        to.setHours(23, 59, 59);
-        if (new Date(f.fixture_date) > to) return false;
-      }
-      if (filters.playerId && !f.representedPlayers.some(p => p.id === filters.playerId)) return false;
-      if (filters.clubId && !f.mapped_club_ids?.includes(filters.clubId)) return false;
-      if (filters.category && !f.representedPlayers.some(p => p.category === filters.category)) return false;
-      if (filters.competition && f.competition_name !== filters.competition) return false;
-      if (filters.agent && !f.statsForFixture.some(s => s.responsible_agent === filters.agent)) return false;
-      if (filters.matchStatus) {
-        const status = getFixtureStatus(f.fixture_status);
-        if (status.group !== filters.matchStatus) return false;
-      }
-      if (filters.followUpStatus && !f.statsForFixture.some(s => s.follow_up_status === filters.followUpStatus)) return false;
-      if (filters.homeAway) {
-        const homeClubId = providerToClub[f.home_provider_team_id];
-        const awayClubId = providerToClub[f.away_provider_team_id];
-        const hasHome = f.representedPlayers.some(p => p.current_club_id === homeClubId);
-        const hasAway = f.representedPlayers.some(p => p.current_club_id === awayClubId);
-        if (filters.homeAway === 'home' && !hasHome) return false;
-        if (filters.homeAway === 'away' && !hasAway) return false;
-      }
-      return true;
-    });
-  }, [fixturesWithPlayers, filters, providerToClub]);
+  // Next event for empty state
+  const nextEvent = useMemo(() => {
+    const upcoming = [...upcomingMatches, ...calendarEvents.filter(e => isFuture(e.start_date) && !isToday(e.start_date))];
+    upcoming.sort((a, b) => new Date(a.fixture_date || a.start_date) - new Date(b.fixture_date || b.start_date));
+    return upcoming[0] || null;
+  }, [upcomingMatches, calendarEvents]);
 
-  // Split into today and upcoming
-  const todayMatches = useMemo(() =>
-    filteredFixtures.filter(f => isToday(f.fixture_date)).sort((a, b) => new Date(a.fixture_date) - new Date(b.fixture_date)),
-    [filteredFixtures]
-  );
-
-  const upcomingMatches = useMemo(() =>
-    filteredFixtures.filter(f => isFuture(f.fixture_date) && !isToday(f.fixture_date)).sort((a, b) => new Date(a.fixture_date) - new Date(b.fixture_date)),
-    [filteredFixtures]
-  );
-
-  // Group upcoming by date within range
-  const upcomingGrouped = useMemo(() => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const maxDate = new Date(now.getTime() + rangeDays * 24 * 60 * 60 * 1000);
-    const filtered = upcomingMatches.filter(f => new Date(f.fixture_date) <= maxDate);
-    const groups = {};
-    for (const f of filtered) {
-      const key = getDateKey(f.fixture_date);
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(f);
-    }
-    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [upcomingMatches, rangeDays]);
-
-  // Available competitions and agents for filters
-  const competitions = useMemo(() => {
-    const set = new Set(fixtures.map(f => f.competition_name).filter(Boolean));
-    return Array.from(set).sort();
-  }, [fixtures]);
-
-  const agents = useMemo(() => {
-    const set = new Set(matchStats.map(s => s.responsible_agent).filter(Boolean));
-    return Array.from(set).sort();
-  }, [matchStats]);
-
-  // Filter click from summary cards
-  const handleSummaryFilter = (filterKey) => {
-    if (filterKey === 'today') {
-      const today = new Date();
-      const todayStr = today.toISOString().slice(0, 10);
-      setFilters({ ...filters, dateFrom: todayStr, dateTo: todayStr });
-    } else if (filterKey === 'upcoming7') {
-      const today = new Date();
-      const future = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-      setFilters({ ...filters, dateFrom: today.toISOString().slice(0, 10), dateTo: future.toISOString().slice(0, 10) });
-    } else if (filterKey === 'pendingFollowUp') {
-      setFilters({ ...filters, followUpStatus: 'pending' });
-    }
-  };
+  const hasActivityToday = todayMatches.length > 0 || todayAgenda.length > 0;
 
   // Actions
-  const handleFollowUp = (fixture, player, existingStats) => {
+  const handleViewProfile = (person) => {
+    if (person.type === 'director') navigate(`/agency/directors/${person.id}`);
+    else navigate(`/agency/players/${person.id}`);
+  };
+
+  const handleViewMatch = (fixture) => {
+    navigate(`/agency/matches`);
+  };
+
+  const handleFollowUp = (fixture, person, existingStats) => {
     const homeClubId = providerToClub[fixture.home_provider_team_id];
-    const isHome = player.current_club_id === homeClubId;
-    setFollowUpState({ fixture, player, existingStats, isHome });
+    const isHome = person.current_club_id === homeClubId;
+    setFollowUpState({ fixture, player: person._raw || person, existingStats, isHome });
   };
 
-  const handleObservation = (fixture, player, existingStats) => {
-    setObservationState({ fixture, player, existingStats });
+  const handleObservation = (fixture, person, existingStats) => {
+    setObservationState({ fixture, player: person._raw || person, existingStats });
   };
 
-  const handleViewProfile = (playerId) => {
-    navigate(`/agency/players/${playerId}`);
+  const handleOpenMaps = (fixture) => {
+    const query = encodeURIComponent((fixture.stadium || '') + ' ' + (fixture.fixture_city || ''));
+    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
   };
 
-  const handleCreateTask = async (fixture, player) => {
-    try {
-      await base44.entities.CalendarEvent.create({
-        organization_id: orgId,
-        player_id: player.id,
-        player_name: `${player.first_name} ${player.last_name}`,
-        title: `Seguimiento: ${fixture.home_team_name} vs ${fixture.away_team_name}`,
-        event_type: 'meeting',
-        start_date: fixture.fixture_date,
-        status: 'scheduled',
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const handleModalSave = () => { loadData(); };
 
-  const handleModalSave = () => {
-    loadData();
-  };
+  if (loading) return <DashboardSkeleton />;
 
-  if (loading) {
+  if (error) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+          <p className="text-red-700 font-medium">No se pudo cargar la información</p>
+          <Button variant="outline" onClick={loadData} className="mt-3">Reintentar</Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">Tablero Operativo</h1>
-          <p className="text-sm text-slate-400">Centro de control diario de la agencia</p>
-        </div>
-        <Button onClick={() => setShowManual(true)}>
-          <Plus className="w-4 h-4 mr-1" /> Cargar Partido
+    <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-5">
+      {/* Hero */}
+      <DashboardHero
+        organization={organization}
+        user={user}
+        todayCount={todayMatches.length + todayAgenda.length}
+        representedCount={todayRepresentedIds.size}
+        onSeeCalendar={() => navigate('/agency/calendar')}
+      />
+
+      {/* Admin action bar */}
+      <div className="flex items-center justify-end">
+        <Button variant="outline" size="sm" onClick={() => setShowManual(true)}>
+          <Plus className="w-4 h-4 mr-1" /> Cargar partido
         </Button>
       </div>
 
-      {/* Summary */}
-      <DashboardSummary stats={summary} onFilterClick={handleSummaryFilter} />
+      {/* Main grid: activity (left) + sidebar (right) */}
+      <div className="grid lg:grid-cols-3 gap-5">
+        {/* Left: Activity of today */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-green-600" />
+            <h2 className="text-lg font-bold text-slate-900">Actividad de hoy</h2>
+            <span className="text-sm text-slate-400">({todayMatches.length} partidos)</span>
+          </div>
 
-      {/* Filters */}
-      <DashboardFilters
-        filters={filters}
-        setFilters={setFilters}
-        players={players}
-        clubs={clubs}
-        competitions={competitions}
-        agents={agents}
-      />
-
-      {/* Today's matches */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <Trophy className="w-5 h-5 text-slate-700" />
-          <h2 className="text-lg font-semibold text-slate-900">Partidos de Hoy</h2>
-          <span className="text-sm text-slate-400">({todayMatches.length})</span>
+          {!hasActivityToday ? (
+            <EmptyActivity nextEvent={nextEvent} onSeeCalendar={() => navigate('/agency/calendar')} />
+          ) : todayMatches.length === 0 ? (
+            <div className="bg-white rounded-xl border border-slate-200 p-6 text-center">
+              <Trophy className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">No hay partidos de hoy con representados</p>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {todayMatches.map(f => (
+                <TodayMatchCard
+                  key={f.id}
+                  fixture={f}
+                  represented={f.represented}
+                  statsMap={f.statsForFixture}
+                  providerToClub={providerToClub}
+                  clubsById={clubsById}
+                  onFollowUp={handleFollowUp}
+                  onViewProfile={handleViewProfile}
+                  onOpenMaps={() => handleOpenMaps(f)}
+                />
+              ))}
+            </div>
+          )}
         </div>
-        {todayMatches.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
-            <Trophy className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-            <p className="text-slate-500 text-sm">No hay partidos de hoy con jugadores representados</p>
+
+        {/* Right: Agenda + Pending actions */}
+        <div className="space-y-4">
+          {/* Agenda */}
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <CalendarDays className="w-4 h-4 text-slate-600" />
+              <h3 className="text-sm font-semibold text-slate-800">Agenda del día</h3>
+            </div>
+            <DayAgenda events={todayAgenda} onViewProfile={handleViewProfile} />
           </div>
-        ) : (
-          <div className="grid lg:grid-cols-2 gap-4">
-            {todayMatches.map(f => (
-              <MatchCard
-                key={f.id}
-                fixture={f}
-                players={players}
-                statsMap={f.statsForFixture}
-                providerToClub={providerToClub}
-                onFollowUp={handleFollowUp}
-                onObservation={handleObservation}
-                onViewProfile={handleViewProfile}
-                onCreateTask={handleCreateTask}
-              />
-            ))}
-          </div>
-        )}
+
+          {/* Pending actions */}
+          <PendingActions stats={summary} />
+        </div>
       </div>
 
       {/* Upcoming matches */}
       <div>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-slate-900">Próximos Partidos</h2>
-            <span className="text-sm text-slate-400">({upcomingMatches.length})</span>
+            <CalendarDays className="w-5 h-5 text-slate-700" />
+            <h2 className="text-lg font-bold text-slate-900">Próximos partidos</h2>
+            <span className="text-sm text-slate-400">· próximos 7 días</span>
           </div>
-          <div className="flex items-center gap-1 bg-white rounded-lg border border-slate-200 p-1">
-            {[7, 15, 30].map(d => (
-              <button
-                key={d}
-                onClick={() => setRangeDays(d)}
-                className={`px-3 py-1 text-xs rounded-md ${rangeDays === d ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
-              >
-                {d} días
-              </button>
-            ))}
-          </div>
+          <button
+            onClick={() => navigate('/agency/calendar')}
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            Ver todos en Calendario →
+          </button>
         </div>
-        {upcomingGrouped.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
-            <p className="text-slate-500 text-sm">No hay próximos partidos en este rango</p>
+
+        {upcomingMatches.length === 0 ? (
+          <div className="bg-white rounded-xl border border-slate-200 p-6 text-center">
+            <p className="text-sm text-slate-500">No hay próximos partidos con representados en los próximos 7 días</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {upcomingGrouped.map(([dateKey, dayFixtures]) => (
-              <div key={dateKey}>
-                <h3 className="text-sm font-medium text-slate-600 mb-2">{formatDateLong(dayFixtures[0].fixture_date)}</h3>
-                <div className="space-y-2">
-                  {dayFixtures.map(f => (
-                    <UpcomingMatchRow
-                      key={f.id}
-                      fixture={f}
-                      players={players}
-                      statsMap={f.statsForFixture}
-                      providerToClub={providerToClub}
-                      onViewProfile={handleViewProfile}
-                    />
-                  ))}
-                </div>
-              </div>
+          <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
+            {upcomingMatches.map(f => (
+              <UpcomingMatchRowNew
+                key={f.id}
+                fixture={f}
+                represented={f.represented}
+                clubsById={clubsById}
+                providerToClub={providerToClub}
+                onViewProfile={handleViewProfile}
+                onViewMatch={handleViewMatch}
+              />
             ))}
           </div>
         )}

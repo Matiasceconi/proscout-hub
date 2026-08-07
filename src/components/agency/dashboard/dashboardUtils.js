@@ -87,3 +87,34 @@ export const isFixtureFinished = (status) => {
 export const needsConfirmation = (fixture) => {
   return !fixture.stadium || fixture.fixture_status === 'TBD' || fixture.fixture_status === 'PST';
 };
+
+export const getGreeting = () => {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return 'Buenos días';
+  if (h >= 12 && h < 20) return 'Buenas tardes';
+  return 'Buenas noches';
+};
+
+export const formatDateFull = (dateStr) => {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  const s = d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
+export const formatDayShort = (dateStr) => {
+  const d = new Date(dateStr);
+  const wd = d.toLocaleDateString('es-ES', { weekday: 'short' });
+  return `${wd.charAt(0).toUpperCase()}${wd.slice(1)} ${d.getDate()}/${d.getMonth() + 1}`;
+};
+
+export const startOfToday = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+export const daysFromNow = (days) => {
+  const d = startOfToday();
+  d.setDate(d.getDate() + days);
+  return d;
+};
