@@ -21,11 +21,6 @@ import DirectorProfile from '@/pages/agency/DirectorProfile';
 import AgencyCalendar from '@/pages/agency/AgencyCalendar';
 import AgencyMatches from '@/pages/agency/AgencyMatches';
 import AgencyStats from '@/pages/agency/AgencyStats';
-import AgencyPhysical from '@/pages/agency/AgencyPhysical';
-import AgencyMedical from '@/pages/agency/AgencyMedical';
-import AgencyAnalysis from '@/pages/agency/AgencyAnalysis';
-import AgencyVideos from '@/pages/agency/AgencyVideos';
-import AgencyBenefits from '@/pages/agency/AgencyBenefits';
 import AgencyDocuments from '@/pages/agency/AgencyDocuments';
 import TeamManagement from '@/pages/agency/TeamManagement';
 import AgencySettings from '@/pages/agency/AgencySettings';
@@ -101,11 +96,6 @@ const AuthenticatedApp = () => {
           <Route path="/agency/calendar" element={<ModulePermissionGuard permission="calendar"><AgencyCalendar /></ModulePermissionGuard>} />
           <Route path="/agency/matches" element={<ModulePermissionGuard permission="matches"><AgencyMatches /></ModulePermissionGuard>} />
           <Route path="/agency/stats" element={<ModulePermissionGuard permission="statistics"><AgencyStats /></ModulePermissionGuard>} />
-          <Route path="/agency/physical" element={<ModulePermissionGuard permission="physical"><AgencyPhysical /></ModulePermissionGuard>} />
-          <Route path="/agency/medical" element={<ModulePermissionGuard permission="medical"><AgencyMedical /></ModulePermissionGuard>} />
-          <Route path="/agency/analysis" element={<ModulePermissionGuard permission="analysis"><AgencyAnalysis /></ModulePermissionGuard>} />
-          <Route path="/agency/videos" element={<ModulePermissionGuard permission="videos"><AgencyVideos /></ModulePermissionGuard>} />
-          <Route path="/agency/benefits" element={<ModulePermissionGuard permission="benefits"><AgencyBenefits /></ModulePermissionGuard>} />
           <Route path="/agency/documents" element={<ModulePermissionGuard permission="documents"><AgencyDocuments /></ModulePermissionGuard>} />
           <Route path="/agency/team" element={<RoleGuard allowedRoles={['organization_owner', 'organization_admin']}><TeamManagement /></RoleGuard>} />
           <Route path="/agency/settings" element={<RoleGuard allowedRoles={['organization_owner', 'organization_admin']}><AgencySettings /></RoleGuard>} />

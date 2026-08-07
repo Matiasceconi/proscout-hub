@@ -7,8 +7,8 @@ import { getDefaultPermissions } from '@/components/agency/settings/accessPermis
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
-  LayoutDashboard, Users, Calendar, Trophy, BarChart3, Activity,
-  HeartPulse, Search, Video, Gift, FileText, UserCog, Settings,
+  LayoutDashboard, Users, Calendar, Trophy, BarChart3,
+  FileText, UserCog, Settings,
   LogOut, Menu, X, ChevronLeft, GraduationCap, ClipboardList, User, Building2, ChevronUp
 } from 'lucide-react';
 import {
@@ -30,11 +30,6 @@ const MENU_GROUPS = [
   { type: 'item', to: '/agency/calendar', icon: Calendar, label: 'Calendario', permission: 'calendar' },
   { type: 'item', to: '/agency/matches', icon: Trophy, label: 'Partidos', permission: 'matches' },
   { type: 'item', to: '/agency/stats', icon: BarChart3, label: 'Estadísticas', permission: 'statistics' },
-  { type: 'item', to: '/agency/physical', icon: Activity, label: 'Rendimiento físico', permission: 'physical' },
-  { type: 'item', to: '/agency/medical', icon: HeartPulse, label: 'Área médica', permission: 'medical' },
-  { type: 'item', to: '/agency/analysis', icon: Search, label: 'Análisis de rivales', permission: 'analysis' },
-  { type: 'item', to: '/agency/videos', icon: Video, label: 'Videos', permission: 'videos' },
-  { type: 'item', to: '/agency/benefits', icon: Gift, label: 'Beneficios', permission: 'benefits' },
   { type: 'item', to: '/agency/documents', icon: FileText, label: 'Documentación', permission: 'documents' },
   { type: 'item', to: '/agency/team', icon: UserCog, label: 'Equipo de trabajo', adminOnly: true },
   { type: 'item', to: '/agency/settings', icon: Settings, label: 'Configuración', adminOnly: true }
