@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/shared/UIBits';
-import { Plus, ShieldCheck, Settings2, UserX } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Plus, ShieldCheck, Settings2, UserX, Send, Copy } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import PermissionDialog from './PermissionDialog';
 import InviteRepresentativeDialog from './InviteRepresentativeDialog';
@@ -14,6 +16,7 @@ export default function MembersAccessPanel({ organizationId, canManage }) {
   const [loading, setLoading] = useState(true);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
+  const [resendUrl, setResendUrl] = useState('');
 
   const loadMembers = async () => {
     try {
@@ -56,6 +59,17 @@ export default function MembersAccessPanel({ organizationId, canManage }) {
     }
   };
 
+  const handleResendInvite = async (member) => {
+    try {
+      const result = await manage({ action: 'invite', organizationId, email: member.user_email, appRole: member.app_role, permissions: member.permissions || [] });
+      if (result?.invitation?.token) setResendUrl(`${window.location.origin}/invite?token=${result.invitation.token}`);
+      loadMembers();
+      return result;
+    } catch (error) {
+      toast({ title: 'No se pudo reenviar la invitación', description: error.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  };
+
   const handleDisable = async (member) => {
     try {
       await manage({ action: 'update', organizationId, membershipId: member.id, status: member.status === 'disabled' ? 'active' : 'disabled' });
@@ -95,6 +109,9 @@ export default function MembersAccessPanel({ organizationId, canManage }) {
               </div>
               {canManage && !member.is_owner && (
                 <div className="flex items-center gap-1">
+                  {member.status === 'pending' && (
+                    <Button size="icon" variant="ghost" onClick={() => handleResendInvite(member)} title="Reenviar invitación"><Send className="w-4 h-4" /></Button>
+                  )}
                   <Button size="icon" variant="ghost" onClick={() => setSelectedMember(member)} title="Editar permisos"><Settings2 className="w-4 h-4" /></Button>
                   <Button size="icon" variant="ghost" onClick={() => handleDisable(member)} title={member.status === 'disabled' ? 'Reactivar acceso' : 'Suspender acceso'}><UserX className="w-4 h-4" /></Button>
                 </div>
@@ -106,6 +123,17 @@ export default function MembersAccessPanel({ organizationId, canManage }) {
 
       <InviteRepresentativeDialog open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={handleInvite} />
       <PermissionDialog open={!!selectedMember} onClose={() => setSelectedMember(null)} member={selectedMember} onSave={handlePermissions} />
+
+      <Dialog open={!!resendUrl} onOpenChange={() => setResendUrl('')}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Invitación reenviada</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-slate-600">Compartí este enlace con la persona invitada. Vence en 7 días.</p>
+            <Input value={resendUrl} readOnly />
+            <Button className="w-full" onClick={() => navigator.clipboard.writeText(resendUrl)}><Copy className="w-4 h-4 mr-1" /> Copiar enlace</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
