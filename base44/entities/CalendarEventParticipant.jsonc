@@ -1,0 +1,50 @@
+{
+  "name": "CalendarEventParticipant",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "calendar_event_id": {
+      "type": "string"
+    },
+    "person_type": {
+      "type": "string",
+      "enum": [
+        "player",
+        "technical_director"
+      ]
+    },
+    "person_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "organization_id",
+    "calendar_event_id",
+    "person_type",
+    "person_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.person_type": "player",
+          "data.person_id": "{{user.data.player_id}}"
+        },
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        }
+      ]
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}

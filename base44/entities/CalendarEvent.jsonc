@@ -29,6 +29,11 @@
         "travel",
         "media",
         "meeting",
+        "signing",
+        "presentation",
+        "press",
+        "follow_up",
+        "internal_task",
         "other"
       ],
       "default": "other"
@@ -53,6 +58,46 @@
         "completed"
       ],
       "default": "scheduled"
+    },
+    "responsible_member_id": {
+      "type": "string",
+      "description": "OrganizationMember ID of the responsible agent"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium"
+    },
+    "all_day": {
+      "type": "boolean",
+      "default": false
+    },
+    "reminder_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "fixture",
+        "document",
+        "contract",
+        "birthday",
+        "follow_up"
+      ],
+      "default": "manual"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "ID of the source record (fixture, document, player, etc.)"
+    },
+    "created_by_user_id": {
+      "type": "string"
     }
   },
   "required": [
