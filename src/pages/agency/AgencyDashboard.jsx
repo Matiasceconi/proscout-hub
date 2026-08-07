@@ -370,17 +370,24 @@ export default function AgencyDashboard() {
       {/* Upcoming matches */}
       <div>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h2 className="text-lg font-bold text-slate-900">Próximos partidos</h2>
           <div className="flex items-center gap-2">
-            <CalendarDays className="w-5 h-5 text-slate-700" />
-            <h2 className="text-lg font-bold text-slate-900">Próximos partidos</h2>
-            <span className="text-sm text-slate-400">· próximos 7 días</span>
+            <button
+              onClick={() => navigate('/agency/calendar')}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full px-3 py-1.5 transition-colors"
+              title="Contratos por vencer en los próximos 7 días"
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+              Contratos por vencer (7 días)
+              <span className="font-bold text-slate-800">{summary.expiringSoon}</span>
+            </button>
+            <button
+              onClick={() => navigate('/agency/calendar')}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Ver todos →
+            </button>
           </div>
-          <button
-            onClick={() => navigate('/agency/calendar')}
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-          >
-            Ver todos en Calendario →
-          </button>
         </div>
 
         {upcomingMatches.length === 0 ? (
