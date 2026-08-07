@@ -1,0 +1,176 @@
+{
+  "name": "PlayerMatchStatistic",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "player_id": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string",
+      "default": "api_football"
+    },
+    "provider_player_id": {
+      "type": "string"
+    },
+    "provider_fixture_id": {
+      "type": "string"
+    },
+    "provider_team_id": {
+      "type": "string"
+    },
+    "provider_league_id": {
+      "type": "string"
+    },
+    "season": {
+      "type": "string"
+    },
+    "fixture_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "opponent_team_id": {
+      "type": "string"
+    },
+    "home_away": {
+      "type": "string",
+      "enum": [
+        "home",
+        "away",
+        "neutral"
+      ]
+    },
+    "position": {
+      "type": "string"
+    },
+    "started": {
+      "type": "boolean",
+      "default": false
+    },
+    "substitute": {
+      "type": "boolean",
+      "default": false
+    },
+    "captain": {
+      "type": "boolean",
+      "default": false
+    },
+    "minutes": {
+      "type": "number",
+      "default": 0
+    },
+    "rating": {
+      "type": "number"
+    },
+    "shots_total": {
+      "type": "number"
+    },
+    "shots_on_target": {
+      "type": "number"
+    },
+    "goals": {
+      "type": "number"
+    },
+    "assists": {
+      "type": "number"
+    },
+    "passes_total": {
+      "type": "number"
+    },
+    "key_passes": {
+      "type": "number"
+    },
+    "pass_accuracy": {
+      "type": "number"
+    },
+    "tackles": {
+      "type": "number"
+    },
+    "blocks": {
+      "type": "number"
+    },
+    "interceptions": {
+      "type": "number"
+    },
+    "duels_total": {
+      "type": "number"
+    },
+    "duels_won": {
+      "type": "number"
+    },
+    "dribbles_attempted": {
+      "type": "number"
+    },
+    "dribbles_successful": {
+      "type": "number"
+    },
+    "fouls_drawn": {
+      "type": "number"
+    },
+    "fouls_committed": {
+      "type": "number"
+    },
+    "yellow_cards": {
+      "type": "number"
+    },
+    "red_cards": {
+      "type": "number"
+    },
+    "penalties_won": {
+      "type": "number"
+    },
+    "penalties_committed": {
+      "type": "number"
+    },
+    "penalties_scored": {
+      "type": "number"
+    },
+    "penalties_missed": {
+      "type": "number"
+    },
+    "penalties_saved": {
+      "type": "number"
+    },
+    "goals_conceded": {
+      "type": "number"
+    },
+    "saves": {
+      "type": "number"
+    },
+    "source_updated_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "synced_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "organization_id",
+    "player_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.player_id": "{{user.data.player_id}}"
+        },
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        }
+      ]
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}

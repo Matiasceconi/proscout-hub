@@ -1,0 +1,47 @@
+{
+  "description": "Ejecuta syncAllPlayersStats diariamente a las 6:00 AM (Buenos Aires) para todas las organizaciones activas",
+  "name": "Sincronizaci\u00f3n diaria de estad\u00edsticas",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 6 * * *",
+      "one_time_date": null,
+      "timezone": "America/Buenos_Aires",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "daily_stats_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_daily_sync": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "dailyStatsSync",
+            "args": {
+              "season": "2026"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Sincronizar estad\u00edsticas",
+            "description": "Sincroniza estad\u00edsticas de todos los jugadores vinculados"
+          }
+        }
+      }
+    ]
+  }
+}

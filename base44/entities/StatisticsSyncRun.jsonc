@@ -1,0 +1,87 @@
+{
+  "name": "StatisticsSyncRun",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "all",
+        "pending",
+        "single_player",
+        "single_fixture"
+      ]
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "running",
+        "completed",
+        "failed",
+        "partial"
+      ],
+      "default": "running"
+    },
+    "players_processed": {
+      "type": "number",
+      "default": 0
+    },
+    "fixtures_processed": {
+      "type": "number",
+      "default": 0
+    },
+    "records_created": {
+      "type": "number",
+      "default": 0
+    },
+    "records_updated": {
+      "type": "number",
+      "default": 0
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "api_requests_used": {
+      "type": "number",
+      "default": 0
+    },
+    "trigger_reason": {
+      "type": "string"
+    },
+    "next_retry_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "organization_id"
+  ],
+  "rls": {
+    "read": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}

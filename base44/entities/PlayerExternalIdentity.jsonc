@@ -1,0 +1,94 @@
+{
+  "name": "PlayerExternalIdentity",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "player_id": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string",
+      "default": "api_football"
+    },
+    "provider_player_id": {
+      "type": "string"
+    },
+    "provider_team_id": {
+      "type": "string"
+    },
+    "provider_league_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "provider_player_name": {
+      "type": "string"
+    },
+    "provider_photo_url": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "verified",
+        "pending",
+        "ambiguous",
+        "error",
+        "unlinked"
+      ],
+      "default": "pending"
+    },
+    "verification_method": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "auto_suggested",
+        "admin_confirmed"
+      ],
+      "default": "manual"
+    },
+    "verified_by": {
+      "type": "string"
+    },
+    "verified_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "last_checked_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "organization_id",
+    "player_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.player_id": "{{user.data.player_id}}"
+        },
+        {
+          "data.organization_id": "{{user.data.organization_id}}"
+        }
+      ]
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}

@@ -1,336 +1,253 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
-import { formatDate } from '@/lib/roleUtils';
+import { useAuth } from '@/lib/AuthContext';
+import { isOrgAdmin } from '@/lib/roleUtils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, BarChart3, TrendingUp, Filter, X, Clock } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts';
+import { Loader2, RefreshCw, Download, Link2, AlertCircle, CheckCircle2, Clock, Calculator } from 'lucide-react';
+import LinkPlayerDialog from './stats/LinkPlayerDialog';
+import StatsSummaryCards from './stats/StatsSummaryCards';
+import StatsCharts from './stats/StatsCharts';
+import StatsMatchTable from './stats/StatsMatchTable';
+import { getSummaryCards, getPositionMetrics, getKeyInsights, getCoverageStatus, POSITION_LABELS_FULL } from './stats/statsHelpers';
 
 export default function PlayerStatsTab({ player, permissions }) {
-  const [matches, setMatches] = useState([]);
+  const { user } = useAuth();
+  const [identity, setIdentity] = useState(null);
   const [matchStats, setMatchStats] = useState([]);
   const [seasonStats, setSeasonStats] = useState([]);
+  const [fixtures, setFixtures] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
-  const [filters, setFilters] = useState({ competition: 'all', season: 'all', club: 'all', opponent: 'all', date_from: '', date_to: '', home_away: 'all' });
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [showLink, setShowLink] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState(null);
+  const [season, setSeason] = useState('2026');
+  const [clubFilter, setClubFilter] = useState('all');
+  const [leagueFilter, setLeagueFilter] = useState('all');
+  const [period, setPeriod] = useState('season');
+  const [viewMode, setViewMode] = useState('totals');
+  const [exporting, setExporting] = useState(false);
+
+  const orgId = player.organization_id;
+  const isAdmin = isOrgAdmin(user);
 
   useEffect(() => { loadData(); }, [player.id]);
 
   const loadData = async () => {
+    setLoading(true);
     try {
-      const [m, ms, ss] = await Promise.all([
-        base44.entities.Match.filter({ organization_id: player.organization_id, player_id: player.id }, 'match_date', 100),
-        base44.entities.PlayerMatchStats.filter({ organization_id: player.organization_id, player_id: player.id }, '-match_date', 100),
-        base44.entities.PlayerSeasonStats.filter({ organization_id: player.organization_id, player_id: player.id }, '-season', 20)
+      const [idents, ms, ss] = await Promise.all([
+        base44.entities.PlayerExternalIdentity.filter({ organization_id: orgId, player_id: player.id, provider: 'api_football' }),
+        base44.entities.PlayerMatchStatistic.filter({ organization_id: orgId, player_id: player.id, season: '2026' }, '-fixture_date', 100),
+        base44.entities.PlayerSeasonStatistic.filter({ organization_id: orgId, player_id: player.id, season: '2026' }),
       ]);
-      setMatches(m);
+      const ident = idents[0] || null;
+      setIdentity(ident);
       setMatchStats(ms);
       setSeasonStats(ss);
+      setLastSync(ss[0]?.synced_at || ms[0]?.synced_at || null);
+      if (ms.length > 0) {
+        const fixtureIds = [...new Set(ms.map(m => m.provider_fixture_id))];
+        const fx = await base44.entities.ClubFixture.filter({ organization_id: orgId, provider_fixture_id: { $in: fixtureIds } });
+        setFixtures(fx);
+      }
     } catch (err) { console.error(err); }
     setLoading(false);
   };
 
-  const competitions = [...new Set(matches.map(m => m.competition).filter(Boolean))].sort();
-  const seasons = [...new Set(matches.map(m => m.season).filter(Boolean))].sort().reverse();
-  const opponents = [...new Set(matches.map(m => m.opponent).filter(Boolean))].sort();
-  const clubs = [...new Set(matches.map(m => player.club).filter(Boolean))].sort();
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      await base44.functions.invoke('syncPlayerSeasonStats', { player_id: player.id, organization_id: orgId, season });
+      await loadData();
+    } catch (err) { console.error(err); }
+    setSyncing(false);
+  };
 
-  const filteredMatches = useMemo(() => {
-    return matches.filter(m => {
-      if (filters.competition !== 'all' && m.competition !== filters.competition) return false;
-      if (filters.season !== 'all' && m.season !== filters.season) return false;
-      if (filters.opponent !== 'all' && m.opponent !== filters.opponent) return false;
-      if (filters.home_away !== 'all' && m.home_away !== filters.home_away) return false;
-      if (filters.date_from && new Date(m.match_date) < new Date(filters.date_from)) return false;
-      if (filters.date_to && new Date(m.match_date) > new Date(filters.date_to + 'T23:59:59')) return false;
-      return true;
-    });
-  }, [matches, filters]);
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const res = await base44.functions.invoke('exportPlayerStatsPdf', { player_id: player.id, organization_id: orgId, season, league_id: leagueFilter === 'all' ? null : leagueFilter });
+      if (res.data?.pdf_base64) {
+        const byteChars = atob(res.data.pdf_base64);
+        const byteNumbers = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+        const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = res.data.filename || 'informe_estadisticas.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) { console.error(err); }
+    setExporting(false);
+  };
 
-  const filteredMatchIds = new Set(filteredMatches.map(m => m.id));
-  const filteredMatchStats = matchStats.filter(ms => filteredMatchIds.has(ms.match_id));
+  const leagues = useMemo(() => [...new Set(seasonStats.map(s => s.league_id).filter(Boolean))].map(lid => {
+    const s = seasonStats.find(x => x.league_id === lid);
+    return { id: lid, name: s?.league_name || lid };
+  }), [seasonStats]);
 
-  const totals = useMemo(() => {
-    const ms = filteredMatchStats;
-    return {
-      matches: ms.length,
-      starts: ms.filter(m => m.is_starter).length,
-      minutes: ms.reduce((s, m) => s + (m.minutes_played || 0), 0),
-      goals: ms.reduce((s, m) => s + (m.goals || 0), 0),
-      assists: ms.reduce((s, m) => s + (m.assists || 0), 0),
-      call_ups: ms.filter(m => m.called_up).length,
-      yellow: ms.reduce((s, m) => s + (m.yellow_cards || 0), 0),
-      red: ms.reduce((s, m) => s + (m.red_cards || 0), 0),
-      avgRating: ms.length > 0 ? (ms.reduce((s, m) => s + (m.rating || 0), 0) / ms.length).toFixed(1) : 0
-    };
-  }, [filteredMatchStats]);
+  const clubs = useMemo(() => [...new Set(seasonStats.map(s => s.club_name).filter(Boolean))], [seasonStats]);
 
-  const chartData = useMemo(() => {
-    return [...filteredMatchStats].sort((a, b) => new Date(a.match_date) - new Date(b.match_date)).map(m => ({
-      date: formatDate(m.match_date).slice(0, 6),
-      goles: m.goals || 0,
-      minutos: m.minutes_played || 0,
-      valoracion: m.rating || 0
-    }));
-  }, [filteredMatchStats]);
-
-  const filteredSeasonStats = seasonStats.filter(s => {
-    if (filters.competition !== 'all' && s.competition !== filters.competition) return false;
-    if (filters.season !== 'all' && s.season !== filters.season) return false;
+  const filteredSeasonStats = useMemo(() => seasonStats.filter(s => {
+    if (leagueFilter !== 'all' && s.league_id !== leagueFilter) return false;
+    if (clubFilter !== 'all' && s.club_name !== clubFilter) return false;
     return true;
-  });
+  }), [seasonStats, leagueFilter, clubFilter]);
+
+  const filteredMatchStats = useMemo(() => {
+    let ms = matchStats;
+    if (leagueFilter !== 'all') ms = ms.filter(m => String(m.provider_league_id) === leagueFilter);
+    if (period === '5') ms = ms.slice(0, 5);
+    if (period === '10') ms = ms.slice(0, 10);
+    return ms;
+  }, [matchStats, leagueFilter, period]);
+
+  const summaryCards = useMemo(() => getSummaryCards(filteredMatchStats, filteredSeasonStats), [filteredMatchStats, filteredSeasonStats]);
+  const positionMetrics = useMemo(() => getPositionMetrics(player.position, filteredSeasonStats[0] || {}), [player.position, filteredSeasonStats]);
+  const keyInsights = useMemo(() => getKeyInsights(filteredMatchStats, filteredSeasonStats, player.position), [filteredMatchStats, filteredSeasonStats, player.position]);
+  const coverage = useMemo(() => getCoverageStatus(identity, seasonStats, matchStats), [identity, seasonStats, matchStats]);
+  const isReduced = (filteredSeasonStats[0]?.minutes || 0) < 450;
 
   if (loading) return <div className="py-8 text-center text-sm text-slate-400">Cargando estadísticas...</div>;
 
-  const activeFilterCount = Object.entries(filters).filter(([k, v]) => v && v !== 'all' && v !== '').length;
-  const resetFilters = () => setFilters({ competition: 'all', season: 'all', club: 'all', opponent: 'all', date_from: '', date_to: '', home_away: 'all' });
+  // UNLINKED STATE
+  if (!identity || identity.status !== 'verified') {
+    return (
+      <div className="space-y-4">
+        <div className="text-center py-12 border border-dashed border-slate-300 rounded-lg bg-slate-50">
+          <AlertCircle className="w-10 h-10 mx-auto mb-3 text-amber-500" />
+          <p className="text-sm font-medium text-slate-700 mb-1">Este jugador no está vinculado al proveedor de datos</p>
+          <p className="text-xs text-slate-400 mb-4">Vinculá el jugador con API-Football para sincronizar estadísticas automáticamente</p>
+          <Button onClick={() => setShowLink(true)} className="bg-slate-900">
+            <Link2 className="w-4 h-4 mr-2" /> Vincular jugador
+          </Button>
+        </div>
+        {showLink && <LinkPlayerDialog player={player} organizationId={orgId} onClose={() => setShowLink(false)} onLinked={() => { setShowLink(false); loadData(); }} />}
+      </div>
+    );
+  }
+
+  const coverageColors = { green: 'text-green-600 bg-green-50', amber: 'text-amber-600 bg-amber-50', red: 'text-red-600 bg-red-50' };
+  const coverageIcons = { green: CheckCircle2, amber: Clock, red: AlertCircle };
+  const CoverageIcon = coverageIcons[coverage.color];
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="border border-slate-200 rounded-lg bg-slate-50/50">
-        <div className="flex items-center justify-between p-3">
-          <button onClick={() => setFiltersExpanded(!filtersExpanded)} className="flex items-center gap-2 text-sm font-medium text-slate-600">
-            <Filter className="w-4 h-4" /> Filtros
-            {activeFilterCount > 0 && <span className="bg-slate-800 text-white text-xs px-1.5 py-0.5 rounded-full">{activeFilterCount}</span>}
-          </button>
-          {activeFilterCount > 0 && <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 text-xs"><X className="w-3 h-3 mr-1" />Limpiar</Button>}
-        </div>
-        {filtersExpanded && (
-          <div className="px-3 pb-3 border-t border-slate-200 pt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            <div>
-              <Label className="text-xs">Campeonato</Label>
-              <Select value={filters.competition} onValueChange={v => setFilters(f => ({ ...f, competition: v }))}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="all">Todos</SelectItem>{competitions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Temporada</Label>
-              <Select value={filters.season} onValueChange={v => setFilters(f => ({ ...f, season: v }))}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="all">Todas</SelectItem>{seasons.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Rival</Label>
-              <Select value={filters.opponent} onValueChange={v => setFilters(f => ({ ...f, opponent: v }))}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="all">Todos</SelectItem>{opponents.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Local/Visitante</Label>
-              <Select value={filters.home_away} onValueChange={v => setFilters(f => ({ ...f, home_away: v }))}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="home">Local</SelectItem>
-                  <SelectItem value="away">Visitante</SelectItem>
-                  <SelectItem value="neutral">Neutral</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div><Label className="text-xs">Fecha desde</Label><Input type="date" value={filters.date_from} onChange={e => setFilters(f => ({ ...f, date_from: e.target.value }))} className="h-8 text-xs" /></div>
-            <div><Label className="text-xs">Fecha hasta</Label><Input type="date" value={filters.date_to} onChange={e => setFilters(f => ({ ...f, date_to: e.target.value }))} className="h-8 text-xs" /></div>
-          </div>
-        )}
-      </div>
-
-      {permissions.canEditStats && (
-        <div className="flex justify-end">
-          <Button size="sm" onClick={() => setShowAdd(true)} className="bg-slate-900"><Plus className="w-4 h-4 mr-1" /> Cargar estadísticas</Button>
-        </div>
-      )}
-
-      {matches.length === 0 ? (
-        <div className="text-center py-8 text-slate-400">
-          <BarChart3 className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-          <p>Sin partidos cargados</p>
-        </div>
-      ) : (
-        <>
-          {/* Totals */}
-          <div className="border border-slate-200 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-3">Totales filtrados</h3>
-            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2">
-              <StatBox label="Partidos" value={totals.matches} />
-              <StatBox label="Titular" value={totals.starts} />
-              <StatBox label="Minutos" value={totals.minutes} />
-              <StatBox label="Goles" value={totals.goals} />
-              <StatBox label="Asist." value={totals.assists} />
-              <StatBox label="Convoc." value={totals.call_ups} />
-              <StatBox label="Amarillas" value={totals.yellow} />
-              <StatBox label="Rojas" value={totals.red} />
-              <StatBox label="Prom." value={totals.avgRating} />
-            </div>
-          </div>
-
-          {/* Season totals */}
-          {filteredSeasonStats.length > 0 && (
-            <div className="space-y-3">
-              {filteredSeasonStats.map(s => (
-                <div key={s.id} className="border border-slate-200 rounded-lg p-4">
-                  <h3 className="text-sm font-semibold text-slate-700 mb-3">{s.season} · {s.competition || 'General'}</h3>
-                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                    <StatBox label="Partidos" value={s.matches} />
-                    <StatBox label="Titularidades" value={s.starts} />
-                    <StatBox label="Minutos" value={s.minutes} />
-                    <StatBox label="Goles" value={s.goals} />
-                    <StatBox label="Asistencias" value={s.assists} />
-                    <StatBox label="Convocatorias" value={s.call_ups} />
-                    <StatBox label="Amarillas" value={s.yellow_cards} />
-                    <StatBox label="Rojas" value={s.red_cards} />
-                    <StatBox label="Min/Parto" value={s.minutes_per_match} />
-                    <StatBox label="% Particip." value={`${s.participation_rate}%`} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Evolution chart */}
-          {chartData.length > 1 && (
-            <div className="border border-slate-200 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Evolución</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#94a3b8" />
-                  <YAxis tick={{ fontSize: 11 }} stroke="#94a3b8" />
-                  <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }} />
-                  <Bar dataKey="minutos" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Match-by-match table */}
-          <div className="border border-slate-200 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-3">Partido por partido ({filteredMatches.length})</h3>
-            <div className="overflow-x-auto -mx-4 px-4">
-              <table className="w-full text-sm min-w-[600px]">
-                <thead>
-                  <tr className="border-b border-slate-100 text-slate-400 text-xs">
-                    <th className="text-left py-2 px-2">Fecha</th>
-                    <th className="text-left py-2 px-2">Rival</th>
-                    <th className="text-left py-2 px-2">Camp.</th>
-                    <th className="text-center py-2 px-2">Tit.</th>
-                    <th className="text-center py-2 px-2">Min.</th>
-                    <th className="text-center py-2 px-2">G</th>
-                    <th className="text-center py-2 px-2">A</th>
-                    <th className="text-center py-2 px-2">TA</th>
-                    <th className="text-center py-2 px-2">TR</th>
-                    <th className="text-center py-2 px-2">Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredMatches.map(m => {
-                    const stats = matchStats.find(ms => ms.match_id === m.id);
-                    return (
-                      <tr key={m.id} className="border-b border-slate-50">
-                        <td className="py-2 px-2 text-slate-500 whitespace-nowrap">{formatDate(m.match_date)}</td>
-                        <td className="py-2 px-2 text-slate-700">{m.opponent}</td>
-                        <td className="py-2 px-2 text-slate-400 text-xs">{m.competition || '—'}</td>
-                        {stats ? (
-                          <>
-                            <td className="py-2 px-2 text-center">{stats.is_starter ? '✓' : '—'}</td>
-                            <td className="py-2 px-2 text-center text-slate-600">{stats.minutes_played}</td>
-                            <td className="py-2 px-2 text-center font-medium text-slate-800">{stats.goals || 0}</td>
-                            <td className="py-2 px-2 text-center font-medium text-slate-800">{stats.assists || 0}</td>
-                            <td className="py-2 px-2 text-center">{stats.yellow_cards || 0}</td>
-                            <td className="py-2 px-2 text-center">{stats.red_cards || 0}</td>
-                            <td className="py-2 px-2 text-center"><span className="text-xs text-green-600">Cargado</span></td>
-                          </>
-                        ) : (
-                          <>
-                            <td colSpan={7} className="py-2 px-2 text-center"><span className="text-xs text-amber-500 flex items-center justify-center gap-1"><Clock className="w-3 h-3" /> Estadísticas pendientes</span></td>
-                          </>
-                        )}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </>
-      )}
-
-      {showAdd && <AddStatsDialog player={player} matches={matches} onClose={() => setShowAdd(false)} onSaved={() => { setShowAdd(false); loadData(); }} />}
-    </div>
-  );
-}
-
-function AddStatsDialog({ player, matches, onClose, onSaved }) {
-  const [form, setForm] = useState({ match_id: '', is_starter: false, minutes_played: 0, goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, called_up: true });
-  const [saving, setSaving] = useState(false);
-
-  const selectedMatch = matches.find(m => m.id === form.match_id);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      await base44.entities.PlayerMatchStats.create({
-        ...form,
-        organization_id: player.organization_id,
-        player_id: player.id,
-        match_date: selectedMatch?.match_date?.slice(0, 10) || null,
-        season: selectedMatch?.season || '',
-        competition: selectedMatch?.competition || '',
-        opponent: selectedMatch?.opponent || ''
-      });
-      onSaved();
-    } catch (err) { console.error(err); }
-    setSaving(false);
-  };
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Cargar estadísticas de partido</DialogTitle></DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <Label>Partido *</Label>
-            <Select value={form.match_id} onValueChange={v => setForm(f => ({ ...f, match_id: v }))} required>
-              <SelectTrigger><SelectValue placeholder="Seleccionar partido" /></SelectTrigger>
+      {/* HEADER */}
+      <div className="border border-slate-200 rounded-lg p-3 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={season} onValueChange={setSeason}>
+            <SelectTrigger className="h-8 w-24 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2026">2026</SelectItem>
+              <SelectItem value="2025">2025</SelectItem>
+            </SelectContent>
+          </Select>
+          {clubs.length > 1 && (
+            <Select value={clubFilter} onValueChange={setClubFilter}>
+              <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {matches.map(m => <SelectItem key={m.id} value={m.id}>{formatDate(m.match_date)} vs {m.opponent}</SelectItem>)}
+                <SelectItem value="all">Todos los clubes</SelectItem>
+                {clubs.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
+          )}
+          <Select value={leagueFilter} onValueChange={setLeagueFilter}>
+            <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las competiciones</SelectItem>
+              {leagues.map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <div className="flex items-center gap-1 ml-auto">
+            <span className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${coverageColors[coverage.color]}`}>
+              <CoverageIcon className="w-3 h-3" /> {coverage.label}
+            </span>
+            {lastSync && <span className="text-xs text-slate-400">Actualizado: {new Date(lastSync).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}</span>}
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div><Label>Minutos</Label><Input type="number" value={form.minutes_played} onChange={e => setForm(f => ({ ...f, minutes_played: +e.target.value }))} /></div>
-            <div><Label>Goles</Label><Input type="number" value={form.goals} onChange={e => setForm(f => ({ ...f, goals: +e.target.value }))} /></div>
-            <div><Label>Asistencias</Label><Input type="number" value={form.assists} onChange={e => setForm(f => ({ ...f, assists: +e.target.value }))} /></div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 text-xs">
+            <span className="text-slate-400 mr-1">Período:</span>
+            {['5', '10', 'season'].map(p => (
+              <button key={p} onClick={() => setPeriod(p)} className={`px-2 py-1 rounded ${period === p ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                {p === '5' ? 'Últimos 5' : p === '10' ? 'Últimos 10' : 'Temporada'}
+              </button>
+            ))}
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label>Amarillas</Label><Input type="number" value={form.yellow_cards} onChange={e => setForm(f => ({ ...f, yellow_cards: +e.target.value }))} /></div>
-            <div><Label>Rojas</Label><Input type="number" value={form.red_cards} onChange={e => setForm(f => ({ ...f, red_cards: +e.target.value }))} /></div>
+          <div className="flex items-center gap-1 text-xs">
+            <span className="text-slate-400 mr-1">Vista:</span>
+            {['totals', 'per90'].map(v => (
+              <button key={v} onClick={() => setViewMode(v)} className={`px-2 py-1 rounded ${viewMode === v ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                {v === 'totals' ? 'Totales' : 'Por 90 min'}
+              </button>
+            ))}
           </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={form.is_starter} onChange={e => setForm(f => ({ ...f, is_starter: e.target.checked }))} /> Titular
-          </label>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-            <Button type="submit" disabled={saving || !form.match_id} className="bg-slate-900">{saving ? 'Guardando...' : 'Guardar'}</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
+          <div className="flex items-center gap-2 ml-auto">
+            {isAdmin && (
+              <Button size="sm" variant="outline" onClick={handleSync} disabled={syncing} className="h-8 text-xs">
+                {syncing ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />} Actualizar
+              </Button>
+            )}
+            <Button size="sm" variant="outline" onClick={handleExport} disabled={exporting} className="h-8 text-xs">
+              {exporting ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Download className="w-3 h-3 mr-1" />} Exportar
+            </Button>
+          </div>
+        </div>
+      </div>
 
-function StatBox({ label, value }) {
-  return (
-    <div className="text-center p-2 bg-slate-50 rounded-lg">
-      <p className="text-lg font-bold text-slate-800">{value}</p>
-      <p className="text-xs text-slate-400">{label}</p>
+      {/* BLOCK 1: Summary cards */}
+      <StatsSummaryCards cards={summaryCards} isReduced={isReduced} />
+
+      {/* BLOCK 2: Position metrics */}
+      <div className="border border-slate-200 rounded-lg p-4">
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">
+          Métricas · {POSITION_LABELS_FULL[player.position] || player.position}
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+          {positionMetrics.map((m, i) => (
+            <div key={i} className="bg-slate-50 rounded-lg p-2 text-center">
+              <p className="text-lg font-bold text-slate-800">{m.value ?? 'Sin dato'}</p>
+              <p className="text-xs text-slate-500 flex items-center justify-center gap-1">
+                {m.calculated && <Calculator className="w-3 h-3 text-slate-400" />}
+                {m.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* BLOCK 3: Charts */}
+      <StatsCharts matchStats={filteredMatchStats} seasonStats={filteredSeasonStats} position={player.position} />
+
+      {/* BLOCK 4: Key insights */}
+      <div className="border border-slate-200 rounded-lg p-4">
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">Claves para la representación</h3>
+        <div className="space-y-2">
+          {keyInsights.length > 0 ? keyInsights.map((ins, i) => (
+            <div key={i} className="flex items-start gap-2 p-2 bg-slate-50 rounded">
+              <span className="text-sm text-slate-700 flex-1">{ins.text}</span>
+              <span className="text-xs text-slate-400 whitespace-nowrap">{ins.sample}</span>
+            </div>
+          )) : <p className="text-sm text-slate-400">Sin datos suficientes para generar conclusiones</p>}
+        </div>
+      </div>
+
+      {/* BLOCK 5: Match table */}
+      <StatsMatchTable matchStats={filteredMatchStats} fixtures={fixtures} position={player.position} />
+
+      {/* BLOCK 7: Coverage footer */}
+      <div className="border-t pt-3 text-xs text-slate-400 space-y-1">
+        <p>Proveedor: API-Football v3 · Última sincronización: {lastSync ? new Date(lastSync).toLocaleString('es-AR') : '—'} · Temporada: {season}</p>
+        <p>Estado: {coverage.label} · Partidos con datos: {matchStats.length} · Los datos dependen de la cobertura proporcionada por la competencia y el proveedor.</p>
+      </div>
+
+      {showLink && <LinkPlayerDialog player={player} organizationId={orgId} onClose={() => setShowLink(false)} onLinked={() => { setShowLink(false); loadData(); }} />}
     </div>
   );
 }
