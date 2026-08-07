@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Plus, BarChart3, TrendingUp, Filter, X, Clock } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts';
-import ApiFootballStatsPanel from '@/components/agency/player-tabs/ApiFootballStatsPanel';
 
 export default function PlayerStatsTab({ player, permissions }) {
   const [matches, setMatches] = useState([]);
@@ -92,8 +91,6 @@ export default function PlayerStatsTab({ player, permissions }) {
 
   return (
     <div className="space-y-4">
-      <ApiFootballStatsPanel player={player} />
-
       {/* Filters */}
       <div className="border border-slate-200 rounded-lg bg-slate-50/50">
         <div className="flex items-center justify-between p-3">

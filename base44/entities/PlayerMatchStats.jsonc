@@ -15,10 +15,6 @@
       "type": "string",
       "description": "Reference to ClubFixture ID"
     },
-    "api_player_id": {
-      "type": "number",
-      "description": "API-Football player ID"
-    },
     "match_date": {
       "type": "string",
       "format": "date"
@@ -63,78 +59,6 @@
       "default": 0
     },
     "assists": {
-      "type": "number",
-      "default": 0
-    },
-    "penalties_scored": {
-      "type": "number",
-      "default": 0
-    },
-    "shots_total": {
-      "type": "number",
-      "default": 0
-    },
-    "shots_on": {
-      "type": "number",
-      "default": 0
-    },
-    "passes_total": {
-      "type": "number",
-      "default": 0
-    },
-    "passes_key": {
-      "type": "number",
-      "default": 0
-    },
-    "passes_accuracy": {
-      "type": "number",
-      "default": 0
-    },
-    "dribbles_attempts": {
-      "type": "number",
-      "default": 0
-    },
-    "dribbles_success": {
-      "type": "number",
-      "default": 0
-    },
-    "duels_total": {
-      "type": "number",
-      "default": 0
-    },
-    "duels_won": {
-      "type": "number",
-      "default": 0
-    },
-    "fouls_committed": {
-      "type": "number",
-      "default": 0
-    },
-    "fouls_drawn": {
-      "type": "number",
-      "default": 0
-    },
-    "tackles_total": {
-      "type": "number",
-      "default": 0
-    },
-    "tackles_blocks": {
-      "type": "number",
-      "default": 0
-    },
-    "tackles_interceptions": {
-      "type": "number",
-      "default": 0
-    },
-    "defensive_saved": {
-      "type": "number",
-      "default": 0
-    },
-    "defensive_blocked": {
-      "type": "number",
-      "default": 0
-    },
-    "defensive_clearances": {
       "type": "number",
       "default": 0
     },
