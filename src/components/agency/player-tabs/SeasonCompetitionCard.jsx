@@ -1,0 +1,9 @@
+import React from 'react';
+import { Trophy } from 'lucide-react';
+import { Image } from '@/components/ui/image';
+import StatMetric from '@/components/agency/player-tabs/StatMetric';
+
+export default function SeasonCompetitionCard({ stats }) {
+  const groups = [[['PJ', stats.appearances], ['Titular', stats.lineups], ['Banca', stats.bench], ['Minutos', stats.minutes], ['Rating', stats.rating ?? '—']], [['Goles', stats.goals_total], ['Asist.', stats.goals_assists], ['Penales', stats.penalties_scored], ['Tiros', stats.shots_total], ['Al arco', stats.shots_on]], [['Pases', stats.passes_total], ['Clave', stats.passes_key], ['Precisión', `${stats.passes_accuracy || 0}%`], ['Dribles', stats.dribbles_attempts], ['Exitosos', stats.dribbles_success]], [['Duelos', stats.duels_total], ['Ganados', stats.duels_won], ['Tackles', stats.tackles_total], ['Intercep.', stats.tackles_interceptions], ['Despejes', stats.defense_clearances]]];
+  return <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"><div className="mb-4 flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50">{stats.team_logo ? <Image src={stats.team_logo} alt={stats.team_name} className="h-8 w-8" fittingType="fit" /> : <Trophy className="h-5 w-5 text-slate-400" />}</div><div><h3 className="font-semibold text-slate-900">{stats.league_name || 'Competencia'}</h3><p className="text-xs text-slate-500">{stats.team_name} · {stats.position || '—'}</p></div></div><div className="space-y-3">{groups.map((group, index) => <div key={index} className="grid grid-cols-2 gap-2 sm:grid-cols-5">{group.map(([label, value], metricIndex) => <StatMetric key={label} label={label} value={value} tone={index === 1 && metricIndex < 3 ? 'blue' : index === 3 ? 'green' : 'slate'} />)}</div>)}</div></section>;
+}
