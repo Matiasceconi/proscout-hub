@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-import { apiGetWithRetry, mapSeasonStats, mapMatchStats, sanitizeError } from '../../shared/statsUtils.ts';
+import { mapSeasonStats, mapMatchStats, sanitizeError, getApiKey, API_BASE_URL, parseRateLimit } from '../../shared/statsUtils.ts';
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -34,12 +34,16 @@ export default async function(req: Request): Promise<Response> {
     let lastRateLimitRemaining: number | null = null;
 
     try {
-      // Get all verified identities
-      const identityFilter: any = { organization_id, provider: "api_football" };
-      if (scp === "pending") identityFilter.status = { $in: ["pending", "ambiguous"] };
-      else identityFilter.status = "verified";
+      // Step 1: Buscar todos los PlayerExternalIdentity con filtro mínimo + filtrar en código
+      const allIdentities = await asAdmin.entities.PlayerExternalIdentity.filter({
+        organization_id
+      });
 
-      const identities = await asAdmin.entities.PlayerExternalIdentity.filter(identityFilter);
+      let identities = (allIdentities || []).filter(i => i.provider === "api_football" && i.status === "verified");
+      if (scp === "pending") {
+        identities = (allIdentities || []).filter(i => i.provider === "api_football" && (i.status === "pending" || i.status === "ambiguous"));
+      }
+
       if (identities.length === 0) {
         await asAdmin.entities.StatisticsSyncRun.update(syncRun.id, {
           status: "completed", finished_at: new Date().toISOString(), errors: ["Sin jugadores vinculados"]
@@ -47,7 +51,7 @@ export default async function(req: Request): Promise<Response> {
         return Response.json({ success: true, run_id: syncRun.id, message: "Sin jugadores vinculados" });
       }
 
-      // Group by provider_team_id to minimize API calls
+      // Step 2: Agrupar por provider_team_id
       const byTeam = new Map<string, any[]>();
       for (const ident of identities) {
         const teamId = ident.provider_team_id;
@@ -56,28 +60,65 @@ export default async function(req: Request): Promise<Response> {
         byTeam.get(teamId)!.push(ident);
       }
 
-      // Sync season stats per team (one call per team)
+      // Mapa de provider_player_id → identity para búsqueda rápida
+      const identByPid = new Map<string, any>();
+      for (const ident of identities) {
+        if (ident.provider_player_id) identByPid.set(String(ident.provider_player_id), ident);
+      }
+
+      // Step 3: Para cada grupo, llamar a GET /players?team={team_id}&season={season}
       for (const [teamId, teamIdentities] of byTeam) {
         if (lastRateLimitRemaining !== null && lastRateLimitRemaining <= 5) {
           await new Promise(r => setTimeout(r, 3000));
         }
         try {
-          const { data, rateLimit } = await apiGetWithRetry(`/players?team=${teamId}&season=${s}`);
+          const url = `${API_BASE_URL}/players?team=${teamId}&season=${s}`;
+          const res = await fetch(url, { headers: { "x-apisports-key": getApiKey() } });
+          const rateLimit = parseRateLimit(res.headers);
           apiRequestsUsed++;
           lastRateLimitRemaining = rateLimit.remaining;
 
+          if (res.status === 429) {
+            await new Promise(r => setTimeout(r, 5000));
+            errors.push(`Team ${teamId}: Rate limit exceeded`);
+            continue;
+          }
+          if (!res.ok) {
+            const errBody = await res.text().catch(() => "");
+            errors.push(`Team ${teamId}: API error ${res.status}`);
+            continue;
+          }
+
+          const data = await res.json();
+
+          // Step 4: Para cada jugador de la API, buscar PlayerExternalIdentity con ese provider_player_id
           for (const apiPlayer of data.response || []) {
             const providerPlayerId = String(apiPlayer.player?.id || "");
-            const matchingIdent = teamIdentities.find(i => i.provider_player_id === providerPlayerId);
+            const matchingIdent = identByPid.get(providerPlayerId);
             if (!matchingIdent) continue;
 
+            // Step 5: Si coincide, crear/actualizar PlayerSeasonStatistic
             for (const stat of apiPlayer.statistics || []) {
               if (!stat.league?.id) continue;
+              const league_id = String(stat.league.id);
               const mapped = mapSeasonStats(stat, organization_id, matchingIdent.player_id, providerPlayerId, s);
-              const existing = await asAdmin.entities.PlayerSeasonStatistic.filter({
-                organization_id, player_id: matchingIdent.player_id, provider: "api_football", season: s, league_id: String(stat.league.id)
+
+              // Buscar existente con filtro compuesto
+              let existing = await asAdmin.entities.PlayerSeasonStatistic.filter({
+                organization_id, player_id: matchingIdent.player_id, provider: "api_football", season: s, league_id
               });
-              if (existing.length > 0) {
+
+              // Fallback: filtro simple + filtrar en código
+              if (!existing || existing.length === 0) {
+                const allByPlayer = await asAdmin.entities.PlayerSeasonStatistic.filter({
+                  organization_id, player_id: matchingIdent.player_id, season: s
+                });
+                existing = (allByPlayer || []).filter(r =>
+                  r.provider === "api_football" && String(r.league_id) === league_id
+                );
+              }
+
+              if (existing && existing.length > 0) {
                 await asAdmin.entities.PlayerSeasonStatistic.update(existing[0].id, mapped);
                 recordsUpdated++;
               } else {
@@ -108,13 +149,23 @@ export default async function(req: Request): Promise<Response> {
           const relevantPlayers = players.filter(p => p.current_club_id && clubIds.includes(p.current_club_id));
           if (relevantPlayers.length === 0) continue;
           const playerIds = relevantPlayers.map(p => p.id);
-          const fxIdentities = await asAdmin.entities.PlayerExternalIdentity.filter({ organization_id, player_id: { $in: playerIds }, provider: "api_football", status: "verified" });
+
+          // Filtro simple + filtrar en código
+          const allFxIdentities = await asAdmin.entities.PlayerExternalIdentity.filter({
+            organization_id, player_id: { $in: playerIds }, provider: "api_football"
+          });
+          const fxIdentities = (allFxIdentities || []).filter(i => i.status === "verified");
           if (fxIdentities.length === 0) continue;
 
-          const { data, rateLimit } = await apiGetWithRetry(`/fixtures/players?fixture=${fx.provider_fixture_id}`);
+          const fxUrl = `${API_BASE_URL}/fixtures/players?fixture=${fx.provider_fixture_id}`;
+          const res = await fetch(fxUrl, { headers: { "x-apisports-key": getApiKey() } });
+          const rateLimit = parseRateLimit(res.headers);
           apiRequestsUsed++;
           lastRateLimitRemaining = rateLimit.remaining;
 
+          if (res.status === 429 || !res.ok) continue;
+
+          const data = await res.json();
           const fixtureData = data.response?.[0];
           if (!fixtureData) continue;
 
@@ -123,21 +174,30 @@ export default async function(req: Request): Promise<Response> {
             league: { id: fx.competition_id, season: fx.season },
             teams: { home: { id: fx.home_provider_team_id }, away: { id: fx.away_provider_team_id } },
           };
-          const identByPid = new Map(fxIdentities.map(i => [i.player_id, i]));
+          const identByPlayerId = new Map(fxIdentities.map(i => [i.player_id, i]));
 
           for (const teamData of fixtureData.players || []) {
             for (const ps of teamData.players || []) {
               const ppid = String(ps.player?.id || "");
               let matchPid = null;
-              for (const [pid, ident] of identByPid) {
+              for (const [pid, ident] of identByPlayerId) {
                 if (ident.provider_player_id === ppid) { matchPid = pid; break; }
               }
               if (!matchPid) continue;
               const mapped = mapMatchStats(ps, fullFixture, organization_id, matchPid, ppid);
-              const existing = await asAdmin.entities.PlayerMatchStatistic.filter({
+
+              let existing = await asAdmin.entities.PlayerMatchStatistic.filter({
                 organization_id, provider: "api_football", provider_fixture_id: fx.provider_fixture_id, player_id: matchPid
               });
-              if (existing.length > 0) {
+
+              if (!existing || existing.length === 0) {
+                const allByFixture = await asAdmin.entities.PlayerMatchStatistic.filter({
+                  organization_id, provider_fixture_id: fx.provider_fixture_id
+                });
+                existing = (allByFixture || []).filter(r => r.player_id === matchPid && r.provider === "api_football");
+              }
+
+              if (existing && existing.length > 0) {
                 await asAdmin.entities.PlayerMatchStatistic.update(existing[0].id, mapped);
                 recordsUpdated++;
               } else {

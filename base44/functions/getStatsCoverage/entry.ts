@@ -16,8 +16,8 @@ export default async function(req: Request): Promise<Response> {
     const [players, identities, matchStats, seasonStats, lastRuns] = await Promise.all([
       asAdmin.entities.Player.filter({ organization_id, status: { $ne: "archived" } }),
       asAdmin.entities.PlayerExternalIdentity.filter({ organization_id, provider: "api_football" }),
-      asAdmin.entities.PlayerMatchStatistic.filter({ organization_id }, "-synced_at", 1),
-      asAdmin.entities.PlayerSeasonStatistic.filter({ organization_id }, "-synced_at", 1),
+      asAdmin.entities.PlayerMatchStatistic.filter({ organization_id }, "-synced_at", 500),
+      asAdmin.entities.PlayerSeasonStatistic.filter({ organization_id }, "-synced_at", 500),
       asAdmin.entities.StatisticsSyncRun.filter({ organization_id }, "-started_at", 1),
     ]);
 

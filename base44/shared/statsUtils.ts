@@ -1,9 +1,7 @@
-import { secrets } from "base44:runtime";
-
 export const API_BASE_URL = "https://v3.football.api-sports.io";
 
 export function getApiKey(): string {
-  const key = secrets.get("API_FOOTBALL_KEY");
+  const key = process.env.API_FOOTBALL_KEY;
   if (!key) throw new Error("API_FOOTBALL_KEY no configurada");
   return key;
 }
@@ -146,7 +144,7 @@ export function mapSeasonStats(leagueStat: any, orgId: string, playerId: string,
     league_logo: leagueStat.league?.logo || null,
     club_name: leagueStat.team?.name || null,
     club_logo: leagueStat.team?.logo || null,
-    appearances: safeNum(games.appearances) || 0,
+    appearances: safeNum(games.appearences ?? games.appearances) || 0,
     lineups: safeNum(games.lineups) || 0,
     bench: safeNum(games.bench) || 0,
     minutes: safeNum(games.minutes) || 0,

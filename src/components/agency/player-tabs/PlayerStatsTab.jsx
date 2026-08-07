@@ -36,20 +36,25 @@ export default function PlayerStatsTab({ player, permissions }) {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [idents, ms, ss] = await Promise.all([
-        base44.entities.PlayerExternalIdentity.filter({ organization_id: orgId, player_id: player.id, provider: 'api_football' }),
-        base44.entities.PlayerMatchStatistic.filter({ organization_id: orgId, player_id: player.id, season: '2026' }, '-fixture_date', 100),
-        base44.entities.PlayerSeasonStatistic.filter({ organization_id: orgId, player_id: player.id, season: '2026' }),
+      // Filtro simple + filtrar en código (el compuesto puede no funcionar)
+      const [identsRaw, msRaw, ssRaw] = await Promise.all([
+        base44.entities.PlayerExternalIdentity.filter({ organization_id: orgId, player_id: player.id }),
+        base44.entities.PlayerMatchStatistic.filter({ organization_id: orgId, player_id: player.id }, '-fixture_date', 100),
+        base44.entities.PlayerSeasonStatistic.filter({ organization_id: orgId, player_id: player.id }),
       ]);
-      const ident = idents[0] || null;
+      const ident = (identsRaw || []).find(i => i.provider === 'api_football') || identsRaw?.[0] || null;
+      const ms = (msRaw || []).filter(m => m.season === '2026' && m.provider === 'api_football');
+      const ss = (ssRaw || []).filter(s => s.season === '2026' && s.provider === 'api_football');
       setIdentity(ident);
       setMatchStats(ms);
       setSeasonStats(ss);
       setLastSync(ss[0]?.synced_at || ms[0]?.synced_at || null);
       if (ms.length > 0) {
-        const fixtureIds = [...new Set(ms.map(m => m.provider_fixture_id))];
-        const fx = await base44.entities.ClubFixture.filter({ organization_id: orgId, provider_fixture_id: { $in: fixtureIds } });
-        setFixtures(fx);
+        const fixtureIds = [...new Set(ms.map(m => m.provider_fixture_id).filter(Boolean))];
+        if (fixtureIds.length > 0) {
+          const fx = await base44.entities.ClubFixture.filter({ organization_id: orgId, provider_fixture_id: { $in: fixtureIds } });
+          setFixtures(fx || []);
+        }
       }
     } catch (err) { console.error(err); }
     setLoading(false);
