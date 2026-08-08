@@ -15,6 +15,7 @@ import DashboardSkeleton from '@/components/agency/dashboard/DashboardSkeleton';
 import FollowUpModal from '@/components/agency/dashboard/FollowUpModal';
 import ObservationModal from '@/components/agency/dashboard/ObservationModal';
 import ManualFixtureDialog from '@/components/agency/dashboard/ManualFixtureDialog';
+import LiveMatchesSection from '@/components/agency/dashboard/LiveMatchesSection';
 import {
   isToday, isWithinDays, isFuture, isFixtureFinished, needsConfirmation,
   startOfToday, daysFromNow
@@ -299,6 +300,9 @@ export default function AgencyDashboard() {
 
   return (
     <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-5">
+      {/* Partidos en Vivo */}
+      <LiveMatchesSection onNavigateToPlayer={(p) => navigate(`/agency/players/${p.player_id}`)} />
+
       {/* Hero */}
       <DashboardHero
         organization={organization}
