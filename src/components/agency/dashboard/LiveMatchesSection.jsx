@@ -28,7 +28,7 @@ export default function LiveMatchesSection({ onNavigateToPlayer }) {
       else setRefreshing(true);
       setError(false);
       const res = await base44.functions.invoke('getLiveFixtures', { organization_id: orgId });
-      setFixtures(res.fixtures || []);
+      setFixtures(res.data?.fixtures || []);
     } catch (err) {
       console.error('Live fixtures error:', err);
       if (!silent) setError(true);
