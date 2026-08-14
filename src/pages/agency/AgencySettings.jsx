@@ -40,7 +40,7 @@ export default function AgencySettings() {
     setSaving(true);
     try {
       await base44.entities.Organization.update(orgId, form);
-      toast({ title: 'Configuración guardada', description: 'La identidad de tu agencia se actualizó correctamente.' });
+      toast({ title: 'Configuración guardada', description: 'La identidad de tu empresa se actualizó correctamente.' });
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
@@ -60,12 +60,12 @@ export default function AgencySettings() {
 
   return (
     <div className="p-4 lg:p-6 max-w-3xl mx-auto">
-      <PageHeader title="Configuración" subtitle="Personaliza la identidad de tu agencia" />
+      <PageHeader title="Configuración" subtitle="Personalizá la identidad de tu empresa" />
       <form onSubmit={handleSave} className="space-y-5">
         {/* Branding */}
         <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
           <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2"><Building2 className="w-4 h-4" /> Identidad visual</h3>
-          <div><Label>Nombre de la agencia</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
+          <div><Label>Nombre de la empresa</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <Label>Logotipo</Label>
