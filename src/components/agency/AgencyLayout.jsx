@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { getUserOrgId, getUserRole, isOrgAdmin } from '@/lib/roleUtils';
 import { getDefaultPermissions } from '@/components/agency/settings/accessPermissions';
+import { useOrganizationBranding } from '@/hooks/use-organization-branding';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -91,6 +92,8 @@ export default function AgencyLayout() {
     .toUpperCase();
 
   const primaryColor = org?.primary_color || '#0F172A';
+  useOrganizationBranding(org, 'Gestión de representados');
+
   const canAccess = (entry) => {
     if (entry.adminOnly) return isOrgAdmin(user);
     return !entry.permission || memberPermissions.includes(entry.permission);
@@ -124,8 +127,8 @@ export default function AgencyLayout() {
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-white font-semibold text-sm truncate">{org?.name || 'FootAgency'}</p>
-              <p className="text-white/50 text-xs">Panel de agencia</p>
+              <p className="text-white font-semibold text-sm truncate">{org?.name || 'Plataforma de gestión'}</p>
+              <p className="text-white/50 text-xs">Gestión de representados</p>
             </div>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white/60 hover:text-white">
@@ -210,7 +213,7 @@ export default function AgencyLayout() {
                 <User className="w-4 h-4 mr-2" /> Mi perfil
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/agency/settings')}>
-                <Settings className="w-4 h-4 mr-2" /> Configuración de la agencia
+                <Settings className="w-4 h-4 mr-2" /> Configuración de la empresa
               </DropdownMenuItem>
               {orgCount > 1 && (
                 <DropdownMenuItem onClick={() => navigate('/company-access')}>
@@ -233,7 +236,7 @@ export default function AgencyLayout() {
           <button onClick={() => setSidebarOpen(true)} className="text-slate-600">
             <Menu className="w-6 h-6" />
           </button>
-          <span className="font-semibold text-slate-800 text-sm">{org?.name || 'FootAgency'}</span>
+          <span className="font-semibold text-slate-800 text-sm">{org?.name || 'Plataforma de gestión'}</span>
           <div className="w-6" />
         </header>
 
