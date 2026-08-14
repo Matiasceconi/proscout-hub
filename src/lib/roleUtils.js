@@ -7,7 +7,7 @@ export const getUserRole = (user) => {
 
 export const getUserOrgId = (user) => {
   if (!user) return null;
-  return user.organization_id || user.data?.organization_id || null;
+  return user.organization_id || user.data?.organization_id || localStorage.getItem('active_organization_id') || null;
 };
 
 export const getPlayerId = (user) => {
