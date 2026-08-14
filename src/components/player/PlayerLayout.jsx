@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { getPlayerId, getPlayerOrgId } from '@/lib/roleUtils';
+import { useOrganizationBranding } from '@/hooks/use-organization-branding';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Home, Calendar, Trophy, BarChart3, Activity, Search, Video,
@@ -57,6 +58,8 @@ export default function PlayerLayout() {
   }, [location.pathname]);
 
   const primaryColor = org?.primary_color || '#0F172A';
+  useOrganizationBranding(org, 'Portal del jugador');
+
   const initials = (player?.first_name?.[0] || '') + (player?.last_name?.[0] || '') || 'P';
 
   return (
@@ -73,7 +76,7 @@ export default function PlayerLayout() {
               </div>
             )}
             <div>
-              <p className="font-semibold text-slate-800 text-sm leading-tight">{org?.name || 'FootAgency'}</p>
+              <p className="font-semibold text-slate-800 text-sm leading-tight">{org?.name || 'Plataforma de gestión'}</p>
               <p className="text-slate-400 text-xs">Portal del jugador</p>
             </div>
           </div>
