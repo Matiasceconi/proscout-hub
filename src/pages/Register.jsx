@@ -130,8 +130,8 @@ export default function Register() {
   return (
     <AuthLayout
       icon={UserPlus}
-      title="Crear una cuenta"
-      subtitle="Completá los datos para solicitar acceso"
+      title="Crear acceso a Score Fútbol"
+      subtitle="Completá los datos para solicitar un acceso autorizado"
       footer={
         <>
           ¿Ya tenés una cuenta?{" "}
