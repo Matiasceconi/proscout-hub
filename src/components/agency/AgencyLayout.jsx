@@ -6,12 +6,11 @@ import { getUserOrgId, getUserRole, isOrgAdmin } from '@/lib/roleUtils';
 import { getDefaultPermissions } from '@/components/agency/settings/accessPermissions';
 import { useOrganizationBranding } from '@/hooks/use-organization-branding';
 import { SCORE_FUTBOL_BRAND } from '@/lib/scoreFutbolBrand';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   LayoutDashboard, Users, Calendar, Trophy, BarChart3,
   FileText, UserCog, Settings,
-  LogOut, Menu, X, ChevronLeft, GraduationCap, ClipboardList, User, Building2, ChevronUp
+  LogOut, Menu, X, GraduationCap, ClipboardList, User, Building2, ChevronUp
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
