@@ -8,7 +8,7 @@ import { SCORE_FUTBOL_BRAND } from '@/lib/scoreFutbolBrand';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Home, Calendar, Trophy, BarChart3, Activity, Search, Video,
-  HeartPulse, Gift, FileText, Bell, User, LogOut, Menu, X
+  HeartPulse, Gift, FileText, Bell, User, LogOut, Menu, X, Headphones
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -18,6 +18,7 @@ const MENU_ITEMS = [
   { to: '/portal/stats', icon: BarChart3, label: 'Mis estadísticas' },
   { to: '/portal/physical', icon: Activity, label: 'Mi rendimiento' },
   { to: '/portal/opponent', icon: Search, label: 'Mi próximo rival' },
+  { to: '/portal/coaching', icon: Headphones, label: 'Solicitar coaching' },
   { to: '/portal/videos', icon: Video, label: 'Mis videos' },
   { to: '/portal/medical', icon: HeartPulse, label: 'Mi estado médico' },
   { to: '/portal/benefits', icon: Gift, label: 'Mis beneficios' },
