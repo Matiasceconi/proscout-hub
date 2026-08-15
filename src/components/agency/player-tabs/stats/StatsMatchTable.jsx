@@ -39,19 +39,78 @@ function FullStatsView({ stat }) {
   );
 }
 
+// Determina el estado del jugador en el partido
+function getMatchStatus(m) {
+  if (m.minutes > 0) return 'played';
+  if (m.started === false && m.substitute === true) return 'benched'; // convocado que no jugó
+  if (m.minutes === 0 && m.started === false) return 'no_data';
+  return 'no_data';
+}
+
+function MatchCard({ m, fx, isExpanded, onToggle, position }) {
+  const isHome = m.home_away === 'home';
+  const homeScore = fx?.home_score;
+  const awayScore = fx?.away_score;
+  const result = homeScore !== null && homeScore !== undefined && awayScore !== null && awayScore !== undefined
+    ? (isHome ? `${homeScore}-${awayScore}` : `${awayScore}-${homeScore}`)
+    : '—';
+  const rival = fx ? (isHome ? fx.away_team_name : fx.home_team_name) : '—';
+  const status = getMatchStatus(m);
+  const statusLabel = {
+    played: m.started ? 'Titular' : 'Suplente',
+    benched: 'Convocado (no jugó)',
+    no_data: 'Sin datos',
+  }[status];
+  const statusColor = {
+    played: m.started ? 'text-green-600' : 'text-amber-600',
+    benched: 'text-slate-500',
+    no_data: 'text-slate-300',
+  }[status];
+  const metrics = getMatchMetricsByPosition(m, position);
+
+  return (
+    <div className="border border-slate-200 rounded-lg p-3">
+      <button onClick={onToggle} className="w-full text-left">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs text-slate-500">{formatDate(m.fixture_date)}</span>
+          <span className={`text-xs font-medium ${statusColor}`}>{statusLabel}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-slate-700 truncate">vs {rival}</p>
+            <p className="text-xs text-slate-400">{fx?.competition_name || '—'} · {isHome ? 'Local' : 'Visitante'}</p>
+          </div>
+          <div className="text-right ml-2">
+            <p className="text-sm font-medium text-slate-700">{result}</p>
+            {status === 'played' && <p className="text-xs text-slate-500">{m.minutes}' · {m.rating ? Number(m.rating).toFixed(1) : '—'}</p>}
+          </div>
+        </div>
+      </button>
+      {isExpanded && <FullStatsView stat={m} />}
+    </div>
+  );
+}
+
 export default function StatsMatchTable({ matchStats, fixtures, position }) {
   const [expanded, setExpanded] = useState(null);
   const fixtureById = new Map((fixtures || []).map(f => [f.provider_fixture_id, f]));
 
   if (!matchStats || matchStats.length === 0) {
-    return <p className="text-sm text-slate-400 py-4 text-center">Sin partidos con estadísticas</p>;
+    return (
+      <div className="border border-slate-200 rounded-lg p-4">
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">Partidos recientes</h3>
+        <p className="text-sm text-slate-400 py-4 text-center">Sin partidos con estadísticas</p>
+      </div>
+    );
   }
   const sorted = [...matchStats].sort((a, b) => new Date(b.fixture_date) - new Date(a.fixture_date));
 
   return (
     <div className="border border-slate-200 rounded-lg overflow-hidden">
       <h3 className="text-sm font-semibold text-slate-700 p-3 border-b border-slate-100">Partidos recientes</h3>
-      <div className="overflow-x-auto">
+
+      {/* Desktop: tabla */}
+      <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-xs min-w-[700px]">
           <thead>
             <tr className="border-b border-slate-100 text-slate-400">
@@ -79,21 +138,34 @@ export default function StatsMatchTable({ matchStats, fixtures, position }) {
               const result = homeScore !== null && homeScore !== undefined && awayScore !== null && awayScore !== undefined
                 ? (isHome ? `${homeScore}-${awayScore}` : `${awayScore}-${homeScore}`)
                 : '—';
+              const status = getMatchStatus(m);
               return (
                 <React.Fragment key={i}>
-                  <tr className="border-b border-slate-50 hover:bg-slate-50">
+                  <tr className="border-b border-slate-50">
                     <td className="p-2 text-slate-500 whitespace-nowrap">{formatDate(m.fixture_date)}</td>
                     <td className="p-2 text-slate-700">{fx ? (isHome ? fx.away_team_name : fx.home_team_name) : '—'}</td>
                     <td className="p-2 text-slate-400">{fx?.competition_name || '—'}</td>
                     <td className="p-2 text-center text-slate-600">{result}</td>
                     <td className="p-2 text-center">{isHome ? 'L' : 'V'}</td>
-                    <td className="p-2 text-center">{m.started ? <span className="text-green-600">T</span> : m.minutes > 0 ? <span className="text-amber-500">S</span> : <span className="text-slate-300">—</span>}</td>
-                    <td className="p-2 text-center text-slate-500">{m.position || '—'}</td>
-                    <td className="p-2 text-center text-slate-600">{m.minutes === 0 && m.started === false ? 'Conv.' : m.minutes}</td>
-                    <td className="p-2 text-center font-medium text-slate-700">{m.rating ? Number(m.rating).toFixed(1) : '—'}</td>
-                    <td className="p-2 text-center text-slate-500 text-[10px]">{metrics.filter(([, v]) => v !== null && v !== undefined && v !== 0).map(([l, v]) => `${l}: ${v}`).join(' · ') || '—'}</td>
                     <td className="p-2 text-center">
-                      <button onClick={() => setExpanded(isExpanded ? null : i)} className="text-slate-400 hover:text-slate-700">
+                      {status === 'played' ? (
+                        m.started ? <span className="text-green-600 font-medium">T</span> : <span className="text-amber-500">S</span>
+                      ) : status === 'benched' ? (
+                        <span className="text-slate-400" title="Convocado que no jugó">C</span>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
+                    <td className="p-2 text-center text-slate-500">{m.position || '—'}</td>
+                    <td className="p-2 text-center text-slate-600">
+                      {status === 'played' ? m.minutes : status === 'benched' ? '0' : '—'}
+                    </td>
+                    <td className="p-2 text-center font-medium text-slate-700">{m.rating ? Number(m.rating).toFixed(1) : '—'}</td>
+                    <td className="p-2 text-center text-slate-500 text-[10px]">
+                      {metrics.filter(([, v]) => v !== null && v !== undefined && v !== 0).map(([l, v]) => `${l}: ${v}`).join(' · ') || '—'}
+                    </td>
+                    <td className="p-2 text-center">
+                      <button onClick={() => setExpanded(isExpanded ? null : i)} className="text-slate-400">
                         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                       </button>
                     </td>
@@ -110,6 +182,23 @@ export default function StatsMatchTable({ matchStats, fixtures, position }) {
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: tarjetas */}
+      <div className="sm:hidden p-2 space-y-2">
+        {sorted.map((m, i) => {
+          const fx = fixtureById.get(m.provider_fixture_id);
+          return (
+            <MatchCard
+              key={i}
+              m={m}
+              fx={fx}
+              position={position}
+              isExpanded={expanded === i}
+              onToggle={() => setExpanded(expanded === i ? null : i)}
+            />
+          );
+        })}
       </div>
     </div>
   );
