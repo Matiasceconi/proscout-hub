@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { getPlayerId, getPlayerOrgId } from '@/lib/roleUtils';
 import { useOrganizationBranding } from '@/hooks/use-organization-branding';
+import { SCORE_FUTBOL_BRAND } from '@/lib/scoreFutbolBrand';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Home, Calendar, Trophy, BarChart3, Activity, Search, Video,
@@ -57,7 +58,8 @@ export default function PlayerLayout() {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  const primaryColor = org?.primary_color || '#0F172A';
+  const primaryColor = org?.primary_color || SCORE_FUTBOL_BRAND.primaryColor;
+  const brandLogo = org?.logo_url || SCORE_FUTBOL_BRAND.logoUrl;
   useOrganizationBranding(org, 'Portal del jugador');
 
   const initials = (player?.first_name?.[0] || '') + (player?.last_name?.[0] || '') || 'P';
@@ -68,15 +70,15 @@ export default function PlayerLayout() {
       <header className="sticky top-0 z-30 bg-white border-b border-slate-200">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            {org?.logo_url ? (
-              <img src={org.logo_url} alt="logo" className="w-8 h-8 rounded-lg object-cover" />
+            {brandLogo ? (
+              <img src={brandLogo} alt={`Logo de ${SCORE_FUTBOL_BRAND.name}`} className="w-8 h-8 rounded-lg bg-white object-contain p-0.5" />
             ) : (
               <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: primaryColor }}>
                 <Trophy className="w-4 h-4 text-white" />
               </div>
             )}
             <div>
-              <p className="font-semibold text-slate-800 text-sm leading-tight">{org?.name || 'Plataforma de gestión'}</p>
+              <p className="font-semibold text-slate-800 text-sm leading-tight">{SCORE_FUTBOL_BRAND.name}</p>
               <p className="text-slate-400 text-xs">Portal del jugador</p>
             </div>
           </div>
