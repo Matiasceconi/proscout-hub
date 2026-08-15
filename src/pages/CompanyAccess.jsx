@@ -3,7 +3,8 @@ import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { getMyOrganizationContext, setActiveOrganization } from '@/lib/organizationUtils';
 import { Button } from '@/components/ui/button';
-import { Building2, LogIn, Loader2, ShieldCheck } from 'lucide-react';
+import { Building2, LogIn, Loader2 } from 'lucide-react';
+import { SCORE_FUTBOL_BRAND } from '@/lib/scoreFutbolBrand';
 
 const ROLE_LABELS = {
   organization_owner: 'Propietario',
@@ -58,11 +59,11 @@ export default function CompanyAccess() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-900 mb-4">
-            <ShieldCheck className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm mb-4">
+            <img src={SCORE_FUTBOL_BRAND.logoUrl} alt={`Logo de ${SCORE_FUTBOL_BRAND.name}`} className="h-full w-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Acceso a la plataforma</h1>
-          <p className="text-slate-500 mt-2 text-sm">Seleccioná una empresa para continuar</p>
+          <h1 className="text-2xl font-bold text-slate-900">Acceso a {SCORE_FUTBOL_BRAND.name}</h1>
+          <p className="text-slate-500 mt-2 text-sm">Seleccioná tu acceso autorizado para continuar</p>
         </div>
 
         {orgs.length === 0 ? (
