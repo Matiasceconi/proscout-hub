@@ -1,16 +1,21 @@
 import React from "react";
+import { SCORE_FUTBOL_BRAND } from "@/lib/scoreFutbolBrand";
 
-export default function AuthLayout({ icon: Icon, title, subtitle, footer, children }) {
+export default function AuthLayout({ title, subtitle, footer, children }) {
   return (
     <div className="min-h-screen bg-slate-50 lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)]">
-      <aside className="relative hidden overflow-hidden bg-slate-950 px-12 py-14 text-white lg:flex lg:flex-col lg:justify-between">
+      <aside className="relative hidden overflow-hidden px-12 py-14 text-white lg:flex lg:flex-col lg:justify-between" style={{ backgroundColor: SCORE_FUTBOL_BRAND.primaryColor }}>
         <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-emerald-500/10" aria-hidden="true" />
         <div className="absolute -bottom-32 -left-24 h-96 w-96 rounded-full border border-white/10" aria-hidden="true" />
 
-        <div className="relative">
-          <span className="inline-flex rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">
-            Plataforma privada
-          </span>
+        <div className="relative flex items-center gap-3">
+          <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white p-1.5 shadow-lg">
+            <img src={SCORE_FUTBOL_BRAND.logoUrl} alt={`Logo de ${SCORE_FUTBOL_BRAND.name}`} className="h-full w-full object-contain" />
+          </div>
+          <div>
+            <p className="text-lg font-bold tracking-tight">{SCORE_FUTBOL_BRAND.name}</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-emerald-300">{SCORE_FUTBOL_BRAND.descriptor}</p>
+          </div>
         </div>
 
         <div className="relative max-w-xl">
@@ -32,8 +37,8 @@ export default function AuthLayout({ icon: Icon, title, subtitle, footer, childr
       <main className="flex min-h-screen items-center justify-center px-4 py-10 sm:px-8">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
-            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 shadow-lg shadow-slate-900/10">
-              <Icon className="h-7 w-7 text-white" aria-hidden="true" />
+            <div className="mb-4 inline-flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-lg shadow-slate-900/10">
+              <img src={SCORE_FUTBOL_BRAND.logoUrl} alt={`Logo de ${SCORE_FUTBOL_BRAND.name}`} className="h-full w-full object-contain" />
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-950">{title}</h1>
             {subtitle && <p className="mt-2 text-slate-500">{subtitle}</p>}
