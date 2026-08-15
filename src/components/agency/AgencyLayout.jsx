@@ -117,7 +117,7 @@ export default function AgencyLayout() {
         } flex flex-col border-r-[3px]`}
         style={{
           backgroundColor: primaryColor,
-          borderRightColor: org?.secondary_color || SCORE_FUTBOL_BRAND.secondaryColor,
+          borderRightColor: org?.secondary_color || SCORE_FUTBOL_BRAND.accentColor,
         }}
       >
         {/* Logo / Org name */}
