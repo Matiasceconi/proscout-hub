@@ -30,6 +30,7 @@ import PortalMatches from '@/pages/portal/PortalMatches';
 import PortalStats from '@/pages/portal/PortalStats';
 import PortalPhysical from '@/pages/portal/PortalPhysical';
 import PortalOpponent from '@/pages/portal/PortalOpponent';
+import PortalCoaching from '@/pages/portal/PortalCoaching';
 import PortalVideos from '@/pages/portal/PortalVideos';
 import PortalMedical from '@/pages/portal/PortalMedical';
 import PortalBenefits from '@/pages/portal/PortalBenefits';
@@ -112,6 +113,7 @@ const AuthenticatedApp = () => {
           <Route path="/portal/stats" element={<PortalStats />} />
           <Route path="/portal/physical" element={<PortalPhysical />} />
           <Route path="/portal/opponent" element={<PortalOpponent />} />
+          <Route path="/portal/coaching" element={<PortalCoaching />} />
           <Route path="/portal/videos" element={<PortalVideos />} />
           <Route path="/portal/medical" element={<PortalMedical />} />
           <Route path="/portal/benefits" element={<PortalBenefits />} />
