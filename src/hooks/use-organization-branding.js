@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
+import { SCORE_FUTBOL_BRAND } from '@/lib/scoreFutbolBrand';
 
-const DEFAULT_TITLE = 'Plataforma de gestión';
-const DEFAULT_THEME_COLOR = '#0F172A';
+const DEFAULT_TITLE = SCORE_FUTBOL_BRAND.defaultTitle;
+const DEFAULT_THEME_COLOR = SCORE_FUTBOL_BRAND.primaryColor;
 
 function getOrCreateThemeMeta() {
   let meta = document.querySelector('meta[name="theme-color"]');
@@ -15,33 +16,26 @@ function getOrCreateThemeMeta() {
 
 export function useOrganizationBranding(org, contextLabel) {
   useEffect(() => {
-    const organizationName = org?.name?.trim();
     const label = contextLabel?.trim();
-
-    document.title = organizationName
-      ? [organizationName, label].filter(Boolean).join(' · ')
-      : DEFAULT_TITLE;
+    document.title = [SCORE_FUTBOL_BRAND.name, label].filter(Boolean).join(' · ');
 
     const themeMeta = getOrCreateThemeMeta();
     themeMeta.content = org?.primary_color || DEFAULT_THEME_COLOR;
 
     let favicon = document.querySelector('link[data-organization-branding="true"]');
-    if (org?.logo_url) {
-      if (!favicon) {
-        favicon = document.createElement('link');
-        favicon.rel = 'icon';
-        favicon.dataset.organizationBranding = 'true';
-        document.head.appendChild(favicon);
-      }
-      favicon.href = org.logo_url;
-    } else if (favicon) {
-      favicon.remove();
+    const faviconUrl = org?.logo_url || SCORE_FUTBOL_BRAND.logoUrl;
+    if (!favicon) {
+      favicon = document.createElement('link');
+      favicon.rel = 'icon';
+      favicon.dataset.organizationBranding = 'true';
+      document.head.appendChild(favicon);
     }
+    favicon.href = faviconUrl;
 
     return () => {
       document.title = DEFAULT_TITLE;
       themeMeta.content = DEFAULT_THEME_COLOR;
       document.querySelector('link[data-organization-branding="true"]')?.remove();
     };
-  }, [org?.name, org?.logo_url, org?.primary_color, contextLabel]);
+  }, [org?.logo_url, org?.primary_color, contextLabel]);
 }
