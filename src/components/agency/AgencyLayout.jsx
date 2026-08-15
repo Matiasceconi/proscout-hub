@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { getUserOrgId, getUserRole, isOrgAdmin } from '@/lib/roleUtils';
 import { getDefaultPermissions } from '@/components/agency/settings/accessPermissions';
 import { useOrganizationBranding } from '@/hooks/use-organization-branding';
+import { SCORE_FUTBOL_BRAND } from '@/lib/scoreFutbolBrand';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -91,7 +92,8 @@ export default function AgencyLayout() {
     .join('')
     .toUpperCase();
 
-  const primaryColor = org?.primary_color || '#0F172A';
+  const primaryColor = org?.primary_color || SCORE_FUTBOL_BRAND.primaryColor;
+  const brandLogo = org?.logo_url || SCORE_FUTBOL_BRAND.logoUrl;
   useOrganizationBranding(org, 'Gestión de representados');
 
   const canAccess = (entry) => {
@@ -119,15 +121,15 @@ export default function AgencyLayout() {
         {/* Logo / Org name */}
         <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
           <div className="flex items-center gap-3 min-w-0">
-            {org?.logo_url ? (
-              <img src={org.logo_url} alt="logo" className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+            {brandLogo ? (
+              <img src={brandLogo} alt={`Logo de ${SCORE_FUTBOL_BRAND.name}`} className="w-9 h-9 rounded-lg bg-white object-contain p-0.5 flex-shrink-0" />
             ) : (
               <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
                 <Trophy className="w-5 h-5 text-white" />
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-white font-semibold text-sm truncate">{org?.name || 'Plataforma de gestión'}</p>
+              <p className="text-white font-semibold text-sm truncate">{SCORE_FUTBOL_BRAND.name}</p>
               <p className="text-white/50 text-xs">Gestión de representados</p>
             </div>
           </div>
@@ -236,7 +238,7 @@ export default function AgencyLayout() {
           <button onClick={() => setSidebarOpen(true)} className="text-slate-600">
             <Menu className="w-6 h-6" />
           </button>
-          <span className="font-semibold text-slate-800 text-sm">{org?.name || 'Plataforma de gestión'}</span>
+          <span className="font-semibold text-slate-800 text-sm">{SCORE_FUTBOL_BRAND.name}</span>
           <div className="w-6" />
         </header>
 
