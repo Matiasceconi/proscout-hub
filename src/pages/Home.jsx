@@ -4,7 +4,6 @@ import {
   Activity,
   ArrowRight,
   BarChart3,
-  CalendarDays,
   CheckCircle2,
   Download,
   Headphones,
