@@ -162,11 +162,17 @@ export default function Home() {
 
       try {
         const ctx = await getMyOrganizationContext();
-        if (ctx.activeOrg) {
+        const activeItems = ctx.activeItems || [];
+        const preferred = activeItems.find(({ organization }) =>
+          organization?.slug === 'score-futbol' ||
+          (organization?.name === 'Score Fútbol' && Boolean(organization?.logo_url))
+        ) || activeItems[0];
+
+        if (ctx.activeOrg?.id === preferred?.organization?.id) {
           setRedirect('/agency');
-        } else if (ctx.activeItems?.length === 1) {
+        } else if (preferred?.organization?.id) {
           const { setActiveOrganization } = await import('@/lib/organizationUtils');
-          await setActiveOrganization(ctx.activeItems[0].organization.id);
+          await setActiveOrganization(preferred.organization.id);
           setRedirect('/agency');
         } else {
           setRedirect('/company-access');
