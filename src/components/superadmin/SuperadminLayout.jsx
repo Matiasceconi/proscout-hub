@@ -1,7 +1,8 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { ShieldCheck, LogOut, Building2 } from 'lucide-react';
+import { LogOut, Building2 } from 'lucide-react';
+import { SCORE_FUTBOL_BRAND } from '@/lib/scoreFutbolBrand';
 
 const MENU_ITEMS = [
   { to: '/superadmin', icon: Building2, label: 'Organizaciones', end: true }
@@ -15,12 +16,12 @@ export default function SuperadminLayout() {
       <aside className="sticky top-0 h-screen w-60 bg-slate-900 flex flex-col">
         <div className="px-5 py-5 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-lg bg-white p-0.5 flex items-center justify-center overflow-hidden">
+              <img src={SCORE_FUTBOL_BRAND.logoUrl} alt={`Logo de ${SCORE_FUTBOL_BRAND.name}`} className="h-full w-full object-contain" />
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">FootAgency Pro</p>
-              <p className="text-white/40 text-xs">Superadmin</p>
+              <p className="text-white font-semibold text-sm">{SCORE_FUTBOL_BRAND.name}</p>
+              <p className="text-white/40 text-xs">Administración</p>
             </div>
           </div>
         </div>
