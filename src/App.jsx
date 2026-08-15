@@ -72,6 +72,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       {/* Public routes */}
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -80,7 +81,6 @@ const AuthenticatedApp = () => {
 
       {/* Auth required, no org required */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route path="/" element={<Home />} />
         <Route path="/company-access" element={<CompanyAccess />} />
         <Route path="/company/create" element={<Onboarding />} />
       </Route>
