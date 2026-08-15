@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { getPlayerId, getPlayerOrgId } from '@/lib/roleUtils';
@@ -8,7 +8,7 @@ import { SCORE_FUTBOL_BRAND } from '@/lib/scoreFutbolBrand';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Home, Calendar, Trophy, BarChart3, Activity, Search, Video,
-  HeartPulse, Gift, FileText, Bell, User, LogOut, Menu, X, ChevronLeft
+  HeartPulse, Gift, FileText, Bell, User, LogOut, Menu, X
 } from 'lucide-react';
 
 const MENU_ITEMS = [
