@@ -114,22 +114,29 @@ export default function AgencyLayout() {
       <aside
         className={`fixed lg:sticky top-0 left-0 h-screen w-64 z-40 transform transition-transform duration-300 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        } flex flex-col`}
-        style={{ backgroundColor: primaryColor }}
+        } flex flex-col border-r-[3px]`}
+        style={{
+          backgroundColor: primaryColor,
+          borderRightColor: org?.secondary_color || SCORE_FUTBOL_BRAND.secondaryColor,
+        }}
       >
         {/* Logo / Org name */}
-        <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
           <div className="flex items-center gap-3 min-w-0">
             {brandLogo ? (
-              <img src={brandLogo} alt={`Logo de ${SCORE_FUTBOL_BRAND.name}`} className="w-9 h-9 rounded-lg bg-white object-contain p-0.5 flex-shrink-0" />
+              <img
+                src={brandLogo}
+                alt={`Logo de ${SCORE_FUTBOL_BRAND.name}`}
+                className="w-16 h-16 object-contain flex-shrink-0 drop-shadow-[0_6px_14px_rgba(0,0,0,0.35)]"
+              />
             ) : (
-              <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
-                <Trophy className="w-5 h-5 text-white" />
+              <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center flex-shrink-0">
+                <Trophy className="w-8 h-8 text-emerald-400" />
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-white font-semibold text-sm truncate">{SCORE_FUTBOL_BRAND.name}</p>
-              <p className="text-white/50 text-xs">Gestión de representados</p>
+              <p className="text-white font-black text-base tracking-tight truncate">{SCORE_FUTBOL_BRAND.name}</p>
+              <p className="text-emerald-300/80 text-[11px] font-medium">Gestión de representados</p>
             </div>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white/60 hover:text-white">
@@ -154,8 +161,8 @@ export default function AgencyLayout() {
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
                           isActive
-                            ? 'bg-white/15 text-white font-medium'
-                            : 'text-white/60 hover:text-white hover:bg-white/10'
+                            ? 'bg-emerald-500/20 text-white font-semibold ring-1 ring-inset ring-emerald-400/30'
+                            : 'text-white/65 hover:text-white hover:bg-white/10'
                         }`
                       }
                     >
@@ -175,8 +182,8 @@ export default function AgencyLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     isActive
-                      ? 'bg-white/15 text-white font-medium'
-                      : 'text-white/60 hover:text-white hover:bg-white/10'
+                      ? 'bg-emerald-500/20 text-white font-semibold ring-1 ring-inset ring-emerald-400/30'
+                      : 'text-white/65 hover:text-white hover:bg-white/10'
                   }`
                 }
               >
@@ -237,7 +244,10 @@ export default function AgencyLayout() {
           <button onClick={() => setSidebarOpen(true)} className="text-slate-600">
             <Menu className="w-6 h-6" />
           </button>
-          <span className="font-semibold text-slate-800 text-sm">{SCORE_FUTBOL_BRAND.name}</span>
+          <div className="flex items-center gap-2">
+            {brandLogo && <img src={brandLogo} alt="" className="h-9 w-9 object-contain" />}
+            <span className="font-black text-slate-900 text-sm">{SCORE_FUTBOL_BRAND.name}</span>
+          </div>
           <div className="w-6" />
         </header>
 
