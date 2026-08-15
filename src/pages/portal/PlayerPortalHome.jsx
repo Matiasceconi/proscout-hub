@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { getPlayerId, formatDate, formatDateTime, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS, daysUntil } from '@/lib/roleUtils';
+import { getPlayerId, formatDate, formatDateTime, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS } from '@/lib/roleUtils';
 import { Badge } from '@/components/shared/UIBits';
-import { Trophy, Video, Search, Activity, Gift, Calendar, HeartPulse, Bell, ChevronRight, TrendingUp } from 'lucide-react';
+import { Trophy, Video, Search, Gift, Calendar, HeartPulse, Bell, TrendingUp, Headphones } from 'lucide-react';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
 
 export default function PlayerPortalHome() {
@@ -111,6 +111,28 @@ export default function PlayerPortalHome() {
           </div>
         </div>
       )}
+
+      {/* Preparation shortcuts */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={() => navigate('/portal/opponent')}
+          className="rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-emerald-200 hover:bg-emerald-50"
+        >
+          <Search className="h-5 w-5 text-emerald-600" />
+          <p className="mt-3 text-sm font-bold text-slate-800">Próximo rival</p>
+          <p className="mt-1 text-xs leading-5 text-slate-400">Ver análisis disponible</p>
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/portal/coaching')}
+          className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left transition hover:bg-emerald-100"
+        >
+          <Headphones className="h-5 w-5 text-emerald-700" />
+          <p className="mt-3 text-sm font-bold text-emerald-950">Solicitar coaching</p>
+          <p className="mt-1 text-xs leading-5 text-emerald-800/60">Reunión virtual personalizada</p>
+        </button>
+      </div>
 
       {/* Stats summary */}
       {data.seasonStats && (
