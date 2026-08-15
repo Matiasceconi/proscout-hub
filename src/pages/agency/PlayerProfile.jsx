@@ -55,6 +55,16 @@ export default function PlayerProfile() {
     setLoading(false);
   };
 
+  const handleSavePhoto = async (file_url) => {
+    await base44.entities.Player.update(player.id, { photo_url: file_url, photo_status: 'ok' });
+    setPlayer(p => ({ ...p, photo_url: file_url, photo_status: 'ok' }));
+  };
+
+  const handleRemovePhoto = async () => {
+    await base44.entities.Player.update(player.id, { photo_url: '', photo_status: 'pending' });
+    setPlayer(p => ({ ...p, photo_url: '', photo_status: 'pending' }));
+  };
+
   const handleTabChange = (tab, subtab) => {
     setActiveTab(tab);
     if (subtab) setVideoSubtab(subtab);
@@ -129,6 +139,9 @@ export default function PlayerProfile() {
             <Button size="sm" variant="outline" onClick={handleShare}><Share2 className="w-3.5 h-3.5 mr-1" /> Compartir perfil</Button>
           </>
         ) : undefined}
+        canEditPhoto={canManage}
+        onSavePhoto={handleSavePhoto}
+        onRemovePhoto={handleRemovePhoto}
       >
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-400">
           {player.preferred_foot && <span>Pierna: {player.preferred_foot === 'left' ? 'Izquierda' : player.preferred_foot === 'right' ? 'Derecha' : 'Ambidiestro'}</span>}

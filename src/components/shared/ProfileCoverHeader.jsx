@@ -1,10 +1,16 @@
 import React from 'react';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
+import PhotoEditOverlay from '@/components/shared/PhotoEditOverlay';
 
 /**
  * ProfileCoverHeader - Encabezado de portada para fichas de jugadores y DTs.
  * Muestra la foto de perfil centrada y prominente (circular, 128px) sobre una
  * banda de portada, con el logo del club como composición visual.
+ *
+ * Props de edición de foto:
+ *  - canEditPhoto: boolean    (muestra el botón de edición sobre la foto)
+ *  - onSavePhoto: async (file_url) => void
+ *  - onRemovePhoto: async () => void  (opcional)
  */
 export default function ProfileCoverHeader({
   photoUrl,
@@ -16,7 +22,10 @@ export default function ProfileCoverHeader({
   subtitle,
   badges,
   actions,
-  children
+  children,
+  canEditPhoto = false,
+  onSavePhoto,
+  onRemovePhoto
 }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-4">
@@ -36,15 +45,24 @@ export default function ProfileCoverHeader({
       <div className="px-5 pb-5">
         <div className="flex flex-col items-center -mt-16">
           {/* Foto de perfil - grande, circular, centrada */}
-          <ProfileAvatar
-            photoUrl={photoUrl}
-            photoSourceUrl={photoSourceUrl}
-            firstName={firstName}
-            lastName={lastName}
-            size="2xl"
-            shape="rounded-full"
-            className="border-4 border-white shadow-xl"
-          />
+          <div className={`relative ${canEditPhoto ? 'group' : ''}`}>
+            <ProfileAvatar
+              photoUrl={photoUrl}
+              photoSourceUrl={photoSourceUrl}
+              firstName={firstName}
+              lastName={lastName}
+              size="2xl"
+              shape="rounded-full"
+              className="border-4 border-white shadow-xl"
+            />
+            {canEditPhoto && (
+              <PhotoEditOverlay
+                onSave={onSavePhoto}
+                onRemove={onRemovePhoto}
+                hasPhoto={!!photoUrl}
+              />
+            )}
+          </div>
 
           {/* Nombre + club */}
           <div className="mt-3 text-center">

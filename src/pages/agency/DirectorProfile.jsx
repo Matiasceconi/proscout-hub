@@ -62,6 +62,16 @@ export default function DirectorProfile() {
     setLoading(false);
   };
 
+  const handleSavePhoto = async (file_url) => {
+    await base44.entities.TechnicalDirector.update(director.id, { photo_url: file_url, photo_status: 'ok' });
+    setDirector(d => ({ ...d, photo_url: file_url, photo_status: 'ok' }));
+  };
+
+  const handleRemovePhoto = async () => {
+    await base44.entities.TechnicalDirector.update(director.id, { photo_url: '', photo_status: 'pending' });
+    setDirector(d => ({ ...d, photo_url: '', photo_status: 'pending' }));
+  };
+
   if (loading) {
     return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div></div>;
   }
@@ -107,6 +117,9 @@ export default function DirectorProfile() {
             <Pencil className="w-4 h-4 mr-1" /> Editar
           </Button>
         ) : undefined}
+        canEditPhoto={canManage}
+        onSavePhoto={handleSavePhoto}
+        onRemovePhoto={handleRemovePhoto}
       >
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-400">
           {director.coaching_license && <span>Licencia: {director.coaching_license}</span>}
