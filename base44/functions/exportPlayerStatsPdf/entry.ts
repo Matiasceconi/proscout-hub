@@ -13,8 +13,32 @@ export default async function(req: Request): Promise<Response> {
     if (!player_id || !organization_id) return Response.json({ error: "player_id y organization_id son obligatorios" }, { status: 400 });
 
     const asAdmin = base44.asServiceRole;
+    const role = user.app_role || user.data?.app_role;
+    const userPlayerId = user.player_id || user.data?.player_id;
+    const isPlayerRequest = role === 'player';
+    const isPlatformAdmin = role === 'platform_superadmin' || user.role === 'admin';
+
+    if (isPlayerRequest && userPlayerId !== player_id) {
+      return Response.json({ error: 'No tenés permiso para exportar este informe.' }, { status: 403 });
+    }
+
+    if (!isPlayerRequest && !isPlatformAdmin) {
+      const email = String(user.email || '').trim().toLowerCase();
+      const memberships = await asAdmin.entities.OrganizationMember.filter({
+        organization_id,
+        status: 'active',
+        $or: [{ user_id: user.id }, { user_email: email }]
+      }, '-updated_date', 10);
+      if (memberships.length === 0) {
+        return Response.json({ error: 'No tenés acceso activo a esta organización.' }, { status: 403 });
+      }
+    }
+
     const player = (await asAdmin.entities.Player.filter({ id: player_id, organization_id }))[0];
     if (!player) return Response.json({ error: "Jugador no encontrado" }, { status: 404 });
+    if (isPlayerRequest && player.linked_user_id && player.linked_user_id !== user.id) {
+      return Response.json({ error: 'No se pudo validar tu vínculo con el jugador.' }, { status: 403 });
+    }
 
     const org = (await asAdmin.entities.Organization.filter({ id: organization_id }))[0];
     const [matchStats, seasonStats] = await Promise.all([
