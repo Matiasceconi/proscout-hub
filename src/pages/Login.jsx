@@ -44,8 +44,8 @@ export default function Login() {
   return (
     <AuthLayout
       icon={LogIn}
-      title="Acceso a la plataforma"
-      subtitle="Ingresá con tu cuenta para continuar"
+      title="Acceso a Score Fútbol"
+      subtitle="Ingresá con tu cuenta para gestionar a los representados"
       footer={
         <>
           ¿Todavía no tenés una cuenta?{" "}
