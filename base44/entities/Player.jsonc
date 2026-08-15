@@ -210,6 +210,54 @@
     },
     "current_club_id": {
       "type": "string"
+    },
+    "is_on_loan": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indica si el jugador esta a prestamo en el club actual"
+    },
+    "loan_from_club": {
+      "type": "string",
+      "description": "Nombre del club dueno del pase (club que lo presto)"
+    },
+    "loan_from_club_id": {
+      "type": "string",
+      "description": "ID interno del club dueno del pase"
+    },
+    "loan_start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "loan_end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "loan_type": {
+      "type": "string",
+      "enum": [
+        "loan",
+        "loan_with_option",
+        "free_transfer",
+        "permanent"
+      ],
+      "default": "loan"
+    },
+    "contract_type": {
+      "type": "string",
+      "description": "Tipo de contrato: propiedad, prestamo, etc."
+    },
+    "last_transfer_sync_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Ultima sincronizacion de datos de transferencia"
+    },
+    "sofascore_id": {
+      "type": "string",
+      "description": "ID del jugador en Sofascore"
+    },
+    "sofascore_rating_avg": {
+      "type": "number",
+      "description": "Rating promedio de Sofascore"
     }
   },
   "required": [

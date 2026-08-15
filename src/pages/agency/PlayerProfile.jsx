@@ -173,7 +173,7 @@ export default function PlayerProfile() {
           ))}
         </div>
         <div className="p-4 lg:p-5">
-          {activeTab === 'summary' && <PlayerSummary player={player} onTabChange={handleTabChange} permissions={permissions} />}
+          {activeTab === 'summary' && <PlayerSummary player={player} onTabChange={handleTabChange} permissions={permissions} clubData={clubData} />}
           {activeTab === 'career' && <PlayerCareerTab player={player} permissions={permissions} />}
           {activeTab === 'calendar' && <PlayerCalendarTab player={player} permissions={permissions} />}
           {activeTab === 'stats' && <PlayerStatsTab player={player} permissions={permissions} />}

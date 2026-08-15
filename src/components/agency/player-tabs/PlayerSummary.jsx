@@ -3,8 +3,9 @@ import { base44 } from '@/api/base44Client';
 import { formatDate, formatDateTime, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS, daysUntil } from '@/lib/roleUtils';
 import { Badge, EmptyState } from '@/components/shared/UIBits';
 import { Trophy, Activity, HeartPulse, Video, FileText, Calendar, Search, BarChart3 } from 'lucide-react';
+import PlayerTransferStatus from '@/components/agency/player-tabs/PlayerTransferStatus';
 
-export default function PlayerSummary({ player, onTabChange, permissions }) {
+export default function PlayerSummary({ player, onTabChange, permissions, clubData }) {
   const [data, setData] = useState({
     nextMatch: null,
     lastMatch: null,
@@ -13,7 +14,7 @@ export default function PlayerSummary({ player, onTabChange, permissions }) {
     latestInjury: null,
     pendingVideos: 0,
     pendingAnalysis: 0,
-    clubName: null
+    clubName: clubData?.club_name || null
   });
   const [loading, setLoading] = useState(true);
 
@@ -77,6 +78,9 @@ export default function PlayerSummary({ player, onTabChange, permissions }) {
           <InfoRow label="Altura / Peso" value={`${player.height || '—'}cm / ${player.weight || '—'}kg`} />
         </InfoCard>
       </div>
+
+      {/* Transfer status */}
+      <PlayerTransferStatus player={player} clubData={clubData} />
 
       {/* Status + next match */}
       <div className="grid sm:grid-cols-2 gap-4">
