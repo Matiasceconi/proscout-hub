@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
 import { getMyOrganizationContext, setActiveOrganization } from '@/lib/organizationUtils';
 import { Button } from '@/components/ui/button';
 import { Building2, LogIn, Loader2 } from 'lucide-react';
