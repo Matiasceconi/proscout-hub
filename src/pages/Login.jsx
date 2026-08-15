@@ -18,6 +18,17 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const returnTo = safeReturnTo();
+  const portal = new URLSearchParams(window.location.search).get('portal');
+  const isPlayerPortal = portal === 'player';
+  const isRepresentativePortal = portal === 'representative';
+  const accessTitle = isPlayerPortal
+    ? 'Acceso para jugadores'
+    : isRepresentativePortal
+      ? 'Acceso para representantes'
+      : 'Acceso a Score Fútbol';
+  const accessSubtitle = isPlayerPortal
+    ? 'Ingresá a tu espacio personal de rendimiento y preparación'
+    : 'Ingresá para gestionar y acompañar a tus representados';
 
   if (authChecked && isAuthenticated) {
     return <Navigate to={returnTo} replace />;
@@ -44,15 +55,24 @@ export default function Login() {
   return (
     <AuthLayout
       icon={LogIn}
-      title="Acceso a Score Fútbol"
-      subtitle="Ingresá con tu cuenta para gestionar a los representados"
+      title={accessTitle}
+      subtitle={accessSubtitle}
       footer={
-        <>
-          ¿Todavía no tenés una cuenta?{" "}
-          <Link to={`/register?returnTo=${encodeURIComponent(returnTo)}`} className="text-primary font-medium hover:underline">
-            Crear cuenta
+        <span className="flex flex-col items-center gap-2">
+          {isPlayerPortal ? (
+            <span>Tu acceso personal es habilitado por Score Fútbol.</span>
+          ) : (
+            <span>
+              ¿Todavía no tenés una cuenta?{" "}
+              <Link to={`/register?returnTo=${encodeURIComponent(returnTo)}`} className="text-primary font-medium hover:underline">
+                Crear cuenta
+              </Link>
+            </span>
+          )}
+          <Link to="/" className="font-medium text-slate-700 hover:text-emerald-600 hover:underline">
+            Cambiar tipo de acceso
           </Link>
-        </>
+        </span>
       }
     >
       <Button
@@ -125,7 +145,7 @@ export default function Login() {
               Ingresando...
             </>
           ) : (
-            "Ingresar"
+            isPlayerPortal ? "Ingresar a mi espacio" : "Ingresar a la plataforma"
           )}
         </Button>
       </form>
