@@ -1,5 +1,5 @@
 {
-  "name": "Plataforma de gestión",
+  "name": "Score Fútbol",
   "site": {
     "installCommand": "npm install",
     "buildCommand": "npm run build",
