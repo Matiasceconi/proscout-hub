@@ -30,7 +30,27 @@ export default function ActivatePortal() {
   }, []);
 
   const validateToken = async () => {
-    if (!token) { setStatus('invalid'); setLoading(false); return; }
+    if (!token) {
+      // No token — check if authenticated with pending invitation (from inviteUser email)
+      try {
+        const res = await base44.functions.invoke('playerInviteActivation', { action: 'check_pending' });
+        if (res.data.pending) {
+          setStatus(res.data.expired ? 'expired' : 'pending');
+          setInvite({
+            player_first_name: res.data.player_first_name,
+            player_last_name: res.data.player_last_name,
+            organization_name: res.data.organization_name,
+            email: res.data.email
+          });
+        } else {
+          setStatus('invalid');
+        }
+      } catch {
+        setStatus('invalid');
+      }
+      setLoading(false);
+      return;
+    }
     try {
       const res = await base44.functions.invoke('playerInviteActivation', { action: 'validate', token });
       setStatus(res.data.status);
@@ -98,7 +118,8 @@ export default function ActivatePortal() {
 
   const activatePortal = async () => {
     try {
-      await base44.functions.invoke('playerInviteActivation', { action: 'activate', token });
+      const payload = token ? { action: 'activate', token } : { action: 'activate_by_email' };
+      await base44.functions.invoke('playerInviteActivation', payload);
       await checkUserAuth();
       window.location.href = '/portal';
     } catch (err) {

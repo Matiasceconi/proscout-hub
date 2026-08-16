@@ -108,6 +108,72 @@ export default async function(req: Request) {
       return Response.json({ success: true });
     }
 
+    // ---- CHECK PENDING (authenticated, no token — from inviteUser email) ----
+    if (action === 'check_pending') {
+      const user = await base44.auth.me();
+      if (!user) return Response.json({ pending: false });
+
+      const links = await base44.asServiceRole.entities.PlayerUserLink.filter({ user_email: user.email, status: 'pending' });
+      if (links.length === 0) {
+        return Response.json({ pending: false });
+      }
+
+      const link = links[0];
+      const expired = link.invite_token_expires_at && new Date(link.invite_token_expires_at) < new Date();
+      const player = await base44.asServiceRole.entities.Player.get(link.player_id);
+      const org = await base44.asServiceRole.entities.Organization.get(link.organization_id);
+
+      return Response.json({
+        pending: true,
+        expired,
+        player_first_name: player?.first_name || '',
+        player_last_name: player?.last_name || '',
+        organization_name: org?.name || '',
+        email: link.user_email
+      });
+    }
+
+    // ---- ACTIVATE BY EMAIL (authenticated, no token — from inviteUser email) ----
+    if (action === 'activate_by_email') {
+      const user = await base44.auth.me();
+      if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+      const links = await base44.asServiceRole.entities.PlayerUserLink.filter({ user_email: user.email, status: 'pending' });
+      if (links.length === 0) {
+        return Response.json({ error: 'No hay invitaciones pendientes para tu email.' }, { status: 404 });
+      }
+
+      const link = links[0];
+
+      if (link.invite_token_expires_at && new Date(link.invite_token_expires_at) < new Date()) {
+        return Response.json({ error: 'La invitación venció. Pedile a tu agencia que te envíe una nueva.' }, { status: 400 });
+      }
+
+      // Update User profile to player role
+      await base44.asServiceRole.entities.User.update(user.id, {
+        app_role: 'player',
+        player_id: link.player_id,
+        player_organization_id: link.organization_id,
+        organization_id: null,
+        active_organization_id: null,
+        is_player: true
+      });
+
+      await base44.asServiceRole.entities.PlayerUserLink.update(link.id, {
+        user_id: user.id,
+        status: 'active',
+        accepted_at: new Date().toISOString()
+      });
+
+      await base44.asServiceRole.entities.Player.update(link.player_id, {
+        linked_user_id: user.id,
+        linked_user_email: user.email,
+        portal_status: 'active'
+      });
+
+      return Response.json({ success: true });
+    }
+
     return Response.json({ error: 'Acción no válida' }, { status: 400 });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

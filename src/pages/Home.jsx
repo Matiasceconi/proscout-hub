@@ -160,6 +160,16 @@ export default function Home() {
         return;
       }
 
+      // Check for pending player invitation (from inviteUser email flow)
+      try {
+        const { base44 } = await import('@/api/base44Client');
+        const links = await base44.entities.PlayerUserLink.filter({ user_email: user.email, status: 'pending' });
+        if (links.length > 0) {
+          setRedirect('/portal/activate');
+          return;
+        }
+      } catch {}
+
       try {
         const ctx = await getMyOrganizationContext();
         const activeItems = ctx.activeItems || [];

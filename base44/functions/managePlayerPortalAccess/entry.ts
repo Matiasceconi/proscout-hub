@@ -120,6 +120,13 @@ export default async function(req: Request) {
         email_sent = true;
       } catch (emailErr) {
         send_error = emailErr.message;
+        // Fallback: platform invite delivers to non-registered emails
+        try {
+          await base44.users.inviteUser(targetEmail, 'user');
+          email_sent = true;
+        } catch (inviteErr) {
+          send_error += ` | invite: ${inviteErr.message}`;
+        }
       }
 
       return Response.json({
