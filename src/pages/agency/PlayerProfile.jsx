@@ -12,6 +12,8 @@ import PlayerStatsTab from '@/components/agency/player-tabs/PlayerStatsTab';
 import PlayerCalendarTab from '@/components/agency/player-tabs/PlayerCalendarTab';
 import PlayerVideoTab from '@/components/agency/player-tabs/PlayerVideoTab';
 import ProfileCoverHeader from '@/components/shared/ProfileCoverHeader';
+import PlayerPortalAccessSection from '@/components/agency/PlayerPortalAccessSection';
+import InvitePlayerDialog from '@/components/agency/InvitePlayerDialog';
 
 const TABS = [
   { id: 'summary', label: 'Resumen', icon: Users },
@@ -30,6 +32,7 @@ export default function PlayerProfile() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('summary');
   const [videoSubtab, setVideoSubtab] = useState('own');
+  const [showInvite, setShowInvite] = useState(false);
 
   useEffect(() => {
     if (id) loadPlayer();
@@ -135,7 +138,11 @@ export default function PlayerProfile() {
         actions={canManage ? (
           <>
             <Button size="sm" variant="outline" onClick={() => navigate(`/agency/players/${player.id}?edit=1`)}><Pencil className="w-3.5 h-3.5 mr-1" /> Editar</Button>
-            <Button size="sm" variant="outline"><UserPlus className="w-3.5 h-3.5 mr-1" /> Invitar jugador</Button>
+            {(player.portal_status === 'not_invited' || player.portal_status === 'pending') && (
+              <Button size="sm" variant="outline" onClick={() => setShowInvite(true)}>
+                <UserPlus className="w-3.5 h-3.5 mr-1" /> {player.portal_status === 'pending' ? 'Reenviar' : 'Invitar'}
+              </Button>
+            )}
             <Button size="sm" variant="outline" onClick={handleShare}><Share2 className="w-3.5 h-3.5 mr-1" /> Compartir perfil</Button>
           </>
         ) : undefined}
@@ -153,6 +160,12 @@ export default function PlayerProfile() {
           {player.representative_name && <span>Representante: {player.representative_name}</span>}
         </div>
       </ProfileCoverHeader>
+
+      {canManage && (
+        <div className="mt-4">
+          <PlayerPortalAccessSection player={player} onUpdated={loadPlayer} />
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -180,6 +193,14 @@ export default function PlayerProfile() {
           {activeTab === 'video' && <PlayerVideoTab player={player} permissions={permissions} initialSubtab={videoSubtab} />}
         </div>
       </div>
+
+      {showInvite && (
+        <InvitePlayerDialog
+          player={player}
+          onClose={() => setShowInvite(false)}
+          onDone={() => { setShowInvite(false); loadPlayer(); }}
+        />
+      )}
     </div>
   );
 }

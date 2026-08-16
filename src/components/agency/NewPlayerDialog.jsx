@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2, UserPlus } from 'lucide-react';
 import { POSITION_LABELS, PLAYER_CATEGORIES } from '@/lib/roleUtils';
 
 export default function NewPlayerDialog({ open, onClose, orgId, onCreated }) {
@@ -13,6 +15,7 @@ export default function NewPlayerDialog({ open, onClose, orgId, onCreated }) {
     position: 'CM', preferred_foot: 'right', club: '', competition: '',
     category: 'primera_division', linked_user_email: ''
   });
+  const [grantPortal, setGrantPortal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -20,23 +23,36 @@ export default function NewPlayerDialog({ open, onClose, orgId, onCreated }) {
     e.preventDefault();
     setSaving(true);
     setError('');
+
+    if (grantPortal && !form.linked_user_email.trim()) {
+      setError('El email es obligatorio para dar acceso al portal');
+      setSaving(false);
+      return;
+    }
+
     try {
       const player = await base44.entities.Player.create({
         ...form,
         organization_id: orgId,
         status: 'active',
         availability_status: 'available',
-        portal_status: form.linked_user_email ? 'pending' : 'not_invited',
-        linked_user_email: form.linked_user_email || null
+        portal_status: 'not_invited',
+        linked_user_email: null
       });
 
-      if (form.linked_user_email) {
-        await base44.entities.PlayerUserLink.create({
-          organization_id: orgId,
-          player_id: player.id,
-          user_email: form.linked_user_email,
-          status: 'pending'
-        });
+      if (grantPortal && form.linked_user_email) {
+        try {
+          await base44.functions.invoke('managePlayerPortalAccess', {
+            action: 'invite',
+            player_id: player.id,
+            email: form.linked_user_email.toLowerCase().trim()
+          });
+        } catch (inviteErr) {
+          // El jugador se creó pero falló la invitación
+          setError(`Jugador creado pero hubo un error al invitar: ${inviteErr.response?.data?.error || inviteErr.message}`);
+          onCreated(player.id);
+          return;
+        }
       }
 
       onCreated(player.id);
@@ -114,16 +130,41 @@ export default function NewPlayerDialog({ open, onClose, orgId, onCreated }) {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label>Email del jugador (para invitar al portal)</Label>
-            <Input type="email" value={form.linked_user_email} onChange={e => setForm(f => ({ ...f, linked_user_email: e.target.value }))} placeholder="jugador@email.com" />
-            <p className="text-xs text-slate-400">El jugador recibirá acceso a su portal privado tras registrarse con este email.</p>
+
+          {/* Toggle: Dar acceso al portal */}
+          <div className="border border-slate-200 rounded-lg p-3 space-y-3 bg-slate-50">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <Checkbox
+                checked={grantPortal}
+                onCheckedChange={setGrantPortal}
+                className="mt-0.5"
+              />
+              <div>
+                <span className="text-sm font-medium text-slate-800">Dar acceso al Portal del Jugador</span>
+                <p className="text-xs text-slate-400 mt-0.5">El jugador recibirá una invitación para activar su portal privado.</p>
+              </div>
+            </label>
+            {grantPortal && (
+              <div className="space-y-1.5 pt-1">
+                <Label>Email del jugador *</Label>
+                <Input
+                  type="email"
+                  value={form.linked_user_email}
+                  onChange={e => setForm(f => ({ ...f, linked_user_email: e.target.value }))}
+                  placeholder="jugador@email.com"
+                  required={grantPortal}
+                />
+                <p className="text-xs text-slate-400">Este email quedará vinculado exclusivamente al perfil de este jugador.</p>
+              </div>
+            )}
           </div>
+
           {error && <p className="text-sm text-red-600">{error}</p>}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
             <Button type="submit" disabled={saving} className="bg-slate-900 hover:bg-slate-800">
-              {saving ? 'Creando...' : 'Crear jugador'}
+              {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : grantPortal ? <UserPlus className="w-4 h-4 mr-1" /> : null}
+              {saving ? 'Creando...' : grantPortal ? 'Crear jugador e invitar' : 'Crear jugador'}
             </Button>
           </DialogFooter>
         </form>

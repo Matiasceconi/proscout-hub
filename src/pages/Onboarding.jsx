@@ -118,6 +118,13 @@ export default function Onboarding() {
         user_id: user.id
       });
 
+      // Sincronizar el Player con el usuario vinculado
+      await base44.entities.Player.update(playerLink.player_id, {
+        linked_user_id: user.id,
+        linked_user_email: user.email,
+        portal_status: 'active'
+      });
+
       await checkUserAuth();
       navigate('/portal');
     } catch (err) {

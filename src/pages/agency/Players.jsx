@@ -123,19 +123,8 @@ export default function Players() {
 
     setActionLoading(true);
     try {
-      if (action === 'invite' || action === 'resend') {
-        await base44.entities.Player.update(player.id, { portal_status: 'pending' });
-        if (player.linked_user_email) {
-          const existing = await base44.entities.PlayerUserLink.filter({ player_id: player.id });
-          if (existing.length === 0) {
-            await base44.entities.PlayerUserLink.create({
-              organization_id: orgId, player_id: player.id,
-              user_email: player.linked_user_email, status: 'pending'
-            });
-          }
-        }
-      } else if (action === 'suspend') {
-        await base44.entities.Player.update(player.id, { portal_status: 'suspended' });
+      if (['invite', 'resend', 'suspend', 'reactivate'].includes(action)) {
+        await base44.functions.invoke('managePlayerPortalAccess', { action, player_id: player.id });
       } else if (action === 'archive') {
         await base44.entities.Player.update(player.id, { status: 'archived' });
       }
@@ -394,7 +383,13 @@ function EditPlayerDialog({ player, orgId, primaryColor, onClose, onSaved }) {
             <div className="space-y-1.5"><Label>N° camiseta</Label><Input type="number" value={form.jersey_number} onChange={e => setForm(f => ({ ...f, jersey_number: Number(e.target.value) || '' }))} /></div>
           </div>
           <div className="space-y-1.5"><Label>Representante responsable</Label><Input value={form.representative_name} onChange={e => setForm(f => ({ ...f, representative_name: e.target.value }))} /></div>
-          <div className="space-y-1.5"><Label>Email del jugador (portal)</Label><Input type="email" value={form.linked_user_email} onChange={e => setForm(f => ({ ...f, linked_user_email: e.target.value }))} /></div>
+          <div className="space-y-1.5">
+            <Label>Email del jugador (portal)</Label>
+            <Input type="email" value={form.linked_user_email} onChange={e => setForm(f => ({ ...f, linked_user_email: e.target.value }))} />
+            {player.portal_status === 'active' && form.linked_user_email !== (player.linked_user_email || '') && (
+              <p className="text-xs text-amber-600 font-medium">⚠ El acceso está activo. Cambiar el email puede romper la vinculación. Usá "Cambiar usuario de acceso" desde la ficha para un cambio seguro.</p>
+            )}
+          </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
