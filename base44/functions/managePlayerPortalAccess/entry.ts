@@ -2,7 +2,22 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
 const ADMIN_ROLES = ['organization_owner', 'organization_admin'];
 
-export default async function(req) {
+async function sha256(text: string): Promise<string> {
+  const data = new TextEncoder().encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function generateToken(): string {
+  return crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
+}
+
+function buildInviteUrl(origin: string, token: string): string {
+  const base = origin || '';
+  return `${base}/portal/activate?token=${token}`;
+}
+
+export default async function(req: Request) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
@@ -30,9 +45,6 @@ export default async function(req) {
     }
 
     const origin = req.headers.get('origin') || req.headers.get('referer') || '';
-    const inviteUrl = origin
-      ? `${origin}/login?returnTo=${encodeURIComponent('/company/create')}`
-      : `/login?returnTo=${encodeURIComponent('/company/create')}`;
 
     // ---- INVITE / RESEND ----
     if (action === 'invite' || action === 'resend') {
@@ -59,22 +71,33 @@ export default async function(req) {
         }, { status: 409 });
       }
 
-      // Find or create PlayerUserLink for this player
+      // Generate secure one-time token (store hash only)
+      const rawToken = generateToken();
+      const tokenHash = await sha256(rawToken);
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      const inviteUrl = buildInviteUrl(origin, rawToken);
+
+      // Find or create PlayerUserLink
       const existingLinks = await base44.asServiceRole.entities.PlayerUserLink.filter({ player_id });
-      let link;
       if (existingLinks.length > 0) {
-        link = existingLinks[0];
-        await base44.asServiceRole.entities.PlayerUserLink.update(link.id, {
+        await base44.asServiceRole.entities.PlayerUserLink.update(existingLinks[0].id, {
           user_email: targetEmail,
           status: 'pending',
-          user_id: link.user_id || null
+          user_id: null,
+          invite_token_hash: tokenHash,
+          invite_token_expires_at: expiresAt,
+          invited_at: new Date().toISOString(),
+          accepted_at: null
         });
       } else {
-        link = await base44.asServiceRole.entities.PlayerUserLink.create({
+        await base44.asServiceRole.entities.PlayerUserLink.create({
           organization_id: orgId,
           player_id,
           user_email: targetEmail,
-          status: 'pending'
+          status: 'pending',
+          invite_token_hash: tokenHash,
+          invite_token_expires_at: expiresAt,
+          invited_at: new Date().toISOString()
         });
       }
 
@@ -84,25 +107,19 @@ export default async function(req) {
         portal_status: 'pending'
       });
 
-      // Send platform invitation (works for non-registered emails)
+      // Send custom invitation email (reaches registered users; for non-registered
+      // the admin shares the activation link manually via WhatsApp/etc.)
       let email_sent = false;
       let send_error = '';
       try {
-        await base44.users.inviteUser(targetEmail, 'user');
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to: targetEmail,
+          subject: 'Tu acceso a Score Fútbol está listo',
+          body: `Hola ${player.first_name},\n\nTu agencia te invitó a acceder a tu Portal del Jugador en Score Fútbol.\n\nDesde tu espacio vas a poder consultar tus partidos, estadísticas, rendimiento y contenido compartido por tu agencia.\n\nPara activar tu acceso, ingresá al siguiente enlace:\n${inviteUrl}\n\nSi ya tenés una cuenta de Score Fútbol, el mismo enlace te permitirá iniciar sesión y vincular tu perfil.\n\nEste acceso es personal y está asociado al email: ${targetEmail}`
+        });
         email_sent = true;
-      } catch (inviteErr) {
-        send_error = `invite: ${inviteErr.message}`;
-        // Fallback: SendEmail (only reaches registered users)
-        try {
-          await base44.asServiceRole.integrations.Core.SendEmail({
-            to: targetEmail,
-            subject: 'Invitación al Portal del Jugador - Score Fútbol',
-            body: `Hola ${player.first_name},\n\n${user.full_name || 'Tu representante'} te ha invitado a acceder a tu Portal de Jugador en Score Fútbol.\n\nPara activar tu acceso:\n1. Ingresá a: ${inviteUrl}\n2. Iniciá sesión con el email ${targetEmail}\n3. Activá tu portal desde la pantalla de configuración\n\nEste email quedará vinculado exclusivamente a tu perfil de jugador.`
-          });
-          email_sent = true;
-        } catch (emailErr) {
-          send_error += ` | email: ${emailErr.message}`;
-        }
+      } catch (emailErr) {
+        send_error = emailErr.message;
       }
 
       return Response.json({
@@ -155,26 +172,42 @@ export default async function(req) {
         return Response.json({ error: 'El email ya está vinculado a otro jugador' }, { status: 409 });
       }
 
+      // Generate new token for the new email
+      const rawToken = generateToken();
+      const tokenHash = await sha256(rawToken);
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      const inviteUrl = buildInviteUrl(origin, rawToken);
+
       await base44.asServiceRole.entities.Player.update(player_id, {
-        linked_user_email: targetEmail
+        linked_user_email: targetEmail,
+        portal_status: 'pending',
+        linked_user_id: null
       });
 
       const existingLinks = await base44.asServiceRole.entities.PlayerUserLink.filter({ player_id });
       if (existingLinks.length > 0) {
         await base44.asServiceRole.entities.PlayerUserLink.update(existingLinks[0].id, {
-          user_email: targetEmail
+          user_email: targetEmail,
+          user_id: null,
+          status: 'pending',
+          invite_token_hash: tokenHash,
+          invite_token_expires_at: expiresAt,
+          invited_at: new Date().toISOString(),
+          accepted_at: null
         });
       } else {
         await base44.asServiceRole.entities.PlayerUserLink.create({
           organization_id: orgId,
           player_id,
           user_email: targetEmail,
-          status: 'pending'
+          status: 'pending',
+          invite_token_hash: tokenHash,
+          invite_token_expires_at: expiresAt,
+          invited_at: new Date().toISOString()
         });
-        await base44.asServiceRole.entities.Player.update(player_id, { portal_status: 'pending' });
       }
 
-      return Response.json({ success: true, linked_user_email: targetEmail, portal_status: 'pending' });
+      return Response.json({ success: true, linked_user_email: targetEmail, portal_status: 'pending', invite_url: inviteUrl });
     }
 
     return Response.json({ error: 'Acción no válida' }, { status: 400 });

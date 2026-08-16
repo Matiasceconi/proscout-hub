@@ -100,8 +100,8 @@ export default function InvitePlayerDialog({ player, onClose, onDone }) {
               <p className="font-medium text-slate-900">Invitación creada correctamente</p>
               <p className="text-sm text-slate-400 mt-1">
                 {result.email_sent
-                  ? `Se envió un email a ${result.linked_user_email}`
-                  : `El email ${result.linked_user_email} no está registrado aún. Compartí el enlace manualmente.`}
+                  ? `Se envió un email a ${result.linked_user_email} con el enlace de activación.`
+                  : `No pudimos enviar el email automáticamente. Compartí el enlace manualmente con el jugador.`}
               </p>
             </div>
 

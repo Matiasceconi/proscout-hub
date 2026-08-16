@@ -47,6 +47,7 @@ import ApiFootballClubMapping from '@/pages/agency/ApiFootballClubMapping';
 import OrganizationGate from '@/components/OrganizationGate';
 import ModulePermissionGuard from '@/components/ModulePermissionGuard';
 import AcceptInvitation from '@/pages/AcceptInvitation';
+import ActivatePortal from '@/pages/portal/ActivatePortal';
 // Add page imports here
 
 function AdminClubMappingRedirect() {
@@ -79,6 +80,7 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/invite" element={<AcceptInvitation />} />
+      <Route path="/portal/activate" element={<ActivatePortal />} />
 
       {/* Auth required, no org required */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>

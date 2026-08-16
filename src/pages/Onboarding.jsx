@@ -148,10 +148,12 @@ export default function Onboarding() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-900 mb-4">
             <ShieldCheck className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Configuración inicial de la agencia</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {mode === 'player_link' ? 'Activá tu portal de jugador' : 'Configuración inicial de la agencia'}
+          </h1>
           <p className="text-slate-500 mt-2 text-sm">
             {mode === 'player_link'
-              ? 'Activá tu portal de jugador para acceder a tu información.'
+              ? 'Activá tu portal para acceder a tus estadísticas, calendario, videos y más.'
               : 'Configurá tu agencia para comenzar a gestionar tus futbolistas.'}
           </p>
         </div>

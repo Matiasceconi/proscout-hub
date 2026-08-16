@@ -22,6 +22,22 @@
         "disabled"
       ],
       "default": "pending"
+    },
+    "invite_token_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of the secure invite token (never store raw token)"
+    },
+    "invite_token_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "invited_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [
