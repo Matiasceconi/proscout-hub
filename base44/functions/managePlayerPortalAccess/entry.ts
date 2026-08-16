@@ -86,11 +86,13 @@ export default async function(req) {
 
       // Send platform invitation (works for non-registered emails)
       let email_sent = false;
+      let send_error = '';
       try {
-        await base44.asServiceRole.users.inviteUser(targetEmail, 'user');
+        await base44.users.inviteUser(targetEmail, 'user');
         email_sent = true;
       } catch (inviteErr) {
-        // If already registered, try SendEmail as fallback
+        send_error = `invite: ${inviteErr.message}`;
+        // Fallback: SendEmail (only reaches registered users)
         try {
           await base44.asServiceRole.integrations.Core.SendEmail({
             to: targetEmail,
@@ -99,7 +101,7 @@ export default async function(req) {
           });
           email_sent = true;
         } catch (emailErr) {
-          // Neither method worked
+          send_error += ` | email: ${emailErr.message}`;
         }
       }
 
@@ -108,7 +110,8 @@ export default async function(req) {
         portal_status: 'pending',
         linked_user_email: targetEmail,
         invite_url: inviteUrl,
-        email_sent
+        email_sent,
+        send_error
       });
     }
 
