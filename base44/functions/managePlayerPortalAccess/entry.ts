@@ -84,17 +84,23 @@ export default async function(req) {
         portal_status: 'pending'
       });
 
-      // Send invitation email (best effort)
+      // Send platform invitation (works for non-registered emails)
       let email_sent = false;
       try {
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          to: targetEmail,
-          subject: 'Invitación al Portal del Jugador - Score Fútbol',
-          body: `Hola ${player.first_name},\n\n${user.full_name || 'Tu representante'} te ha invitado a acceder a tu Portal de Jugador en Score Fútbol.\n\nPara activar tu acceso:\n1. Ingresá a: ${inviteUrl}\n2. Iniciá sesión o creá tu cuenta con el email ${targetEmail}\n3. Activá tu portal desde la pantalla de configuración\n\nEste email quedará vinculado exclusivamente a tu perfil de jugador.`
-        });
+        await base44.asServiceRole.users.inviteUser(targetEmail, 'user');
         email_sent = true;
-      } catch (emailErr) {
-        // User may not be registered yet - not critical
+      } catch (inviteErr) {
+        // If already registered, try SendEmail as fallback
+        try {
+          await base44.asServiceRole.integrations.Core.SendEmail({
+            to: targetEmail,
+            subject: 'Invitación al Portal del Jugador - Score Fútbol',
+            body: `Hola ${player.first_name},\n\n${user.full_name || 'Tu representante'} te ha invitado a acceder a tu Portal de Jugador en Score Fútbol.\n\nPara activar tu acceso:\n1. Ingresá a: ${inviteUrl}\n2. Iniciá sesión con el email ${targetEmail}\n3. Activá tu portal desde la pantalla de configuración\n\nEste email quedará vinculado exclusivamente a tu perfil de jugador.`
+          });
+          email_sent = true;
+        } catch (emailErr) {
+          // Neither method worked
+        }
       }
 
       return Response.json({
