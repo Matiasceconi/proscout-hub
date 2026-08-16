@@ -100,20 +100,33 @@ export default function InvitePlayerDialog({ player, onClose, onDone }) {
               <p className="font-medium text-slate-900">Invitación creada correctamente</p>
               <p className="text-sm text-slate-400 mt-1">
                 {result.email_sent
-                  ? `Se envió un email a ${result.linked_user_email} con el enlace de activación.`
-                  : `No pudimos enviar el email automáticamente. Compartí el enlace manualmente con el jugador.`}
+                  ? `Se envió un email a ${result.linked_user_email}.`
+                  : `No se pudo enviar el email automáticamente (plan gratuito).`}
               </p>
             </div>
 
+            {!result.email_sent && (
+              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800">
+                  Compartí el enlace de abajo con el jugador por WhatsApp o email. Al abrirlo, va a poder crear su contraseña y activar su portal.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
-              <Label>Enlace de invitación</Label>
+              <Label>Enlace de activación del portal</Label>
               <div className="flex items-center gap-2">
                 <Input value={result.invite_url} readOnly className="text-xs bg-slate-50" />
                 <Button type="button" variant="outline" size="icon" onClick={handleCopyLink} className="flex-shrink-0">
                   {copied ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
                 </Button>
               </div>
-              <p className="text-xs text-slate-400">Compartí este enlace por WhatsApp para que el jugador active su acceso.</p>
+              <p className="text-xs text-slate-400">
+                {result.email_sent
+                  ? 'Si el jugador no recibe el email, compartí también este enlace por WhatsApp.'
+                  : 'El jugador abre este enlace, crea su contraseña y activa su portal.'}
+              </p>
             </div>
 
             <DialogFooter>

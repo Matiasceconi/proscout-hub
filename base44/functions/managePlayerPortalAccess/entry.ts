@@ -107,8 +107,8 @@ export default async function(req: Request) {
         portal_status: 'pending'
       });
 
-      // Send custom invitation email (reaches registered users; for non-registered
-      // the admin shares the activation link manually via WhatsApp/etc.)
+      // Send custom invitation email (reaches registered users only; for
+      // non-registered the admin shares the activation link manually)
       let email_sent = false;
       let send_error = '';
       try {
@@ -120,13 +120,6 @@ export default async function(req: Request) {
         email_sent = true;
       } catch (emailErr) {
         send_error = emailErr.message;
-        // Fallback: platform invite delivers to non-registered emails
-        try {
-          await base44.users.inviteUser(targetEmail, 'user');
-          email_sent = true;
-        } catch (inviteErr) {
-          send_error += ` | invite: ${inviteErr.message}`;
-        }
       }
 
       return Response.json({
