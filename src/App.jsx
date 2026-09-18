@@ -14,6 +14,7 @@ import Home from '@/pages/Home';
 import Onboarding from '@/pages/Onboarding';
 import CompanyAccess from '@/pages/CompanyAccess';
 import AgencyDashboard from '@/pages/agency/AgencyDashboard';
+import PersonalDashboard from '@/pages/agency/PersonalDashboard';
 import Players from '@/pages/agency/Players';
 import PlayerProfile from '@/pages/agency/PlayerProfile';
 import Directors from '@/pages/agency/Directors';
@@ -92,7 +93,8 @@ const AuthenticatedApp = () => {
       {/* Agency panel - auth + org required */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<RoleGuard allowedRoles={['organization_owner', 'organization_admin', 'representative', 'video_analyst', 'performance_staff', 'medical_staff']}><OrganizationGate><AgencyLayout /></OrganizationGate></RoleGuard>}>
-          <Route path="/agency" element={<AgencyDashboard />} />
+          <Route path="/agency" element={<ModulePermissionGuard permission="players"><PersonalDashboard /></ModulePermissionGuard>} />
+          <Route path="/agency/operations" element={<ModulePermissionGuard permission="matches"><AgencyDashboard /></ModulePermissionGuard>} />
           <Route path="/agency/intelligence" element={<ModulePermissionGuard permission="players"><AgencyIntelligence /></ModulePermissionGuard>} />
           <Route path="/agency/players" element={<ModulePermissionGuard permission="players"><Players /></ModulePermissionGuard>} />
           <Route path="/agency/players/:id" element={<ModulePermissionGuard permission="players"><PlayerProfile /></ModulePermissionGuard>} />
