@@ -9,7 +9,7 @@ async function providerPlayer(id:string) {
   if(!token)throw new Error('NOT_CONFIGURED');
   const url=new URL('https://api.sportmonks.com/v3/football/players/'+id);
   url.searchParams.set('api_token',token);
-  url.searchParams.set('include','statistics.details.type;statistics.season;statistics.team');
+  url.searchParams.set('include','statistics.details.type;statistics.season.league;statistics.team');
   const response=await fetch(url,{signal:AbortSignal.timeout(20000),redirect:'error'});
   if(response.status===429)throw new Error('RATE_LIMIT');
   if(response.status===401||response.status===403)throw new Error('PROVIDER_ACCESS');
