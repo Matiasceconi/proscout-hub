@@ -48,6 +48,7 @@ import OrganizationGate from '@/components/OrganizationGate';
 import ModulePermissionGuard from '@/components/ModulePermissionGuard';
 import AcceptInvitation from '@/pages/AcceptInvitation';
 import ActivatePortal from '@/pages/portal/ActivatePortal';
+import AgencyIntelligence from '@/pages/agency/AgencyIntelligence';
 // Add page imports here
 
 function AdminClubMappingRedirect() {
@@ -92,6 +93,7 @@ const AuthenticatedApp = () => {
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<RoleGuard allowedRoles={['organization_owner', 'organization_admin', 'representative', 'video_analyst', 'performance_staff', 'medical_staff']}><OrganizationGate><AgencyLayout /></OrganizationGate></RoleGuard>}>
           <Route path="/agency" element={<AgencyDashboard />} />
+          <Route path="/agency/intelligence" element={<ModulePermissionGuard permission="players"><AgencyIntelligence /></ModulePermissionGuard>} />
           <Route path="/agency/players" element={<ModulePermissionGuard permission="players"><Players /></ModulePermissionGuard>} />
           <Route path="/agency/players/:id" element={<ModulePermissionGuard permission="players"><PlayerProfile /></ModulePermissionGuard>} />
           <Route path="/agency/directors" element={<ModulePermissionGuard permission="players"><Directors /></ModulePermissionGuard>} />
