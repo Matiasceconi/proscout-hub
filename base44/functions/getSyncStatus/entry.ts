@@ -1,3 +1,4 @@
+import { requireAgencyMember, hasAgencyPermission } from '../../shared/agencyAccess.ts';
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
 export default async function(req: Request): Promise<Response> {
@@ -10,6 +11,10 @@ export default async function(req: Request): Promise<Response> {
     const { organization_id } = body || {};
     if (!organization_id) return Response.json({ error: "organization_id es obligatorio" }, { status: 400 });
 
+    const member = await requireAgencyMember(base44, user, organization_id);
+    if (!member || !hasAgencyPermission(member, 'matches')) {
+      return Response.json({ error: 'No tienes acceso a esta información' }, { status: 403 });
+    }
     const asAdmin = base44.asServiceRole;
     const mappings = await asAdmin.entities.ClubProviderMapping.filter({ organization_id, provider: "api_football" });
     const syncLogs = await asAdmin.entities.FixtureSyncLog.filter({ organization_id });
