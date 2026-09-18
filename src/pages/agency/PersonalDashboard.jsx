@@ -127,7 +127,7 @@ function Workspace({orgId,user}) {
    <div className="grid sm:grid-cols-2 gap-3">{WIDGET_CATALOG.filter(permitted).map(meta=>{const active=prefs.widgets.some(w=>w.id===meta.id),Icon=ICONS[meta.icon];return <button key={meta.id} aria-pressed={active} onClick={()=>toggleWidget(meta.id)} className={'rounded-xl border p-4 text-left flex gap-3 '+(active?'bg-emerald-50/50 border-emerald-200':'bg-white border-slate-200')}><Icon size={19} className="shrink-0 text-slate-500"/><div className="flex-1"><p className="text-sm font-semibold">{meta.title}</p><p className="text-xs text-slate-500 mt-1">{meta.description}</p></div>{active?<Check size={16} className="text-emerald-600"/>:<Plus size={16}/>}</button>;})}</div>
    <h3 className="text-sm font-semibold mt-3">Jugadores prioritarios · Solo para vos</h3><div className="max-h-52 overflow-y-auto grid sm:grid-cols-2 gap-2 border rounded-xl p-3">{data.players.map(p=><label key={p.id} className="flex items-center gap-2 text-sm p-2 rounded-lg hover:bg-slate-50"><input type="checkbox" checked={prefs.favorite_player_ids.includes(p.id)} onChange={()=>toggleFavorite(p.id)}/><span>{p.name}</span></label>)}{!data.players.length&&<p className="text-sm text-slate-500">No hay jugadores disponibles en tu alcance.</p>}</div>
    <Button onClick={()=>{setCatalog(false);setEditing(true);}}>Volver a mi tablero</Button>
-  </Dialog>
+  </DialogContent></Dialog>
   <SportmonksSetup key={setup?'open':'closed'} open={setup} onOpenChange={setSetup} orgId={orgId} data={data} onUpdated={refresh}/>
  </div>;
 }
