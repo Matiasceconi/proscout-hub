@@ -1,5 +1,22 @@
 # Base44 Project
 
+## Score: tablero personal y Sportmonks
+
+- `/agency`: tablero por usuario y organización; orden, tamaños, filas, favoritos, temporada, color y densidad se guardan con **Guardar mi tablero**.
+- `/agency/operations`: agenda y partidos existentes. `/agency/intelligence`: seguimiento e IA.
+- `personal-dashboard` resuelve la identidad desde la sesión, verifica membresía y permisos, limita jugadores a la cartera autorizada y valida la revisión antes de guardar. Las entidades de preferencias y snapshots no admiten acceso directo del cliente.
+- `sportmonks-player` permite al administrador consultar y confirmar una identidad antes de vincularla. La sincronización usa esa identidad verificada y conserva la última información si falla el proveedor.
+- Configurar `SPORTMONKS_API_TOKEN` como secreto del servidor y verificar que el plan incluya las ligas requeridas. Luego abrir Estado de los datos y vincular jugadores. Nunca colocar el token en variables VITE ni en el navegador.
+- Las estadísticas se agrupan por temporada/competición y equipo. Un valor ausente permanece sin dato; no se convierte en cero. No hay datos deportivos simulados en producción.
+- El tablero relee la caché cada minuto. La consulta al proveedor es manual por jugador, con reutilización de resultados recientes durante 60 segundos. Los partidos conservan su proveedor original; esta entrega no incorpora ingesta de fixtures desde Sportmonks.
+- El acceso a IA abre el centro existente; esta entrega no añade Sportmonks al contexto del asistente.
+- Validación: `npm run build`, ESLint en los tres componentes nuevos y `node --test tests/personal-dashboard.test.cjs` (10 pruebas). Las pruebas usan sesiones/proveedor simulados, no sustituyen la validación con cuentas y credenciales reales.
+- Pendiente de validación operativa: conexión Sportmonks real, persistencia y permisos con dos cuentas reales, revisión visual autenticada y publicación del frontend desde Base44.
+- La revisión detecta guardados basados en una versión anterior; el almacenamiento actual no ofrece una transacción de comparación e intercambio para guardados exactamente simultáneos.
+
+Referencia: [Sportmonks Player by ID](https://docs.sportmonks.com/v3/endpoints-and-entities/endpoints/players/get-player-by-id).
+
+
 Use this repository to run and edit the app locally, then publish changes back through Base44.
 
 Any change pushed to the repo will also be reflected in the Base44 Builder.
