@@ -1,0 +1,30 @@
+{
+  "name": "PersonalDashboardPreference",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "revision": {
+      "type": "integer",
+      "default": 1
+    },
+    "settings": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "organization_id",
+    "user_id",
+    "settings"
+  ],
+  "rls": {
+    "read": false,
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}
