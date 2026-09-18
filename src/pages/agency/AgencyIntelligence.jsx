@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
@@ -44,6 +44,7 @@ export default function AgencyIntelligence() {
   const [aiPlayer,setAiPlayer] = useState('');
   const [mode,setMode] = useState('meeting');
   const [brief,setBrief] = useState(null);
+  useEffect(() => { setBrief(null); setAiPlayer(''); setForm(null); setFeedback(''); }, [orgId, user?.id]);
   const query = useQuery({
     queryKey:['agency-intelligence',orgId,user?.id], enabled:!!orgId,
     queryFn:()=>invoke({organization_id:orgId}), staleTime:60000, retry:1
