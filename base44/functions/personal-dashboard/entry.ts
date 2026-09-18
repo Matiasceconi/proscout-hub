@@ -36,7 +36,7 @@ export default async function(req:Request):Promise<Response> {
     canStats&&ids.length?readAllRows(db.SportmonksPlayerSnapshot,{organization_id:orgId,player_id:{$in:ids}}):[],
     canStats&&ids.length?readAllRows(db.PlayerExternalIdentity,{organization_id:orgId,player_id:{$in:ids},provider:'sportmonks',status:'verified'}):[]
   ]);
-  const safeEvents=events.filter((e:any)=>e.player_id?idSet.has(e.player_id):(e.responsible_member_id===member.id||e.created_by_user_id===user.id));
+  const safeEvents=events.filter((e:any)=>(e.event_type!=='medical'||hasAgencyPermission(member,'medical'))&&(e.player_id?idSet.has(e.player_id):(e.responsible_member_id===member.id||e.created_by_user_id===user.id)));
   const safeSnapshots=[...new Map([...snapshots].reverse().map((s:any)=>[s.player_id,s])).values()];
   const currentSnapshots=safeSnapshots.filter((s:any)=>identities.some((i:any)=>i.player_id===s.player_id&&String(i.provider_player_id)===String(s.provider_player_id)));
   const settings=saved?normalizeSettings(saved.settings):DEFAULT_SETTINGS;
