@@ -18,8 +18,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const MENU_GROUPS = [
-  { type: 'item', to: '/agency', icon: LayoutDashboard, label: 'Inicio', end: true },
-  { type: 'item', to: '/agency/intelligence', icon: Sparkles, label: 'Centro de Inteligencia', permission: 'players' },
+  { type: 'item', to: '/agency', icon: LayoutDashboard, label: 'Mi tablero', permission: 'players', end: true },
+  { type: 'item', to: '/agency/operations', icon: Trophy, label: 'Agenda y partidos', permission: 'matches' },
+  { type: 'item', to: '/agency/intelligence', icon: Sparkles, label: 'Seguimiento e IA', permission: 'players' },
   {
     type: 'group',
     label: 'Representados',
