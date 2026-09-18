@@ -35,7 +35,7 @@ function Workspace({orgId,user}) {
  useEffect(()=>{if(!dirty)return;const before=e=>{e.preventDefault();e.returnValue='';};window.addEventListener('beforeunload',before);return()=>window.removeEventListener('beforeunload',before);},[dirty]);
  const data=query.data;
  const prefs=settings||EMPTY_SETTINGS;
- const change=patch=>{setSettings(current=>({...current,...patch}));setDirty(true);setMessage('');};
+ const change=patch=>{if(saving)return;setSettings(current=>({...current,...patch}));setDirty(true);setMessage('');};
  const refresh=()=>cache.invalidateQueries({queryKey:key});
  const fail=e=>e.response?.data?.error||e.message||'No se pudo completar.';
  const save=async()=>{
