@@ -1,3 +1,4 @@
+import { requireAgencyMember, hasAgencyPermission } from '../../shared/agencyAccess.ts';
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { sanitizeError } from '../../shared/statsUtils.ts';
 
@@ -11,6 +12,10 @@ export default async function(req: Request): Promise<Response> {
     const { organization_id } = body || {};
     if (!organization_id) return Response.json({ error: "organization_id es obligatorio" }, { status: 400 });
 
+    const member = await requireAgencyMember(base44, user, organization_id);
+    if (!member || !hasAgencyPermission(member, 'statistics')) {
+      return Response.json({ error: 'No tienes acceso a esta información' }, { status: 403 });
+    }
     const asAdmin = base44.asServiceRole;
 
     const [players, identities, matchStats, seasonStats, lastRuns] = await Promise.all([
