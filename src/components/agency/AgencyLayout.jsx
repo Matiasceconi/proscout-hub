@@ -9,7 +9,7 @@ import { SCORE_FUTBOL_BRAND } from '@/lib/scoreFutbolBrand';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   LayoutDashboard, Users, Calendar, Trophy, BarChart3,
-  FileText, UserCog, Settings,
+  FileText, UserCog, Settings, Sparkles,
   LogOut, Menu, X, GraduationCap, ClipboardList, User, Building2, ChevronUp
 } from 'lucide-react';
 import {
@@ -19,6 +19,7 @@ import {
 
 const MENU_GROUPS = [
   { type: 'item', to: '/agency', icon: LayoutDashboard, label: 'Inicio', end: true },
+  { type: 'item', to: '/agency/intelligence', icon: Sparkles, label: 'Centro de Inteligencia', permission: 'players' },
   {
     type: 'group',
     label: 'Representados',
