@@ -55,7 +55,7 @@ export function normalizeSportmonksPlayer(raw:any) {
       const value=typeof d.value==='object'&&d.value!==null?d.value.total:d.value;
       metrics[key]=numberOrNull(value);
     }
-    rows.push({key:String(s.season_id)+':'+String(s.team_id),season_id:String(s.season_id),season_name:s.season?.name||String(s.season_id),season_start:s.season?.starting_at||null,team_id:String(s.team_id),team_name:s.team?.name||'',league_id:String(s.season?.league_id||''),...metrics});
+    rows.push({key:String(s.season_id)+':'+String(s.team_id),season_id:String(s.season_id),season_name:s.season?.name||String(s.season_id),season_start:s.season?.starting_at||null,team_id:String(s.team_id),team_name:s.team?.name||'',league_id:String(s.season?.league_id||''),league_name:s.season?.league?.name||'',...metrics});
   }
   return {provider_player_id:String(player.id),provider_name:String(player.display_name||player.name||''),birth_date:player.date_of_birth||null,image_url:player.image_path||null,seasons:[...new Map(rows.map(s=>[s.key,s])).values()]};
 }
