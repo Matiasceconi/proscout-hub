@@ -44,8 +44,15 @@ export default async function(req: Request): Promise<Response> {
       }
     }
 
-    // 4. Fetch all PlayerSeasonStats for the org (filter season in memory)
-    const allStats = await asAdmin.entities.PlayerSeasonStats.filter({ organization_id }, '-updated_date', 2000);
+    // 4. Fetch the canonical statistics entities used by the current API-Football integration.
+    // PlayerSeasonStats is a legacy entity and made cards look empty even when real data existed.
+    const [allStats, identities] = await Promise.all([
+      asAdmin.entities.PlayerSeasonStatistic.filter({ organization_id }, '-synced_at', 2000),
+      asAdmin.entities.PlayerExternalIdentity.filter({ organization_id, provider: 'api_football' }, '-updated_date', 1000),
+    ]);
+    const identityByPlayerId = new Map(
+      identities.filter((i: any) => i.status === 'verified').map((i: any) => [i.player_id, i])
+    );
 
     const matchesSeason = (seasonStr: string) => {
       if (!seasonStr) return false;
@@ -86,60 +93,62 @@ export default async function(req: Request): Promise<Response> {
         city: club.city
       };
 
-      // Step 2: ClubProviderMapping (verified)
+      // Step 2: prefer the current club mapping, but never hide valid player stats
+      // just because the club or the Player row itself is missing a provider ID.
       const mapping = mappingByClubId.get(club.id);
-      if (!mapping) {
-        entry.status = 'club_sin_vincular';
-        result[player.id] = entry;
-        continue;
-      }
-      entry.provider_team_id = mapping.provider_team_id;
-      entry.provider_team_logo = mapping.provider_team_logo;
-
-      // Step 3: provider_player_id on the player
-      const providerPlayerId = player.provider_player_id ||
-        (player.external_source === 'api_football' ? player.external_id : null);
-      if (!providerPlayerId) {
-        entry.status = 'jugador_sin_vincular';
-        result[player.id] = entry;
-        continue;
+      if (mapping) {
+        entry.provider_team_id = mapping.provider_team_id;
+        entry.provider_team_logo = mapping.provider_team_logo;
       }
 
-      // Step 4: Filter stats — current season + current club's provider_team_id only
-      const playerStats = allStats.filter((s: any) =>
-        s.player_id === player.id &&
-        matchesSeason(s.season) &&
-        s.provider_team_id === mapping.provider_team_id
+      const identity = identityByPlayerId.get(player.id);
+      if (identity) entry.provider_player_id = identity.provider_player_id;
+
+      // Step 3: current-season stats. Prefer rows for the current club; if a player
+      // changed clubs and the new club has no data yet, keep the real season data visible.
+      const seasonStats = allStats.filter((s: any) =>
+        s.player_id === player.id && matchesSeason(s.season) && s.provider === 'api_football'
       );
+      const currentClubStats = mapping
+        ? seasonStats.filter((s: any) => String(s.provider_team_id || '') === String(mapping.provider_team_id || ''))
+        : [];
+      const playerStats = currentClubStats.length > 0 ? currentClubStats : seasonStats;
 
       if (playerStats.length === 0) {
-        entry.status = 'sin_datos';
+        entry.status = identity ? 'sin_datos' : (mapping ? 'jugador_sin_vincular' : 'club_sin_vincular');
         result[player.id] = entry;
         continue;
       }
 
-      // Step 5: Coverage check
-      const statsWithCoverage = playerStats.filter((s: any) => s.has_coverage !== false);
-      if (statsWithCoverage.length === 0) {
-        entry.status = 'sin_cobertura';
-        result[player.id] = entry;
-        continue;
-      }
-
-      // Step 6: Aggregate with dedup by org+provider+player+season+team+league
+      // Step 4: aggregate canonical season rows, deduplicated by team + competition.
       const seenKeys = new Set();
-      let pj = 0, min = 0, goals = 0, assists = 0;
-      for (const s of statsWithCoverage) {
-        const dedupKey = `${s.provider || 'api_football'}_${s.provider_player_id || ''}_${s.season}_${s.provider_team_id || ''}_${s.provider_league_id || ''}`;
+      let pj = 0, min = 0, goals = 0, assists = 0, ratingWeighted = 0, ratingWeight = 0;
+      const statClubs = new Set<string>();
+      for (const s of playerStats) {
+        const dedupKey = `${s.provider || 'api_football'}_${s.provider_player_id || ''}_${s.season}_${s.provider_team_id || ''}_${s.league_id || ''}`;
         if (seenKeys.has(dedupKey)) continue;
         seenKeys.add(dedupKey);
-        pj += (s.matches || 0);
-        min += (s.minutes || 0);
-        goals += (s.goals || 0);
-        assists += (s.assists || 0);
+        const appearances = Number(s.appearances || 0);
+        pj += appearances;
+        min += Number(s.minutes || 0);
+        goals += Number(s.goals_total || 0);
+        assists += Number(s.goals_assists || 0);
+        if (s.rating_avg != null && appearances > 0) {
+          ratingWeighted += Number(s.rating_avg) * appearances;
+          ratingWeight += appearances;
+        }
+        if (s.club_name) statClubs.add(s.club_name);
       }
 
-      entry.stats = { pj, min, ga: goals + assists };
+      entry.stats = {
+        pj,
+        min,
+        goals,
+        assists,
+        ga: goals + assists,
+        rating: ratingWeight > 0 ? Number((ratingWeighted / ratingWeight).toFixed(2)) : null,
+      };
+      entry.stats_club_name = statClubs.size === 1 ? Array.from(statClubs)[0] : (statClubs.size > 1 ? 'Varios clubes' : null);
       entry.status = 'ok';
       result[player.id] = entry;
     }
