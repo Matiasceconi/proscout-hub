@@ -20,6 +20,7 @@ import {
   isToday, isWithinDays, isFuture, isFixtureFinished, needsConfirmation,
   startOfToday, daysFromNow
 } from '@/components/agency/dashboard/dashboardUtils';
+import { dedupeFixtureRecords } from '@/lib/fixtureRecords';
 
 export default function AgencyDashboard() {
   const { user } = useAuth();
@@ -66,7 +67,7 @@ export default function AgencyDashboard() {
         base44.entities.Organization.get(orgId),
       ]);
 
-      setFixtures(fixs);
+      setFixtures(dedupeFixtureRecords(fixs));
       setPlayers(pls);
       setDirectors(dirs);
       setMatchStats(stats);
