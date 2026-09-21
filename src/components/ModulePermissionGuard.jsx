@@ -9,12 +9,12 @@ export default function ModulePermissionGuard({ permission, children }) {
   const { user } = useAuth();
   const organizationId = getUserOrgId(user);
   const role = getUserRole(user);
-  const [allowed, setAllowed] = useState(null);
+  const [accessState, setAccessState] = useState({ allowed: null, fallback: '/company-access' });
 
   useEffect(() => {
     const checkPermission = async () => {
       if (['organization_owner', 'organization_admin'].includes(role)) {
-        setAllowed(true);
+        setAccessState({ allowed: true, fallback: '/agency/operations' });
         return;
       }
       try {
@@ -25,17 +25,25 @@ export default function ModulePermissionGuard({ permission, children }) {
         }, '-updated_date', 1);
         const member = members[0];
         const permissions = member?.permissions?.length ? member.permissions : getDefaultPermissions(member?.app_role || role);
-        setAllowed(permissions.includes(permission));
+        const fallbackByPermission = [
+          ['matches', '/agency/operations'],
+          ['players', '/agency/players'],
+          ['calendar', '/agency/calendar'],
+          ['statistics', '/agency/stats'],
+          ['documents', '/agency/documents']
+        ];
+        const fallback = fallbackByPermission.find(([key]) => permissions.includes(key))?.[1] || '/company-access';
+        setAccessState({ allowed: permissions.includes(permission), fallback });
       } catch (error) {
-        setAllowed(false);
+        setAccessState({ allowed: false, fallback: '/company-access' });
       }
     };
     if (organizationId && user?.id) checkPermission();
   }, [organizationId, permission, role, user?.id]);
 
-  if (allowed === null) {
+  if (accessState.allowed === null) {
     return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" /></div>;
   }
-  if (!allowed) return <Navigate to="/agency" replace />;
+  if (!accessState.allowed) return <Navigate to={accessState.fallback} replace />;
   return children;
 }
