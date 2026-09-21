@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { PLAYER_CATEGORIES } from '@/lib/roleUtils';
 
 const selectClass = "mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm";
 
@@ -19,7 +18,7 @@ export default function ManualFixtureDialog({ open, onClose, orgId, players, clu
       setForm({
         fixture_date: '', home_team_name: '', away_team_name: '',
         home_team_logo: '', away_team_logo: '', competition_name: '',
-        stadium: '', fixture_city: '', category: '',
+        stadium: '', fixture_city: '', home_club_id: '', away_club_id: '',
       });
       setSelectedPlayers([]);
     }
@@ -33,25 +32,27 @@ export default function ManualFixtureDialog({ open, onClose, orgId, players, clu
 
   const handleClubSelect = (side, clubId) => {
     const club = clubs.find(c => c.id === clubId);
-    if (club) {
-      update(side === 'home' ? 'home_team_name' : 'away_team_name', club.club_name);
-      update(side === 'home' ? 'home_team_logo' : 'away_team_logo', club.internal_logo_url || club.official_logo_url || '');
-    }
+    const idKey = side === 'home' ? 'home_club_id' : 'away_club_id';
+    const nameKey = side === 'home' ? 'home_team_name' : 'away_team_name';
+    const logoKey = side === 'home' ? 'home_team_logo' : 'away_team_logo';
+    setForm(prev => ({
+      ...prev,
+      [idKey]: clubId || '',
+      [nameKey]: club?.club_name || prev[nameKey] || '',
+      [logoKey]: club ? (club.internal_logo_url || club.official_logo_url || '') : '',
+    }));
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const mapped_club_ids = selectedPlayers
-        .map(pid => players.find(p => p.id === pid)?.current_club_id)
-        .filter(Boolean);
-      const unique_club_ids = [...new Set(mapped_club_ids)];
+      const unique_club_ids = [...new Set([form.home_club_id, form.away_club_id].filter(Boolean))];
 
       const fixtureData = {
         organization_id: orgId,
         provider: 'manual',
         provider_fixture_id: `manual-${Date.now()}`,
-        fixture_date: form.fixture_date ? new Date(form.fixture_date).toISOString() : new Date().toISOString(),
+        fixture_date: form.fixture_date ? new Date(`${form.fixture_date}:00-03:00`).toISOString() : new Date().toISOString(),
         home_team_name: form.home_team_name,
         away_team_name: form.away_team_name,
         home_team_logo: form.home_team_logo || '',
@@ -61,7 +62,8 @@ export default function ManualFixtureDialog({ open, onClose, orgId, players, clu
         fixture_city: form.fixture_city || null,
         fixture_status: 'TBD',
         mapped_club_ids: unique_club_ids,
-        season: new Date().getFullYear().toString(),
+        linked_player_ids: selectedPlayers,
+        season: new Date(`${form.fixture_date}:00-03:00`).getFullYear().toString(),
       };
 
       await base44.entities.ClubFixture.create(fixtureData);
@@ -86,7 +88,7 @@ export default function ManualFixtureDialog({ open, onClose, orgId, players, clu
           </div>
           <div>
             <Label className="text-xs">Equipo local (club existente)</Label>
-            <select onChange={e => handleClubSelect('home', e.target.value)} className={selectClass}>
+            <select value={form.home_club_id || ''} onChange={e => handleClubSelect('home', e.target.value)} className={selectClass}>
               <option value="">Seleccionar club</option>
               {clubs.map(c => <option key={c.id} value={c.id}>{c.club_name}</option>)}
             </select>
@@ -94,22 +96,15 @@ export default function ManualFixtureDialog({ open, onClose, orgId, players, clu
           </div>
           <div>
             <Label className="text-xs">Equipo visitante (club existente)</Label>
-            <select onChange={e => handleClubSelect('away', e.target.value)} className={selectClass}>
+            <select value={form.away_club_id || ''} onChange={e => handleClubSelect('away', e.target.value)} className={selectClass}>
               <option value="">Seleccionar club</option>
               {clubs.map(c => <option key={c.id} value={c.id}>{c.club_name}</option>)}
             </select>
             <Input value={form.away_team_name} onChange={e => update('away_team_name', e.target.value)} className="mt-1" placeholder="O escribir nombre" />
           </div>
-          <div>
+          <div className="col-span-2">
             <Label className="text-xs">Competencia</Label>
-            <Input value={form.competition_name} onChange={e => update('competition_name', e.target.value)} className="mt-1" />
-          </div>
-          <div>
-            <Label className="text-xs">Categoría</Label>
-            <select value={form.category} onChange={e => update('category', e.target.value)} className={selectClass}>
-              <option value="">Sin categoría</option>
-              {Object.entries(PLAYER_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
+            <Input value={form.competition_name} onChange={e => update('competition_name', e.target.value)} className="mt-1" placeholder="Ej. Liga Profesional, Primera Nacional" />
           </div>
           <div>
             <Label className="text-xs">Cancha/Estadio</Label>
@@ -120,8 +115,12 @@ export default function ManualFixtureDialog({ open, onClose, orgId, players, clu
             <Input value={form.fixture_city} onChange={e => update('fixture_city', e.target.value)} className="mt-1" />
           </div>
           <div className="col-span-2">
-            <Label className="text-xs">Jugadores a vincular</Label>
-            <div className="mt-1 max-h-40 overflow-y-auto border border-input rounded-md p-2 space-y-0.5">
+            <div className="flex items-center justify-between gap-3">
+              <Label className="text-xs">Representados a vincular</Label>
+              <span className="text-[11px] text-slate-400">{selectedPlayers.length} seleccionados</span>
+            </div>
+            <p className="mt-1 text-[11px] text-slate-500">Los jugadores del club seleccionado aparecerán automáticamente. Marcá solo casos que quieras vincular de forma explícita.</p>
+            <div className="mt-2 max-h-40 overflow-y-auto border border-input rounded-md p-2 space-y-0.5">
               {players.map(p => (
                 <label key={p.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 p-1 rounded">
                   <input type="checkbox" checked={selectedPlayers.includes(p.id)} onChange={() => togglePlayer(p.id)} className="rounded" />
