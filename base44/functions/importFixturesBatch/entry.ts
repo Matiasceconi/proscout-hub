@@ -30,7 +30,9 @@ export default async function(req: Request): Promise<Response> {
             ...f,
             home_team_logo: ex.home_team_logo || f.home_team_logo,
             away_team_logo: ex.away_team_logo || f.away_team_logo,
-            mapped_club_ids: [...new Set([...(ex.mapped_club_ids || []), ...(f.mapped_club_ids || [])])],
+            mapped_club_ids: Array.isArray(f.mapped_club_ids)
+              ? [...new Set(f.mapped_club_ids)]
+              : (ex.mapped_club_ids || []),
           });
           updated++;
         } else {
