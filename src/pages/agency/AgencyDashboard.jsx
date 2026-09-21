@@ -120,9 +120,11 @@ export default function AgencyDashboard() {
   // Fixtures with represented people (players + directors) linked via current_club_id → mapped_club_ids
   const fixturesWithRepresented = useMemo(() => {
     return fixtures.map(f => {
-      const represented = representedAll.filter(r =>
-        r.current_club_id && f.mapped_club_ids?.includes(r.current_club_id)
-      );
+      const represented = representedAll.filter(r => {
+        const linkedExplicitly = r.type === 'player' && f.linked_player_ids?.includes(r.id);
+        const linkedByClub = r.current_club_id && f.mapped_club_ids?.includes(r.current_club_id);
+        return linkedExplicitly || linkedByClub;
+      });
       const statsForFixture = matchStats.filter(s => s.club_fixture_id === f.id);
       return { ...f, represented, statsForFixture };
     });
@@ -279,7 +281,7 @@ export default function AgencyDashboard() {
 
   const handleOpenMaps = (fixture) => {
     const query = encodeURIComponent((fixture.stadium || '') + ' ' + (fixture.fixture_city || ''));
-    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleModalSave = () => { loadData(); };
