@@ -271,14 +271,21 @@ export default function PlayerStatsTab({ player, permissions }) {
       {/* BLOCK 2: Sección de préstamo y club */}
       <PlayerTransferStatus player={player} clubData={clubData} />
 
-      {/* BLOCK 3: Charts */}
-      <StatsCharts
-        matchStats={filteredMatchStats}
-        seasonStats={filteredSeasonStats}
-        position={player.position}
-        minutesPeriod={minutesPeriod}
-        onMinutesPeriodChange={setMinutesPeriod}
-      />
+      {/* BLOCK 3: Match-by-match charts only when the provider returned that level of detail. */}
+      {filteredMatchStats.length > 0 ? (
+        <StatsCharts
+          matchStats={filteredMatchStats}
+          seasonStats={filteredSeasonStats}
+          position={player.position}
+          minutesPeriod={minutesPeriod}
+          onMinutesPeriodChange={setMinutesPeriod}
+        />
+      ) : (
+        <div className="border border-emerald-100 bg-emerald-50/60 rounded-lg p-4">
+          <p className="text-sm font-medium text-emerald-800">Estadísticas de temporada integradas</p>
+          <p className="text-xs text-emerald-700/70 mt-1">La cobertura actual incluye acumulados de temporada. El detalle partido a partido aparecerá automáticamente cuando el proveedor lo sincronice para esta competencia.</p>
+        </div>
+      )}
 
       {/* BLOCK 4: Position metrics table */}
       <div className="border border-slate-200 rounded-lg p-4">
@@ -299,7 +306,7 @@ export default function PlayerStatsTab({ player, permissions }) {
       </div>
 
       {/* BLOCK 6: Match table */}
-      <StatsMatchTable matchStats={filteredMatchStats} fixtures={fixtures} position={player.position} />
+      {filteredMatchStats.length > 0 && <StatsMatchTable matchStats={filteredMatchStats} fixtures={fixtures} position={player.position} />}
 
       {/* BLOCK 7: Coverage footer */}
       <div className="border-t pt-3 text-xs text-slate-400 space-y-1">
