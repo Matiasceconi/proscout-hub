@@ -54,22 +54,16 @@ function normalizeName(name: string): string {
 function findTeam(clubName: string): { id: string; name: string } | null {
   const norm = normalizeName(clubName);
   if (!norm) return null;
+
+  // Auto-mapping is intentionally conservative. Only explicit aliases are
+  // accepted; substring/fuzzy matching caused Tigres→Tigre, Santos Laguna→Santos,
+  // Plaza Colonia→Colón and youth/reserve teams→first-team collisions.
   for (const entry of TEAM_MAP) {
     for (const m of entry.match) {
       if (norm === m) return { id: entry.id, name: entry.name };
     }
   }
-  let best: { id: string; name: string } | null = null;
-  let bestLen = 0;
-  for (const entry of TEAM_MAP) {
-    for (const m of entry.match) {
-      if (norm.includes(m) && m.length > bestLen) {
-        best = { id: entry.id, name: entry.name };
-        bestLen = m.length;
-      }
-    }
-  }
-  return best;
+  return null;
 }
 
 export default async function(req: Request): Promise<Response> {
@@ -117,20 +111,33 @@ export default async function(req: Request): Promise<Response> {
     for (const { club, team } of toMap) {
       try {
         const existing = existingMappings.filter((m: any) => m.club_id === club.id);
+        const collision = existingMappings.find((m: any) =>
+          m.club_id !== club.id &&
+          String(m.provider_team_id || '') === String(team.id) &&
+          m.mapping_status === 'verified'
+        );
+        const mappingStatus = collision ? 'ambiguous' : 'verified';
+        const mappingData: any = {
+          provider_team_id: team.id,
+          provider_team_name: team.name,
+          mapping_status: mappingStatus,
+          verified_by: collision ? 'auto_collision_guard' : 'auto',
+          last_sync_at: now,
+        };
+        if (!collision) mappingData.verified_at = now;
+
         if (existing.length > 0) {
-          await asAdmin.entities.ClubProviderMapping.update(existing[0].id, {
-            provider_team_id: team.id, provider_team_name: team.name,
-            mapping_status: "verified", verified_by: "auto", verified_at: now, last_sync_at: now
-          });
+          await asAdmin.entities.ClubProviderMapping.update(existing[0].id, mappingData);
         } else {
           await asAdmin.entities.ClubProviderMapping.create({
             organization_id, club_id: club.id, club_name: club.club_name, club_key: club.club_key,
-            provider: "api_football", provider_team_id: team.id, provider_team_name: team.name,
-            mapping_status: "verified", verified_by: "auto", verified_at: now, last_sync_at: now
+            provider: "api_football", ...mappingData
           });
         }
-        newMappings.push({ club_id: club.id, provider_team_id: team.id });
-        clubsMapped++;
+        if (!collision) {
+          newMappings.push({ club_id: club.id, provider_team_id: team.id });
+          clubsMapped++;
+        }
       } catch (err: any) {
         // skip
       }
@@ -147,7 +154,10 @@ export default async function(req: Request): Promise<Response> {
     for (const ef of existingFixturesPre) {
       for (const cid of ef.mapped_club_ids || []) clubsWithFixtures.add(cid);
     }
-    const mappingsToSync = allMappings.filter((m: any) => !clubsWithFixtures.has(m.club_id));
+    const uniqueMappings = Array.from(
+      new Map(allMappings.map((m: any) => [String(m.provider_team_id), m])).values()
+    );
+    const mappingsToSync = uniqueMappings.filter((m: any) => !clubsWithFixtures.has(m.club_id));
 
     const allFixtures: any[] = [];
     let apiCalls = 0;
@@ -174,9 +184,7 @@ export default async function(req: Request): Promise<Response> {
         for (const fd of fixtures) {
           const homeId = String(fd.teams.home.id);
           const awayId = String(fd.teams.away.id);
-          const mapped = [m.club_id];
-          if (teamIdMap.has(homeId) && teamIdMap.get(homeId) !== m.club_id) mapped.push(teamIdMap.get(homeId));
-          if (teamIdMap.has(awayId) && teamIdMap.get(awayId) !== m.club_id) mapped.push(teamIdMap.get(awayId));
+          const mapped = [teamIdMap.get(homeId), teamIdMap.get(awayId)].filter(Boolean);
           allFixtures.push({
             organization_id, provider_fixture_id: String(fd.fixture.id), provider: "api_football",
             home_provider_team_id: homeId, away_provider_team_id: awayId,
@@ -211,7 +219,7 @@ export default async function(req: Request): Promise<Response> {
         toUpdate.push({
           id: existing.id,
           ...f,
-          mapped_club_ids: [...new Set([...(existing.mapped_club_ids || []), ...f.mapped_club_ids])],
+          mapped_club_ids: [...new Set(f.mapped_club_ids || [])],
         });
       } else {
         toCreate.push(f);
