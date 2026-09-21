@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { requireAgencyMember, hasAgencyPermission } from '../../shared/agencyAccess.ts';
-import { scopedPlayers } from '../../shared/personalDashboard.ts';
+import { scopedPlayers } from '../../shared/agencyData.ts';
 
 const DAY = 86400000;
 const clean = (value: unknown, max = 500) => String(value ?? '').trim().slice(0, max);
