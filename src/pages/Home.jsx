@@ -291,16 +291,16 @@ export default function Home() {
                       <p className="text-xs text-slate-400">Centro de rendimiento</p>
                     </div>
                   </div>
-                  <span className="inline-flex items-center gap-2 rounded-full bg-red-500/15 px-3 py-1.5 text-[11px] font-bold text-red-300">
-                    <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
-                    EN VIVO
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-[11px] font-bold text-emerald-200">
+                    <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                    VISTA DE EJEMPLO
                   </span>
                 </div>
 
                 <div className="mt-5 rounded-2xl bg-slate-950/55 p-5">
                   <div className="flex items-center justify-between text-xs text-slate-400">
                     <span>Liga Profesional</span>
-                    <span>67'</span>
+                    <span>Ejemplo</span>
                   </div>
                   <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-4 text-center">
                     <div>
@@ -320,7 +320,7 @@ export default function Home() {
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-400 text-sm font-black text-slate-950">10</div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-bold">Representado en cancha</p>
-                      <p className="text-[11px] text-emerald-300">Titular · 67 minutos</p>
+                      <p className="text-[11px] text-emerald-300">Titular · seguimiento del partido</p>
                     </div>
                     <Activity className="h-5 w-5 text-emerald-300" />
                   </div>
