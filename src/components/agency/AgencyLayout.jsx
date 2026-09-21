@@ -8,9 +8,9 @@ import { useOrganizationBranding } from '@/hooks/use-organization-branding';
 import { SCORE_FUTBOL_BRAND } from '@/lib/scoreFutbolBrand';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
-  LayoutDashboard, Users, Calendar, Trophy, BarChart3,
-  FileText, UserCog, Settings, Sparkles,
-  LogOut, Menu, X, GraduationCap, ClipboardList, User, Building2, ChevronUp
+  Users, Calendar, Trophy, BarChart3,
+  FileText, UserCog, Settings,
+  LogOut, Menu, X, GraduationCap, ClipboardList, Building2, ChevronUp
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -18,9 +18,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const MENU_GROUPS = [
-  { type: 'item', to: '/agency', icon: LayoutDashboard, label: 'Mi tablero', permission: 'players', end: true },
   { type: 'item', to: '/agency/operations', icon: Trophy, label: 'Agenda y partidos', permission: 'matches' },
-  { type: 'item', to: '/agency/intelligence', icon: Sparkles, label: 'Seguimiento e IA', permission: 'players' },
+  { type: 'item', to: '/agency/intelligence', icon: ClipboardList, label: 'Seguimiento', permission: 'players' },
   {
     type: 'group',
     label: 'Representados',
@@ -219,12 +218,11 @@ export default function AgencyLayout() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/agency/settings')}>
-                <User className="w-4 h-4 mr-2" /> Mi perfil
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/agency/settings')}>
-                <Settings className="w-4 h-4 mr-2" /> Configuración de la empresa
-              </DropdownMenuItem>
+              {isOrgAdmin(user) && (
+                <DropdownMenuItem onClick={() => navigate('/agency/settings')}>
+                  <Settings className="w-4 h-4 mr-2" /> Configuración de la empresa
+                </DropdownMenuItem>
+              )}
               {orgCount > 1 && (
                 <DropdownMenuItem onClick={() => navigate('/company-access')}>
                   <Building2 className="w-4 h-4 mr-2" /> Cambiar de organización
