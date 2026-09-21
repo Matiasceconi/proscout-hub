@@ -73,6 +73,12 @@
         "type": "string"
       }
     },
+    "linked_player_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "last_sync_at": {
       "type": "string",
       "format": "date-time"
