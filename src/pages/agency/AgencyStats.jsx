@@ -1,187 +1,289 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { getUserOrgId, isOrgAdmin } from '@/lib/roleUtils';
+import { getUserOrgId, isOrgAdmin, POSITION_LABELS } from '@/lib/roleUtils';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw, Link2, CheckCircle2, BarChart3, AlertCircle, Calendar } from 'lucide-react';
+import { Loader2, RefreshCw, Link2, BarChart3, Activity, Clock3, Target, Star, Trophy, Database, ChevronDown } from 'lucide-react';
 import LinkPlayerDialog from '@/components/agency/player-tabs/stats/LinkPlayerDialog';
+import ProfileAvatar from '@/components/shared/ProfileAvatar';
+
+const SEASON = '2026';
+const nf = new Intl.NumberFormat('es-AR');
 
 export default function AgencyStats() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const orgId = getUserOrgId(user);
   const isAdmin = isOrgAdmin(user);
-  const [coverage, setCoverage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(null);
-  const [linkPlayer, setLinkPlayer] = useState(null);
+  const [coverage, setCoverage] = useState(null);
   const [players, setPlayers] = useState([]);
+  const [seasonStats, setSeasonStats] = useState([]);
+  const [linkPlayer, setLinkPlayer] = useState(null);
 
-  const loadCoverage = async () => {
+  const loadData = async () => {
+    if (!orgId) return;
     setLoading(true);
     try {
-      const res = await base44.functions.invoke('getStatsCoverage', { organization_id: orgId });
-      setCoverage(res.data);
-      if (res.data?.pending_players?.length > 0) {
-        const pIds = res.data.pending_players.map(p => p.player_id);
-        const pls = await base44.entities.Player.filter({ id: { $in: pIds } });
-        setPlayers(pls);
-      }
-    } catch (err) { console.error(err); }
+      const [coverageRes, pls, stats] = await Promise.all([
+        base44.functions.invoke('getStatsCoverage', { organization_id: orgId }),
+        base44.entities.Player.filter({ organization_id: orgId, status: { $ne: 'archived' } }, '-updated_date', 500),
+        base44.entities.PlayerSeasonStatistic.filter({ organization_id: orgId, provider: 'api_football', season: SEASON }, '-synced_at', 500),
+      ]);
+      setCoverage(coverageRes.data || null);
+      setPlayers(pls || []);
+      setSeasonStats(stats || []);
+    } catch (err) {
+      console.error('Stats portfolio load error:', err);
+    }
     setLoading(false);
   };
 
-  useEffect(() => { if (orgId) loadCoverage(); }, [orgId]);
+  useEffect(() => { loadData(); }, [orgId]);
+
+  const playerById = useMemo(() => new Map(players.map(p => [p.id, p])), [players]);
+
+  const portfolioRows = useMemo(() => {
+    const grouped = new Map();
+    for (const s of seasonStats) {
+      if (!s.player_id) continue;
+      if (!grouped.has(s.player_id)) grouped.set(s.player_id, []);
+      grouped.get(s.player_id).push(s);
+    }
+
+    const rows = [];
+    for (const [playerId, stats] of grouped.entries()) {
+      const player = playerById.get(playerId);
+      if (!player) continue;
+      const seen = new Set();
+      let appearances = 0, lineups = 0, minutes = 0, goals = 0, assists = 0;
+      let ratingWeighted = 0, ratingWeight = 0;
+      const clubs = new Set();
+      const competitions = new Set();
+      let latestSync = null;
+
+      for (const s of stats) {
+        const key = `${s.provider_team_id || ''}_${s.league_id || ''}_${s.season || ''}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const apps = Number(s.appearances || 0);
+        appearances += apps;
+        lineups += Number(s.lineups || 0);
+        minutes += Number(s.minutes || 0);
+        goals += Number(s.goals_total || 0);
+        assists += Number(s.goals_assists || 0);
+        if (s.rating_avg != null && apps > 0) {
+          ratingWeighted += Number(s.rating_avg) * apps;
+          ratingWeight += apps;
+        }
+        if (s.club_name) clubs.add(s.club_name);
+        if (s.league_name) competitions.add(s.league_name);
+        if (s.synced_at && (!latestSync || new Date(s.synced_at) > new Date(latestSync))) latestSync = s.synced_at;
+      }
+
+      rows.push({
+        player,
+        appearances,
+        lineups,
+        minutes,
+        goals,
+        assists,
+        ga: goals + assists,
+        rating: ratingWeight > 0 ? Number((ratingWeighted / ratingWeight).toFixed(2)) : null,
+        clubs: Array.from(clubs),
+        competitions: Array.from(competitions),
+        latestSync,
+      });
+    }
+    return rows.sort((a, b) => b.minutes - a.minutes || b.appearances - a.appearances);
+  }, [seasonStats, playerById]);
+
+  const summary = useMemo(() => {
+    let minutes = 0, ga = 0, ratingWeighted = 0, ratingWeight = 0;
+    const competitions = new Set();
+    for (const row of portfolioRows) {
+      minutes += row.minutes;
+      ga += row.ga;
+      if (row.rating != null && row.appearances > 0) {
+        ratingWeighted += row.rating * row.appearances;
+        ratingWeight += row.appearances;
+      }
+      row.competitions.forEach(c => competitions.add(c));
+    }
+    return {
+      players: portfolioRows.length,
+      minutes,
+      ga,
+      rating: ratingWeight > 0 ? (ratingWeighted / ratingWeight).toFixed(2) : '—',
+      competitions: competitions.size,
+    };
+  }, [portfolioRows]);
+
+  const latestSync = useMemo(() => {
+    const dates = portfolioRows.map(r => r.latestSync).filter(Boolean).sort((a, b) => new Date(b) - new Date(a));
+    return dates[0] || null;
+  }, [portfolioRows]);
 
   const handleSync = async (scope) => {
     setSyncing(scope);
     try {
-      await base44.functions.invoke('syncAllPlayersStats', { organization_id: orgId, season: '2026', scope, trigger_reason: 'manual_admin' });
-      await loadCoverage();
-    } catch (err) { console.error(err); }
+      await base44.functions.invoke('syncAllPlayersStats', { organization_id: orgId, season: SEASON, scope, trigger_reason: 'manual_admin' });
+      await loadData();
+    } catch (err) {
+      console.error(err);
+    }
     setSyncing(null);
   };
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4 animate-pulse">
-        <div className="h-6 w-40 bg-slate-100 rounded" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-          {[...Array(6)].map((_, i) => <div key={i} className="h-20 bg-slate-100 rounded-lg" />)}
-        </div>
-        <div className="h-32 bg-slate-100 rounded-lg" />
+      <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-4 animate-pulse">
+        <div className="h-8 w-64 bg-slate-100 rounded" />
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">{[...Array(5)].map((_, i) => <div key={i} className="h-24 bg-slate-100 rounded-xl" />)}</div>
+        <div className="h-96 bg-slate-100 rounded-xl" />
       </div>
     );
   }
 
-  if (!coverage) return <div className="p-6 text-center text-slate-400">Sin datos de cobertura</div>;
-
-  const c = coverage.coverage;
-  const lastRun = coverage.last_sync?.last_run;
-  const linkedPct = c.total_players > 0 ? Math.round((c.linked / c.total_players) * 100) : 0;
-
   return (
-    <div className="p-4 lg:p-6 max-w-5xl mx-auto space-y-4">
-      <div className="flex items-center gap-2">
-        <BarChart3 className="w-5 h-5 text-slate-700" />
-        <h1 className="text-lg font-semibold text-slate-800">Estadísticas</h1>
-      </div>
-
-      {/* Resumen de cobertura */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-        <div className="bg-white border border-slate-200 rounded-lg p-3">
-          <p className="text-2xl font-bold text-slate-800">{c.total_players}</p>
-          <p className="text-xs text-slate-500">Total jugadores</p>
+    <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-5">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <BarChart3 className="w-5 h-5 text-emerald-600" />
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Datos integrados · API-Football</span>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">Rendimiento de la cartera</h1>
+          <p className="text-sm text-slate-500 mt-1">Temporada {SEASON} · lectura consolidada de los representados con cobertura estadística.</p>
         </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-          <p className="text-2xl font-bold text-green-700">{c.linked}</p>
-          <p className="text-xs text-green-600">Vinculados ({linkedPct}%)</p>
-        </div>
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-          <p className="text-2xl font-bold text-amber-700">{c.pending + c.unlinked}</p>
-          <p className="text-xs text-amber-600">Pendientes</p>
-        </div>
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-          <p className="text-2xl font-bold text-amber-700">{c.ambiguous}</p>
-          <p className="text-xs text-amber-600">Ambiguos</p>
-        </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <p className="text-2xl font-bold text-red-700">{c.error}</p>
-          <p className="text-xs text-red-600">Errores</p>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-3">
-          <p className="text-2xl font-bold text-slate-800">{coverage.match_stats_count + coverage.season_stats_count}</p>
-          <p className="text-xs text-slate-500">Registros</p>
+        <div className="flex items-center gap-2">
+          {latestSync && <span className="text-xs text-slate-400">Actualizado {new Date(latestSync).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}</span>}
+          {isAdmin && (
+            <Button size="sm" variant="outline" onClick={() => handleSync('all')} disabled={!!syncing}>
+              {syncing ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1" />}
+              Actualizar datos
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Info de temporada y última sincronización */}
-      <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-wrap items-center gap-3 text-xs">
-        <div className="flex items-center gap-1.5">
-          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-          <span className="font-medium text-slate-600">Temporada:</span>
-          <span className="text-slate-500">2026</span>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <Metric icon={Activity} label="Jugadores con datos" value={summary.players} />
+        <Metric icon={Clock3} label="Minutos registrados" value={nf.format(summary.minutes)} />
+        <Metric icon={Target} label="Goles + asistencias" value={summary.ga} />
+        <Metric icon={Star} label="Rating promedio" value={summary.rating} />
+        <Metric icon={Trophy} label="Competencias" value={summary.competitions} />
+      </div>
+
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="px-4 lg:px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="font-semibold text-slate-900">Representados con actividad estadística</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Los valores provienen de la integración y se actualizan sin carga manual.</p>
+          </div>
+          <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-semibold">{portfolioRows.length} perfiles</span>
         </div>
-        {lastRun && (
-          <>
-            <div className="flex items-center gap-1.5">
-              <span className="font-medium text-slate-600">Última sync:</span>
-              <span className="text-slate-500">{new Date(lastRun.started_at).toLocaleString('es-AR')}</span>
-            </div>
-            <span className={`px-2 py-0.5 rounded-full ${lastRun.status === 'completed' ? 'bg-green-50 text-green-600' : lastRun.status === 'partial' ? 'bg-amber-50 text-amber-600' : lastRun.status === 'failed' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
-              {lastRun.status === 'completed' ? 'Completada' : lastRun.status === 'partial' ? 'Parcial' : lastRun.status === 'failed' ? 'Fallida' : 'En curso'}
-            </span>
-            <span className="text-slate-400">Jugadores: {lastRun.players_processed}</span>
-            <span className="text-slate-400">Partidos: {lastRun.fixtures_processed}</span>
-            <span className="text-slate-400">Requests: {lastRun.api_requests_used}</span>
-          </>
+
+        {portfolioRows.length === 0 ? (
+          <div className="p-10 text-center">
+            <Database className="w-9 h-9 text-slate-300 mx-auto mb-3" />
+            <p className="font-medium text-slate-700">Todavía no hay estadísticas sincronizadas para {SEASON}</p>
+            <p className="text-sm text-slate-400 mt-1">La estructura está lista; al vincular jugadores, los datos aparecen automáticamente.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50/80 border-b border-slate-100">
+                <tr className="text-xs text-slate-500">
+                  <th className="text-left font-medium px-4 py-3">Jugador</th>
+                  <th className="text-left font-medium px-3 py-3 hidden lg:table-cell">Competencia</th>
+                  <th className="text-right font-medium px-3 py-3">PJ</th>
+                  <th className="text-right font-medium px-3 py-3">MIN</th>
+                  <th className="text-right font-medium px-3 py-3">G</th>
+                  <th className="text-right font-medium px-3 py-3">A</th>
+                  <th className="text-right font-medium px-3 py-3">G+A</th>
+                  <th className="text-right font-medium px-4 py-3">Rating</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {portfolioRows.map(row => (
+                  <tr key={row.player.id} onClick={() => navigate(`/agency/players/${row.player.id}`)} className="hover:bg-slate-50 cursor-pointer transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3 min-w-[210px]">
+                        <ProfileAvatar photoUrl={row.player.photo_url} photoSourceUrl={row.player.photo_source_url} firstName={row.player.first_name} lastName={row.player.last_name} size="sm" />
+                        <div className="min-w-0">
+                          <p className="font-semibold text-slate-800 truncate">{row.player.first_name} {row.player.last_name}</p>
+                          <p className="text-xs text-slate-400 truncate">{POSITION_LABELS[row.player.position] || row.player.position} · {row.clubs.join(' / ') || row.player.club || 'Sin club'}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 hidden lg:table-cell text-slate-500 max-w-[240px] truncate">{row.competitions.join(' · ') || '—'}</td>
+                    <Num value={row.appearances} />
+                    <Num value={nf.format(row.minutes)} strong />
+                    <Num value={row.goals} />
+                    <Num value={row.assists} />
+                    <Num value={row.ga} strong />
+                    <td className="px-4 py-3 text-right"><span className="font-semibold text-slate-800">{row.rating ?? '—'}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
-      {/* Errores o cobertura parcial destacados */}
-      {lastRun?.errors?.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="w-4 h-4 text-red-600" />
-            <p className="text-sm font-medium text-red-700">Errores de la última sincronización</p>
-          </div>
-          <div className="space-y-1 max-h-32 overflow-y-auto">
-            {lastRun.errors.slice(0, 5).map((err, i) => (
-              <p key={i} className="text-xs text-red-600">{err}</p>
-            ))}
-            {lastRun.errors.length > 5 && <p className="text-xs text-red-400">+{lastRun.errors.length - 5} errores más...</p>}
-          </div>
-        </div>
-      )}
-
-      {/* Admin actions */}
-      {isAdmin && (
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={() => handleSync('pending')} disabled={!!syncing} variant="outline" size="sm">
-            {syncing === 'pending' ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
-            Sincronizar pendientes
-          </Button>
-          <Button onClick={() => handleSync('all')} disabled={!!syncing} className="bg-slate-900" size="sm">
-            {syncing === 'all' ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
-            Actualizar cartera completa
-          </Button>
-        </div>
-      )}
-
-      {/* Lista de jugadores pendientes */}
-      {coverage.pending_players?.length > 0 && (
-        <div className="border border-slate-200 rounded-lg overflow-hidden">
-          <h3 className="text-sm font-semibold text-slate-700 p-3 border-b border-slate-100">
-            Jugadores pendientes de vinculación ({coverage.pending_players.length})
-          </h3>
-          <div className="divide-y divide-slate-50">
-            {coverage.pending_players.map((p, i) => {
-              const playerData = players.find(pl => pl.id === p.player_id);
-              const reasonLabel = { sin_vincular: 'Sin vincular', ambiguo: 'Ambiguo', error: 'Error' }[p.reason] || p.reason;
-              const reasonColor = { sin_vincular: 'text-amber-600 bg-amber-50', ambiguo: 'text-amber-600 bg-amber-50', error: 'text-red-600 bg-red-50' }[p.reason];
-              return (
-                <div key={i} className="flex items-center gap-3 p-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-700 truncate">{p.name}</p>
-                    <p className="text-xs text-slate-400">{p.club || 'Sin club'}</p>
-                  </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${reasonColor}`}>{reasonLabel}</span>
-                  {isAdmin && playerData && (
-                    <Button size="sm" variant="outline" onClick={() => setLinkPlayer(playerData)} className="h-7 text-xs">
-                      <Link2 className="w-3 h-3 mr-1" /> Vincular
-                    </Button>
-                  )}
+      {isAdmin && coverage && (
+        <details className="group bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <summary className="list-none cursor-pointer px-4 py-3 flex items-center justify-between gap-3 hover:bg-slate-50">
+            <div className="flex items-center gap-2">
+              <Database className="w-4 h-4 text-slate-500" />
+              <div>
+                <p className="text-sm font-medium text-slate-700">Administración de cobertura</p>
+                <p className="text-xs text-slate-400">Vinculación y sincronización de jugadores</p>
+              </div>
+            </div>
+            <ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="border-t border-slate-100 p-4 space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+              <CoverageBox label="Cartera" value={coverage.coverage?.total_players || 0} />
+              <CoverageBox label="Vinculados" value={coverage.coverage?.linked || 0} />
+              <CoverageBox label="Pendientes" value={(coverage.coverage?.pending || 0) + (coverage.coverage?.unlinked || 0)} />
+              <CoverageBox label="Ambiguos" value={coverage.coverage?.ambiguous || 0} />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={() => handleSync('pending')} disabled={!!syncing}>
+                {syncing === 'pending' ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1" />}
+                Sincronizar pendientes
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleSync('all')} disabled={!!syncing}>
+                <RefreshCw className={`w-3.5 h-3.5 mr-1 ${syncing === 'all' ? 'animate-spin' : ''}`} />
+                Actualizar cartera
+              </Button>
+            </div>
+            {coverage.pending_players?.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Pendientes prioritarios</p>
+                <div className="grid md:grid-cols-2 gap-2">
+                  {coverage.pending_players.slice(0, 8).map(p => {
+                    const playerData = playerById.get(p.player_id);
+                    return (
+                      <div key={`${p.player_id}-${p.reason}`} className="flex items-center gap-2 border border-slate-100 rounded-lg p-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-700 truncate">{p.name}</p>
+                          <p className="text-xs text-slate-400 truncate">{p.club || 'Sin club'} · {p.reason === 'ambiguo' ? 'Revisar identidad' : 'Sin vincular'}</p>
+                        </div>
+                        {playerData && <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setLinkPlayer(playerData)}><Link2 className="w-3 h-3 mr-1" />Vincular</Button>}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
-        </div>
-      )}
-
-      {coverage.pending_players?.length === 0 && (
-        <div className="text-center py-8 text-slate-400">
-          <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-500" />
-          <p className="text-sm">Todos los jugadores están vinculados</p>
-        </div>
+        </details>
       )}
 
       {linkPlayer && (
@@ -189,9 +291,26 @@ export default function AgencyStats() {
           player={linkPlayer}
           organizationId={orgId}
           onClose={() => setLinkPlayer(null)}
-          onLinked={() => { setLinkPlayer(null); loadCoverage(); }}
+          onLinked={() => { setLinkPlayer(null); loadData(); }}
         />
       )}
     </div>
   );
+}
+
+function Metric({ icon: Icon, label, value }) {
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+      <div className="flex items-center gap-2 text-slate-400 mb-2"><Icon className="w-4 h-4" /><span className="text-xs font-medium">{label}</span></div>
+      <p className="text-2xl font-bold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function Num({ value, strong = false }) {
+  return <td className={`px-3 py-3 text-right ${strong ? 'font-semibold text-slate-800' : 'text-slate-600'}`}>{value}</td>;
+}
+
+function CoverageBox({ label, value }) {
+  return <div className="bg-slate-50 rounded-lg p-2"><p className="text-lg font-bold text-slate-800">{value}</p><p className="text-[11px] text-slate-400">{label}</p></div>;
 }
