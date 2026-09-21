@@ -30,7 +30,7 @@ export default function Players() {
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({
     category: 'all', position: 'all', club: 'all', competition: 'all',
-    status: 'all', representative: 'all', portal: 'all'
+    status: 'all', representative: 'all', portal: 'all', data: 'all'
   });
   const [showNew, setShowNew] = useState(searchParams.get('action') === 'new');
   const [editPlayer, setEditPlayer] = useState(null);
@@ -82,15 +82,18 @@ export default function Players() {
       if (filters.status !== 'all' && p.availability_status !== filters.status) return false;
       if (filters.representative !== 'all' && p.representative_name !== filters.representative) return false;
       if (filters.portal !== 'all' && p.portal_status !== filters.portal) return false;
+      const hasIntegratedStats = statsData.players?.[p.id]?.status === 'ok';
+      if (filters.data === 'with_stats' && !hasIntegratedStats) return false;
+      if (filters.data === 'without_stats' && hasIntegratedStats) return false;
       return true;
     });
-  }, [players, search, filters]);
+  }, [players, search, filters, statsData]);
 
   const hasActiveFilters = search || Object.values(filters).some(v => v !== 'all');
 
   const clearFilters = () => {
     setSearch('');
-    setFilters({ category: 'all', position: 'all', club: 'all', competition: 'all', status: 'all', representative: 'all', portal: 'all' });
+    setFilters({ category: 'all', position: 'all', club: 'all', competition: 'all', status: 'all', representative: 'all', portal: 'all', data: 'all' });
   };
 
   const toggleView = (v) => {
@@ -188,6 +191,7 @@ export default function Players() {
           <FilterSelect value={filters.position} onChange={v => setFilters(f => ({ ...f, position: v }))} placeholder="Posición" options={POSITION_LABELS} />
           <FilterSelect value={filters.status} onChange={v => setFilters(f => ({ ...f, status: v }))} placeholder="Estado deportivo" options={SPORTING_STATUS_LABELS} />
           <FilterSelect value={filters.portal} onChange={v => setFilters(f => ({ ...f, portal: v }))} placeholder="Estado del portal" options={PORTAL_STATUS_LABELS} />
+          <FilterSelect value={filters.data} onChange={v => setFilters(f => ({ ...f, data: v }))} placeholder="Cobertura de datos" options={{ with_stats: 'Con estadísticas integradas', without_stats: 'Pendientes de integración' }} />
           {clubs.length > 0 && <FilterSelect value={filters.club} onChange={v => setFilters(f => ({ ...f, club: v }))} placeholder="Club" options={Object.fromEntries(clubs.map(c => [c, c]))} />}
           {competitions.length > 0 && <FilterSelect value={filters.competition} onChange={v => setFilters(f => ({ ...f, competition: v }))} placeholder="Competencia" options={Object.fromEntries(competitions.map(c => [c, c]))} />}
           {representatives.length > 0 && <FilterSelect value={filters.representative} onChange={v => setFilters(f => ({ ...f, representative: v }))} placeholder="Representante" options={Object.fromEntries(representatives.map(r => [r, r]))} />}
