@@ -51,13 +51,14 @@ export default function AgencyDashboard() {
       const [fixs, pls, dirs, stats, cls, mappings, events, org] = await Promise.all([
         base44.entities.ClubFixture.filter({
           organization_id: orgId,
+          provider: { $in: ['api_football', 'manual'] },
           fixture_date: { $gte: past7.toISOString(), $lte: future7End.toISOString() }
         }, 'fixture_date', 1000),
         base44.entities.Player.filter({ organization_id: orgId, status: { $ne: 'archived' } }, '-updated_date', 300),
         base44.entities.TechnicalDirector.filter({ organization_id: orgId }, '-updated_date', 200),
         base44.entities.PlayerMatchStats.filter({ organization_id: orgId }, '-match_date', 500),
         base44.entities.Club.list('-club_name', 500),
-        base44.entities.ClubProviderMapping.filter({ organization_id: orgId }),
+        base44.entities.ClubProviderMapping.filter({ organization_id: orgId, mapping_status: 'verified' }),
         base44.entities.CalendarEvent.filter({
           organization_id: orgId,
           start_date: { $gte: startOfToday().toISOString(), $lte: future7End.toISOString() }
