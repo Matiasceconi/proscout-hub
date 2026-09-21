@@ -1,18 +1,17 @@
 # Base44 Project
 
-## Score: tablero personal y Sportmonks
+## Score Fútbol: estado actual
 
-- `/agency`: tablero por usuario y organización; orden, tamaños, filas, favoritos, temporada, color y densidad se guardan con **Guardar mi tablero**.
-- `/agency/operations`: agenda y partidos existentes. `/agency/intelligence`: seguimiento e IA.
-- `personal-dashboard` resuelve la identidad desde la sesión, verifica membresía y permisos, limita jugadores a la cartera autorizada y valida la revisión antes de guardar. Las entidades de preferencias y snapshots no admiten acceso directo del cliente.
+- `/agency` redirige a `/agency/operations`, que funciona como entrada operativa para agenda y partidos.
+- `/agency/intelligence` conserva únicamente prioridades, seguimientos y evolución de servicios. El antiguo informe/asistente de IA fue retirado.
+- El antiguo `personal-dashboard` quedó deshabilitado con respuesta `410`; su interfaz fue eliminada. La entidad histórica de preferencias se conserva temporalmente para rollback, sin acceso desde la navegación.
 - `sportmonks-player` permite al administrador consultar y confirmar una identidad antes de vincularla. La sincronización usa esa identidad verificada y conserva la última información si falla el proveedor.
-- Configurar `SPORTMONKS_API_TOKEN` como secreto del servidor y verificar que el plan incluya las ligas requeridas. Luego abrir Estado de los datos y vincular jugadores. Nunca colocar el token en variables VITE ni en el navegador.
-- Las estadísticas se agrupan por temporada/competición y equipo. Un valor ausente permanece sin dato; no se convierte en cero. No hay datos deportivos simulados en producción.
-- El tablero relee la caché cada minuto. La consulta al proveedor es manual por jugador, con reutilización de resultados recientes durante 60 segundos. Los partidos conservan su proveedor original; esta entrega no incorpora ingesta de fixtures desde Sportmonks.
-- El acceso a IA abre el centro existente; esta entrega no añade Sportmonks al contexto del asistente.
-- Validación: `npm run build`, ESLint en los tres componentes nuevos y `node --test tests/personal-dashboard.test.cjs` (10 pruebas). Las pruebas usan sesiones/proveedor simulados, no sustituyen la validación con cuentas y credenciales reales.
-- Pendiente de validación operativa: conexión Sportmonks real, persistencia y permisos con dos cuentas reales, revisión visual autenticada y publicación del frontend desde Base44.
-- La revisión detecta guardados basados en una versión anterior; el almacenamiento actual no ofrece una transacción de comparación e intercambio para guardados exactamente simultáneos.
+- Configurar `SPORTMONKS_API_TOKEN` como secreto del servidor y verificar que el plan incluya las ligas requeridas. Nunca colocar el token en variables VITE ni en el navegador.
+- Las estadísticas se agregan por temporada/competición y equipo. Un valor ausente permanece sin dato; no se convierte en cero.
+- `score-ai` es el backend nuevo y separado para la futura integración con OpenAI. Requiere `OPENAI_API_KEY`, admite `OPENAI_MODEL` y en esta primera etapa es estrictamente de solo lectura: cartera, ficha, partidos, agenda, próximos partidos y resumen de cartera según permisos.
+- La búsqueda de fotos mediante un LLM externo fue retirada. Las fotos deben provenir de un proveedor verificado o de carga manual.
+- Validación local recomendada: `npm run lint`, `npm run build` y `npm test`. El chequeo `npm run typecheck` todavía expone deuda de tipado heredada en componentes JavaScript y debe tratarse por separado de los errores de compilación.
+- Pendiente de validación operativa: credenciales reales de proveedores, prueba con al menos dos roles de usuario, revisión visual autenticada y publicación desde Base44.
 
 Referencia: [Sportmonks Player by ID](https://docs.sportmonks.com/v3/endpoints-and-entities/endpoints/players/get-player-by-id).
 
