@@ -1,9 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DIRECTOR_ROLE_LABELS, DIRECTOR_STATUS_LABELS, DIRECTOR_STATUS_COLORS, calculateAge } from '@/lib/roleUtils';
-import { Badge } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, MoreVertical, MapPin, Grid3x3 } from 'lucide-react';
+import { MoreVertical, MapPin, Grid3x3 } from 'lucide-react';
 import DirectorActionsMenu from './DirectorActionsMenu';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
 

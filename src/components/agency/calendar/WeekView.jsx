@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import EventCard from './EventCard';
-import { WEEKDAYS_SHORT, isSameDay, isToday, getDateKey } from './calendarUtils';
+import { WEEKDAYS_SHORT, isToday, getDateKey } from './calendarUtils';
 
 const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 8:00 - 20:00
 const HOUR_HEIGHT = 52; // px per hour

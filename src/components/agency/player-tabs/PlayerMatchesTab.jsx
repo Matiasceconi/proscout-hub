@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { formatDateTime, daysUntil } from '@/lib/roleUtils';
+import { daysUntil } from '@/lib/roleUtils';
 import { Badge, EmptyState } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Trophy, Plus, MapPin } from 'lucide-react';
+import { Trophy, Plus } from 'lucide-react';
 
 export default function PlayerMatchesTab({ player, permissions }) {
   const [matches, setMatches] = useState([]);

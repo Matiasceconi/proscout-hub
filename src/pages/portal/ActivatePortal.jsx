@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Mail, Lock, ShieldCheck, AlertCircle, CheckCircle2, Clock, Ban, LogIn } from 'lucide-react';
+import { Loader2, Mail, Lock, ShieldCheck, AlertCircle, CheckCircle2, Clock, Ban } from 'lucide-react';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 export default function ActivatePortal() {

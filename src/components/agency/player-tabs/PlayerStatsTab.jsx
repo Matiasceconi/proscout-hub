@@ -12,7 +12,7 @@ import StatsMatchTable from './stats/StatsMatchTable';
 import StatsPositionTable from './stats/StatsPositionTable';
 import StatsSkeleton from './stats/StatsSkeleton';
 import PlayerTransferStatus from './PlayerTransferStatus';
-import { getSummaryCards, getPositionMetrics, getKeyInsights, getCoverageStatus, POSITION_LABELS_FULL } from './stats/statsHelpers';
+import { getSummaryCards, getPositionMetrics, getKeyInsights, getCoverageStatus } from './stats/statsHelpers';
 
 export default function PlayerStatsTab({ player, permissions }) {
   const { user } = useAuth();

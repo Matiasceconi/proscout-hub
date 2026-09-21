@@ -1,7 +1,6 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, Plus, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { formatWeekRange, formatMonthLabel } from './calendarUtils';
 
 export default function CalendarHeader({
   view, setView,

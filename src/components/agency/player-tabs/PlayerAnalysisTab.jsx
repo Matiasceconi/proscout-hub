@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Search, Eye, CheckCircle, FileText } from 'lucide-react';
+import { Plus, Search, Eye, FileText } from 'lucide-react';
 
 export default function PlayerAnalysisTab({ player, permissions }) {
   const [analyses, setAnalyses] = useState([]);

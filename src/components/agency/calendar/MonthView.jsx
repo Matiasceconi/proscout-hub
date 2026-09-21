@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { WEEKDAYS_SHORT, MONTHS, getMonthGrid, getDateKey, isToday } from './calendarUtils';
+import { WEEKDAYS_SHORT, getMonthGrid, getDateKey, isToday } from './calendarUtils';
 import { EVENT_TYPE_COLORS } from './calendarUtils';
 
 export default function MonthView({ monthDate, items, onItemClick }) {

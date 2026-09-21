@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
-import { formatDate, daysUntil } from '@/lib/roleUtils';
+import { daysUntil } from '@/lib/roleUtils';
 import { Badge } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Video, Play, Search, Eye, CheckCircle, FileText, Link2, Clock, X, Film, Trophy } from 'lucide-react';
+import { Plus, Video, Play, Search, Eye, FileText, Link2 } from 'lucide-react';
 import MatchFilters, { DEFAULT_FILTERS, applyMatchFilters } from '@/components/agency/player-tabs/MatchFilters';
 import VideoMigrationPreview from '@/components/agency/player-tabs/VideoMigrationPreview';
 

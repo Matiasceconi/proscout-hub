@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
-import { Trophy, MapPin, Clock, Calendar, AlertTriangle } from 'lucide-react';
+import { Trophy, MapPin, Clock, AlertTriangle } from 'lucide-react';
 
 const FIXTURE_STATUS = {
   NS: 'Por jugar', FT: 'Finalizado', AET: 'Finalizado (prórroga)',

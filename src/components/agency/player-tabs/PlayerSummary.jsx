@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { formatDate, formatDateTime, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS, daysUntil } from '@/lib/roleUtils';
-import { Badge, EmptyState } from '@/components/shared/UIBits';
-import { Trophy, Activity, HeartPulse, Video, FileText, Calendar, Search, BarChart3 } from 'lucide-react';
+import { formatDate, formatDateTime, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS } from '@/lib/roleUtils';
+import { Badge } from '@/components/shared/UIBits';
+import { Video, Search } from 'lucide-react';
 import PlayerTransferStatus from '@/components/agency/player-tabs/PlayerTransferStatus';
 
 export default function PlayerSummary({ player, onTabChange, permissions, clubData }) {

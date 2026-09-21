@@ -9,9 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { getDefaultPermissions } from '@/components/agency/settings/accessPermissions';
 import InviteRepresentativeDialog from '@/components/agency/settings/InviteRepresentativeDialog';
-import { UserCog, Plus, Mail, Shield } from 'lucide-react';
+import { UserCog, Plus, Mail } from 'lucide-react';
 
 const ROLES = [
   { value: 'organization_admin', label: 'Administrador' },

@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { getUserOrgId, isOrgAdmin } from '@/lib/roleUtils';
+import { getUserOrgId } from '@/lib/roleUtils';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/shared/UIBits';
-import { ChevronLeft, Link2, Plus, RefreshCw, AlertTriangle, CheckCircle2, Loader2, Search } from 'lucide-react';
+import { ChevronLeft, Link2, Plus, RefreshCw, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import ClubCreateDialog from '@/components/agency/club-mapping/ClubCreateDialog';
 import ApiTeamSearchDialog from '@/components/agency/club-mapping/ApiTeamSearchDialog';
 

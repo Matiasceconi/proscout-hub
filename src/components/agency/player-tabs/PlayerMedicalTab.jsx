@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { formatDate, AVAILABILITY_LABELS, AVAILABILITY_COLORS, canEditMedical } from '@/lib/roleUtils';
+import { formatDate, AVAILABILITY_LABELS, AVAILABILITY_COLORS } from '@/lib/roleUtils';
 import { Badge } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, UserPlus, Mail, Copy, CheckCircle2, Ban, RefreshCw, AlertCircle, Link2 } from 'lucide-react';
+import { Loader2, UserPlus, Mail, Ban, RefreshCw, AlertCircle, Link2 } from 'lucide-react';
 import { PORTAL_STATUS_LABELS, PORTAL_STATUS_COLORS } from '@/lib/roleUtils';
 import InvitePlayerDialog from './InvitePlayerDialog';
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { formatDate, POSITION_LABELS, CAREER_OPERATION_LABELS, CAREER_OPERATION_COLORS } from '@/lib/roleUtils';
+import { formatDate, CAREER_OPERATION_LABELS, CAREER_OPERATION_COLORS } from '@/lib/roleUtils';
 import { Badge, EmptyState } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

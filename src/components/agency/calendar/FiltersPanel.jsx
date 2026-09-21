@@ -1,7 +1,6 @@
 import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
 import { EVENT_TYPE_LABELS } from './calendarUtils';
 import { useIsMobile } from '@/hooks/use-mobile';
 

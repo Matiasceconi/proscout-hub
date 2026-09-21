@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Users, Plus, Pencil, Trash2, Link2, Search } from 'lucide-react';
+import { Users, Plus, Pencil, Trash2, Link2 } from 'lucide-react';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
 
 export default function DirectorStaffTab({ director, canManage }) {

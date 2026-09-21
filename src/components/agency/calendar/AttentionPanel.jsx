@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { FileWarning, UserX, BarChart3, Calendar, Plane, FileText, ChevronRight } from 'lucide-react';
+import { FileWarning, UserX, BarChart3, Calendar, FileText, ChevronRight } from 'lucide-react';
 import { isWithinDays, isToday, isFuture, formatTime } from './calendarUtils';
 
 export default function AttentionPanel({ items, fixtures, documents, players, matchStats, onItemClick, onActionClick }) {

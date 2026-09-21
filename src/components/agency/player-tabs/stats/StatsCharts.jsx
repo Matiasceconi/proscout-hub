@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, BarChart, Bar, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { formatDate } from '@/lib/roleUtils';
 
