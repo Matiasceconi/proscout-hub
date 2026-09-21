@@ -18,6 +18,7 @@ import {
   buildUnifiedEvents, getWeekStart, getWeekDays, formatWeekRange, formatMonthLabel,
 } from '@/components/agency/calendar/calendarUtils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { dedupeFixtureRecords } from '@/lib/fixtureRecords';
 
 const VIEW_STORAGE_KEY = 'proscout_calendar_view';
 
@@ -119,7 +120,7 @@ export default function AgencyCalendar() {
         base44.entities.Organization.get(orgId),
       ]);
 
-      setFixtures(fixs);
+      setFixtures(dedupeFixtureRecords(fixs));
       setCalendarEvents(evs);
       setParticipants(parts);
       setPlayers(pls);
