@@ -27,24 +27,80 @@ export default function PlayerSummary({ player, onTabChange, permissions, clubDa
       const clubPromise = player.current_club_id
         ? base44.entities.Club.get(player.current_club_id).catch(() => null)
         : Promise.resolve(null);
-      const [matches, stats, assessments, injuries, videos, analyses, clubData] = await Promise.all([
-        base44.entities.Match.filter({ organization_id: player.organization_id, player_id: player.id }, 'match_date', 50),
-        base44.entities.PlayerSeasonStats.filter({ organization_id: player.organization_id, player_id: player.id }, '-season', 10),
+      const now = new Date();
+      const season = String(now.getFullYear());
+      const [fixtures, stats, assessments, injuries, videos, analyses, clubData, mappings] = await Promise.all([
+        base44.entities.ClubFixture.filter({ organization_id: player.organization_id, provider: 'api_football' }, 'fixture_date', 500),
+        base44.entities.PlayerSeasonStatistic.filter({ organization_id: player.organization_id, player_id: player.id, provider: 'api_football', season }, '-synced_at', 50),
         base44.entities.PhysicalAssessment.filter({ organization_id: player.organization_id, player_id: player.id }, '-assessment_date', 5),
         base44.entities.InjuryRecord.filter({ organization_id: player.organization_id, player_id: player.id, shared_with_player: true }, '-injury_date', 5),
         base44.entities.VideoContent.filter({ organization_id: player.organization_id, player_id: player.id, status: 'published' }, '-published_date', 10),
         base44.entities.OpponentAnalysis.filter({ organization_id: player.organization_id, player_id: player.id, status: 'published' }, '-published_date', 10),
-        clubPromise
+        clubPromise,
+        player.current_club_id
+          ? base44.entities.ClubProviderMapping.filter({ organization_id: player.organization_id, club_id: player.current_club_id, provider: 'api_football', mapping_status: 'verified' }, '-updated_date', 5).catch(() => [])
+          : Promise.resolve([])
       ]);
 
-      const now = new Date();
-      const upcoming = matches.filter(m => new Date(m.match_date) >= now);
-      const past = matches.filter(m => new Date(m.match_date) < now);
+      const providerTeamId = mappings?.[0]?.provider_team_id ? String(mappings[0].provider_team_id) : null;
+      const playerFixtures = fixtures.filter(f =>
+        f.linked_player_ids?.includes(player.id) ||
+        (player.current_club_id && f.mapped_club_ids?.includes(player.current_club_id))
+      );
+      const upcoming = playerFixtures.filter(f => new Date(f.fixture_date) >= now && !['FT', 'AET', 'PEN', 'CANC'].includes(f.fixture_status));
+      const past = playerFixtures.filter(f => new Date(f.fixture_date) < now || ['FT', 'AET', 'PEN'].includes(f.fixture_status));
+      const normalizeFixture = (f) => {
+        if (!f) return null;
+        const isHome = providerTeamId
+          ? String(f.home_provider_team_id) === providerTeamId
+          : (clubData?.club_name && f.home_team_name?.toLowerCase().includes(clubData.club_name.toLowerCase()));
+        return {
+          ...f,
+          opponent: isHome ? f.away_team_name : f.home_team_name,
+          opponent_logo: isHome ? f.away_team_logo : f.home_team_logo,
+          home_away: isHome ? 'home' : 'away',
+          match_date: f.fixture_date,
+          competition: f.competition_name,
+        };
+      };
+
+      const seen = new Set();
+      let appearances = 0, lineups = 0, minutes = 0, goals = 0, assists = 0, yellows = 0;
+      let ratingWeighted = 0, ratingWeight = 0;
+      const competitions = new Set();
+      for (const s of stats) {
+        const key = `${s.provider_team_id || ''}_${s.league_id || ''}_${s.season || ''}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const apps = Number(s.appearances || 0);
+        appearances += apps;
+        lineups += Number(s.lineups || 0);
+        minutes += Number(s.minutes || 0);
+        goals += Number(s.goals_total || 0);
+        assists += Number(s.goals_assists || 0);
+        yellows += Number(s.yellow_cards || 0);
+        if (s.rating_avg != null && apps > 0) {
+          ratingWeighted += Number(s.rating_avg) * apps;
+          ratingWeight += apps;
+        }
+        if (s.league_name) competitions.add(s.league_name);
+      }
+      const seasonSummary = stats.length > 0 ? {
+        season,
+        competition: competitions.size === 1 ? Array.from(competitions)[0] : `${competitions.size} competencias`,
+        matches: appearances,
+        starts: lineups,
+        minutes,
+        goals,
+        assists,
+        yellow_cards: yellows,
+        rating: ratingWeight > 0 ? (ratingWeighted / ratingWeight).toFixed(2) : null,
+      } : null;
 
       setData({
-        nextMatch: upcoming[0] || null,
-        lastMatch: past[past.length - 1] || null,
-        seasonStats: stats[0] || null,
+        nextMatch: normalizeFixture(upcoming.sort((a, b) => new Date(a.fixture_date) - new Date(b.fixture_date))[0]),
+        lastMatch: normalizeFixture(past.sort((a, b) => new Date(b.fixture_date) - new Date(a.fixture_date))[0]),
+        seasonStats: seasonSummary,
         lastAssessment: assessments[0] || null,
         latestInjury: injuries[0] || null,
         pendingVideos: videos.length,
@@ -122,6 +178,7 @@ export default function PlayerSummary({ player, onTabChange, permissions, clubDa
             <StatBox label="Goles" value={data.seasonStats.goals} />
             <StatBox label="Asist." value={data.seasonStats.assists} />
             <StatBox label="Amarillas" value={data.seasonStats.yellow_cards} />
+            {data.seasonStats.rating && <StatBox label="Rating" value={data.seasonStats.rating} />}
           </div>
         </InfoCard>
       )}
@@ -138,13 +195,15 @@ export default function PlayerSummary({ player, onTabChange, permissions, clubDa
         </InfoCard>
       )}
 
-      {/* Pending content */}
-      <InfoCard title="Contenidos pendientes">
-        <div className="flex flex-wrap gap-3">
-          <ContentPill icon={Video} label="Videos publicados" value={data.pendingVideos} onClick={() => onTabChange('video', 'own')} />
-          <ContentPill icon={Search} label="Análisis publicados" value={data.pendingAnalysis} onClick={() => onTabChange('video', 'opponent')} />
-        </div>
-      </InfoCard>
+      {/* Content only appears when there is something useful to open. */}
+      {(data.pendingVideos > 0 || data.pendingAnalysis > 0) && (
+        <InfoCard title="Contenido disponible">
+          <div className="flex flex-wrap gap-3">
+            {data.pendingVideos > 0 && <ContentPill icon={Video} label="Videos publicados" value={data.pendingVideos} onClick={() => onTabChange('video', 'own')} />}
+            {data.pendingAnalysis > 0 && <ContentPill icon={Search} label="Análisis publicados" value={data.pendingAnalysis} onClick={() => onTabChange('video', 'opponent')} />}
+          </div>
+        </InfoCard>
+      )}
     </div>
   );
 }
