@@ -20,7 +20,13 @@ export async function upsertFixture(base44: any, fd: any, orgId: string, provide
     mapped_club_ids: [...new Set(mapped)], last_sync_at: new Date().toISOString(),
   };
   if (existing.length > 0) {
-    const ex = existing[0];
+    const [ex, ...duplicates] = existing;
+    for (const duplicate of duplicates) {
+      await asAdmin.entities.ClubFixture.update(duplicate.id, {
+        provider: `${provider}_duplicate_archive`,
+        mapped_club_ids: [],
+      });
+    }
     await asAdmin.entities.ClubFixture.update(ex.id, {
       ...rec,
       home_team_logo: ex.home_team_logo || rec.home_team_logo,
