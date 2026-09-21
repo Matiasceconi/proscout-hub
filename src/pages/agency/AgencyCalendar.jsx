@@ -104,6 +104,7 @@ export default function AgencyCalendar() {
       const [fixs, evs, parts, pls, dirs, docs, stats, cls, mp, mem, org] = await Promise.all([
         base44.entities.ClubFixture.filter({
           organization_id: orgId,
+          provider: { $in: ['api_football', 'manual'] },
           fixture_date: { $gte: rangeStart.toISOString(), $lte: rangeEnd.toISOString() },
         }, 'fixture_date', 500),
         base44.entities.CalendarEvent.filter({ organization_id: orgId }, 'start_date', 500),
@@ -113,7 +114,7 @@ export default function AgencyCalendar() {
         base44.entities.Document.filter({ organization_id: orgId }, undefined, 500),
         base44.entities.PlayerMatchStats.filter({ organization_id: orgId }, '-match_date', 500),
         base44.entities.Club.list('-club_name', 500),
-        base44.entities.ClubProviderMapping.filter({ organization_id: orgId }, undefined, 500),
+        base44.entities.ClubProviderMapping.filter({ organization_id: orgId, mapping_status: 'verified' }, undefined, 500),
         base44.entities.OrganizationMember.filter({ organization_id: orgId }, undefined, 200),
         base44.entities.Organization.get(orgId),
       ]);
