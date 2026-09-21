@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { requireAgencyMember, hasAgencyPermission } from '../../shared/agencyAccess.ts';
-import { scopedPlayers, normalizeSportmonksPlayer } from '../../shared/personalDashboard.ts';
+import { scopedPlayers, normalizeSportmonksPlayer } from '../../shared/agencyData.ts';
 
 async function providerPlayer(id:string) {
   if(!/^[1-9][0-9]{0,14}$/.test(id))throw new Error('INVALID_ID');
