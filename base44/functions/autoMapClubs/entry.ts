@@ -154,8 +154,13 @@ export default async function(req: Request): Promise<Response> {
     for (const ef of existingFixturesPre) {
       for (const cid of ef.mapped_club_ids || []) clubsWithFixtures.add(cid);
     }
-    const uniqueMappings = Array.from(
-      new Map(allMappings.map((m: any) => [String(m.provider_team_id), m])).values()
+    const mappingCounts = new Map<string, number>();
+    for (const m of allMappings) {
+      const key = String(m.provider_team_id || '');
+      mappingCounts.set(key, (mappingCounts.get(key) || 0) + 1);
+    }
+    const uniqueMappings = allMappings.filter((m: any) =>
+      m.provider_team_id && mappingCounts.get(String(m.provider_team_id)) === 1
     );
     const mappingsToSync = uniqueMappings.filter((m: any) => !clubsWithFixtures.has(m.club_id));
 
