@@ -65,7 +65,11 @@ export default function PlayerStatsTab({ player, permissions }) {
       if (ms.length > 0) {
         const fixtureIds = [...new Set(ms.map(m => m.provider_fixture_id).filter(Boolean))];
         if (fixtureIds.length > 0) {
-          const fx = await base44.entities.ClubFixture.filter({ organization_id: orgId, provider_fixture_id: { $in: fixtureIds } });
+          const fx = await base44.entities.ClubFixture.filter({
+            organization_id: orgId,
+            provider: { $in: ['api_football', 'manual'] },
+            provider_fixture_id: { $in: fixtureIds }
+          });
           setFixtures(fx || []);
         }
       }
