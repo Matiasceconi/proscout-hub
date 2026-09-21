@@ -13,6 +13,7 @@ import StatsPositionTable from './stats/StatsPositionTable';
 import StatsSkeleton from './stats/StatsSkeleton';
 import PlayerTransferStatus from './PlayerTransferStatus';
 import { getSummaryCards, getPositionMetrics, getKeyInsights, getCoverageStatus } from './stats/statsHelpers';
+import { dedupeFixtureRecords } from '@/lib/fixtureRecords';
 
 export default function PlayerStatsTab({ player, permissions }) {
   const { user } = useAuth();
@@ -70,7 +71,7 @@ export default function PlayerStatsTab({ player, permissions }) {
             provider: { $in: ['api_football', 'manual'] },
             provider_fixture_id: { $in: fixtureIds }
           });
-          setFixtures(fx || []);
+          setFixtures(dedupeFixtureRecords(fx || []));
         }
       }
     } catch (err) { console.error(err); }
