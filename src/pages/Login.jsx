@@ -20,15 +20,15 @@ export default function Login() {
   const returnTo = safeReturnTo();
   const portal = new URLSearchParams(window.location.search).get('portal');
   const isPlayerPortal = portal === 'player';
-  const isRepresentativePortal = portal === 'representative';
+  const isStaffPortal = portal === 'staff' || portal === 'representative';
   const accessTitle = isPlayerPortal
-    ? 'Acceso para jugadores'
-    : isRepresentativePortal
-      ? 'Acceso para representantes'
+    ? 'Acceso Jugador'
+    : isStaffPortal
+      ? 'Acceso Staff'
       : 'Acceso a Score Fútbol';
   const accessSubtitle = isPlayerPortal
     ? 'Ingresá a tu espacio personal de rendimiento y preparación'
-    : 'Ingresá para gestionar y acompañar a tus representados';
+    : 'Ingresá al espacio de gestión, seguimiento y rendimiento de Score Fútbol';
 
   if (authChecked && isAuthenticated) {
     return <Navigate to={returnTo} replace />;
