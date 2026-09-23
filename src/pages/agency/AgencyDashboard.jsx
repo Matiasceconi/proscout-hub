@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { getUserOrgId } from '@/lib/roleUtils';
 import { Button } from '@/components/ui/button';
-import { Plus, Trophy, CalendarDays, AlertCircle } from 'lucide-react';
+import { Plus, Trophy, CalendarDays, AlertCircle, Users, CheckCircle2, Clock3 } from 'lucide-react';
 import DashboardHero from '@/components/agency/dashboard/DashboardHero';
 import TodayMatchCard from '@/components/agency/dashboard/TodayMatchCard';
 import UpcomingMatchRowNew from '@/components/agency/dashboard/UpcomingMatchRowNew';
@@ -315,6 +315,13 @@ export default function AgencyDashboard() {
         representedCount={todayRepresentedIds.size}
         onSeeCalendar={() => navigate('/agency/calendar')}
       />
+
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <ExecutiveMetric icon={Trophy} label="Partidos hoy" value={summary.todayFixtures} helper="con representados" onClick={() => navigate('/agency/matches')} />
+        <ExecutiveMetric icon={Users} label="Representados hoy" value={summary.todayPlayers} helper="con actividad" onClick={() => navigate('/agency/players')} />
+        <ExecutiveMetric icon={CheckCircle2} label="A confirmar" value={summary.toConfirm} helper="convocatorias / estado" attention={summary.toConfirm > 0} />
+        <ExecutiveMetric icon={Clock3} label="Seguimientos" value={summary.pendingFollowUps} helper="acciones pendientes" attention={summary.pendingFollowUps > 0} onClick={() => navigate('/agency/intelligence')} />
+      </section>
 
       {/* Admin action bar */}
       <div className="flex items-center justify-end">
