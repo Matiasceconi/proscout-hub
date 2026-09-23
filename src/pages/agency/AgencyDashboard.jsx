@@ -461,3 +461,24 @@ export default function AgencyDashboard() {
     </div>
   );
 }
+
+function ExecutiveMetric({ icon: Icon, label, value, helper, attention = false, onClick }) {
+  const Wrapper = onClick ? 'button' : 'div';
+  return (
+    <Wrapper
+      {...(onClick ? { type: 'button', onClick } : {})}
+      className={`group rounded-2xl border bg-white p-4 text-left shadow-sm transition ${onClick ? 'hover:-translate-y-0.5 hover:shadow-md' : ''} ${attention ? 'border-amber-200' : 'border-slate-200'}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</p>
+          <p className="mt-2 text-3xl font-black tracking-tight text-slate-950">{value}</p>
+          <p className="mt-1 text-xs text-slate-500">{helper}</p>
+        </div>
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${attention ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+      </div>
+    </Wrapper>
+  );
+}
