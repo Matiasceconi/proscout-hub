@@ -26,7 +26,7 @@ function StatsMessage({ message }) {
   );
 }
 
-export default function PlayerCard({ player, primaryColor, canManage, onAction, statsData, seasonDisplay }) {
+export default function PlayerCard({ player, clubData, primaryColor, canManage, onAction, statsData, seasonDisplay }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = React.useState(false);
 
@@ -34,7 +34,7 @@ export default function PlayerCard({ player, primaryColor, canManage, onAction, 
   const categoryColor = PLAYER_CATEGORY_COLORS[player.category] || 'bg-slate-100 text-slate-600 border-slate-200';
 
   // Club info from statsData (Club entity) with fallback to player fields
-  const clubInfo = statsData?.club;
+  const clubInfo = statsData?.club || clubData;
   const clubLogo = clubInfo?.internal_logo_url || clubInfo?.official_logo_url || statsData?.provider_team_logo || player.club_logo_url;
   const clubName = clubInfo?.short_name || clubInfo?.club_name || player.club || 'Sin club';
   const clubCountry = clubInfo?.country || player.club_country || player.competition;
