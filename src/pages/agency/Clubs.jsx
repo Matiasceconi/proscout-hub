@@ -15,7 +15,6 @@ export default function Clubs() {
   const [clubs, setClubs] = useState([]);
   const [players, setPlayers] = useState([]);
   const [fixtures, setFixtures] = useState([]);
-  const [mappings, setMappings] = useState([]);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -24,22 +23,26 @@ export default function Clubs() {
       base44.entities.Club.list('club_name', 500),
       base44.entities.Player.filter({ organization_id: orgId, status: { $ne: 'archived' } }, '-updated_date', 300),
       base44.entities.ClubFixture.filter({ organization_id: orgId, provider: { $in: ['api_football', 'manual'] } }, '-fixture_date', 1000),
-      base44.entities.ClubProviderMapping.filter({ organization_id: orgId, mapping_status: 'verified' }, '-updated_date', 500),
-    ]).then(([clubRows, playerRows, fixtureRows, mappingRows]) => {
+    ]).then(([clubRows, playerRows, fixtureRows]) => {
       setClubs(clubRows);
       setPlayers(playerRows);
       setFixtures(fixtureRows);
-      setMappings(mappingRows);
     }).catch(console.error).finally(() => setLoading(false));
   }, [orgId]);
 
   const rows = useMemo(() => {
-    const relevantIds = new Set();
+    const representedClubIds = new Set();
+    const representedPlayerIds = new Set(players.map(p => p.id));
     players.forEach(p => {
-      if (p.current_club_id) relevantIds.add(p.current_club_id);
-      if (p.loan_from_club_id) relevantIds.add(p.loan_from_club_id);
+      if (p.current_club_id) representedClubIds.add(p.current_club_id);
+      if (p.loan_from_club_id) representedClubIds.add(p.loan_from_club_id);
     });
-    mappings.forEach(m => m.club_id && relevantIds.add(m.club_id));
+    const relevantIds = new Set(representedClubIds);
+    fixtures.forEach(f => {
+      const hasRepresentedClub = f.mapped_club_ids?.some(id => representedClubIds.has(id));
+      const hasExplicitPlayer = f.linked_player_ids?.some(id => representedPlayerIds.has(id));
+      if (hasRepresentedClub || hasExplicitPlayer) f.mapped_club_ids?.forEach(id => relevantIds.add(id));
+    });
 
     const now = Date.now();
     return clubs
@@ -61,7 +64,7 @@ export default function Clubs() {
         return `${row.club.club_name} ${row.club.country || ''} ${row.club.city || ''}`.toLowerCase().includes(q);
       })
       .sort((a, b) => b.clubPlayers.length - a.clubPlayers.length || a.club.club_name.localeCompare(b.club.club_name));
-  }, [clubs, players, fixtures, mappings, search]);
+  }, [clubs, players, fixtures, search]);
 
   if (loading) return <div className="p-10 text-slate-500">Cargando clubes relacionados…</div>;
 
