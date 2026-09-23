@@ -14,6 +14,7 @@ export default function PlayerSummary({ player, onTabChange, permissions, clubDa
     latestInjury: null,
     pendingVideos: 0,
     pendingAnalysis: 0,
+    activeOpportunities: [],
     clubName: clubData?.club_name || null
   });
   const [loading, setLoading] = useState(true);
@@ -29,7 +30,7 @@ export default function PlayerSummary({ player, onTabChange, permissions, clubDa
         : Promise.resolve(null);
       const now = new Date();
       const season = String(now.getFullYear());
-      const [fixtures, stats, assessments, injuries, videos, analyses, clubData, mappings] = await Promise.all([
+      const [fixtures, stats, assessments, injuries, videos, analyses, clubData, mappings, opportunities] = await Promise.all([
         base44.entities.ClubFixture.filter({ organization_id: player.organization_id, provider: 'api_football' }, 'fixture_date', 500),
         base44.entities.PlayerSeasonStatistic.filter({ organization_id: player.organization_id, player_id: player.id, provider: 'api_football', season }, '-synced_at', 50),
         base44.entities.PhysicalAssessment.filter({ organization_id: player.organization_id, player_id: player.id }, '-assessment_date', 5),
@@ -39,7 +40,8 @@ export default function PlayerSummary({ player, onTabChange, permissions, clubDa
         clubPromise,
         player.current_club_id
           ? base44.entities.ClubProviderMapping.filter({ organization_id: player.organization_id, club_id: player.current_club_id, provider: 'api_football', mapping_status: 'verified' }, '-updated_date', 5).catch(() => [])
-          : Promise.resolve([])
+          : Promise.resolve([]),
+        base44.entities.MarketOpportunity.filter({ organization_id: player.organization_id, player_id: player.id }, '-updated_date', 20).catch(() => [])
       ]);
 
       const providerTeamId = mappings?.[0]?.provider_team_id ? String(mappings[0].provider_team_id) : null;
@@ -105,6 +107,7 @@ export default function PlayerSummary({ player, onTabChange, permissions, clubDa
         latestInjury: injuries[0] || null,
         pendingVideos: videos.length,
         pendingAnalysis: analyses.length,
+        activeOpportunities: opportunities.filter(o => !['closed_won', 'closed_lost'].includes(o.stage)),
         clubName: clubData?.club_name || null
       });
     } catch (err) {
@@ -191,6 +194,22 @@ export default function PlayerSummary({ player, onTabChange, permissions, clubDa
             {data.lastAssessment.sprint_10m != null && <StatBox label="Sprint 10m" value={data.lastAssessment.sprint_10m} unit="s" />}
             {data.lastAssessment.sprint_30m != null && <StatBox label="Sprint 30m" value={data.lastAssessment.sprint_30m} unit="s" />}
             {data.lastAssessment.yo_yo_ir1 != null && <StatBox label="Yo-Yo IR1" value={data.lastAssessment.yo_yo_ir1} unit="m" />}
+          </div>
+        </InfoCard>
+      )}
+
+      {data.activeOpportunities.length > 0 && (
+        <InfoCard title="Oportunidades de mercado activas">
+          <div className="space-y-2">
+            {data.activeOpportunities.slice(0, 4).map(opportunity => (
+              <div key={opportunity.id} className="flex items-start justify-between gap-4 rounded-lg bg-slate-50 p-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">{opportunity.title}</p>
+                  <p className="mt-1 text-xs text-slate-500">Etapa: {opportunity.stage} {opportunity.next_action ? `· Próxima acción: ${opportunity.next_action}` : ''}</p>
+                </div>
+                <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase text-emerald-700">{opportunity.priority}</span>
+              </div>
+            ))}
           </div>
         </InfoCard>
       )}
