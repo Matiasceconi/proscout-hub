@@ -104,7 +104,7 @@ export default function Clubs() {
             </div>
 
             <div className="mt-4 rounded-xl bg-slate-50 p-3">
-              {next ? <FixtureLine label="Próximo" fixture={next} clubId={club.id} /> : last ? <FixtureLine label="Último" fixture={last} clubId={club.id} /> : <p className="text-xs text-slate-400">Sin partidos vinculados todavía.</p>}
+              {next ? <FixtureLine label="Próximo" fixture={next} /> : last ? <FixtureLine label="Último" fixture={last} /> : <p className="text-xs text-slate-400">Sin partidos vinculados todavía.</p>}
             </div>
           </Link>
         ))}
@@ -119,8 +119,6 @@ function MiniStat({ icon: Icon, value, label }) {
   return <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2"><div className="flex items-center gap-1.5 text-sm font-bold text-slate-900">{Icon && <Icon className="h-3.5 w-3.5 text-emerald-600" />}{value}</div><p className="mt-0.5 text-[10px] text-slate-500">{label}</p></div>;
 }
 
-function FixtureLine({ label, fixture, clubId }) {
-  const isHome = fixture.mapped_club_ids?.[0] === clubId ? fixture.home_team_name : null;
-  const opponent = isHome ? fixture.away_team_name : (fixture.home_team_name || fixture.away_team_name);
+function FixtureLine({ label, fixture }) {
   return <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p><p className="mt-1 text-sm font-semibold text-slate-800">{fixture.home_team_name} vs {fixture.away_team_name}</p></div><p className="shrink-0 text-xs text-slate-500">{new Date(fixture.fixture_date).toLocaleDateString('es-AR',{day:'2-digit',month:'short'})}</p></div>;
 }
