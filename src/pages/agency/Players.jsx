@@ -28,6 +28,7 @@ export default function Players() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState(() => localStorage.getItem('playersView') || 'cards');
   const [search, setSearch] = useState('');
+  const [quickView, setQuickView] = useState('all');
   const [filters, setFilters] = useState({
     category: 'all', position: 'all', club: 'all', competition: 'all',
     status: 'all', representative: 'all', portal: 'all', data: 'all'
@@ -85,14 +86,23 @@ export default function Players() {
       const hasIntegratedStats = statsData.players?.[p.id]?.status === 'ok';
       if (filters.data === 'with_stats' && !hasIntegratedStats) return false;
       if (filters.data === 'without_stats' && hasIntegratedStats) return false;
+      if (quickView === 'contracts') {
+        if (!p.contract_end) return false;
+        const days = (new Date(p.contract_end).getTime() - Date.now()) / 86400000;
+        if (days < 0 || days > 365) return false;
+      }
+      if (quickView === 'market' && !(p.availability_status === 'no_club' || p.availability_status === 'on_loan' || p.status === 'on_loan')) return false;
+      if (quickView === 'attention' && !['injured','rehabilitation','differentiated_training','available_with_restrictions'].includes(p.availability_status)) return false;
+      if (quickView === 'integrated' && !hasIntegratedStats) return false;
       return true;
     });
-  }, [players, search, filters, statsData]);
+  }, [players, search, filters, statsData, quickView]);
 
-  const hasActiveFilters = search || Object.values(filters).some(v => v !== 'all');
+  const hasActiveFilters = search || quickView !== 'all' || Object.values(filters).some(v => v !== 'all');
 
   const clearFilters = () => {
     setSearch('');
+    setQuickView('all');
     setFilters({ category: 'all', position: 'all', club: 'all', competition: 'all', status: 'all', representative: 'all', portal: 'all', data: 'all' });
   };
 
@@ -157,8 +167,19 @@ export default function Players() {
         )}
       />
 
-      {/* Filters bar */}
+      {/* Views + filters, inspired by a flexible workspace without duplicating data */}
       <div className="bg-white rounded-xl border border-slate-200 p-3 mb-4 space-y-3">
+        <div className="flex flex-wrap gap-2">
+          {[
+            ['all','Todos'],
+            ['contracts','Contratos < 12 meses'],
+            ['market','Situación de mercado'],
+            ['attention','Necesitan atención'],
+            ['integrated','Con estadísticas']
+          ].map(([id,label]) => (
+            <button key={id} onClick={() => setQuickView(id)} className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${quickView === id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{label}</button>
+          ))}
+        </div>
         <div className="flex flex-col lg:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
