@@ -282,7 +282,21 @@ export default function Players() {
                     <Badge className="bg-slate-100 text-slate-600 border-slate-200">{PLAYER_CATEGORIES[player.category] || '—'}</Badge>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell text-slate-600">{POSITION_LABELS[player.position] || player.position}</td>
-                  <td className="px-4 py-3 hidden lg:table-cell text-slate-600">{player.club || '—'}</td>
+                  <td className="px-4 py-3 hidden lg:table-cell text-slate-600">
+                    {(() => {
+                      const clubInfo = statsData.players?.[player.id]?.club;
+                      const clubLogo = clubInfo?.internal_logo_url || clubInfo?.official_logo_url || statsData.players?.[player.id]?.provider_team_logo || player.club_logo_url;
+                      const clubName = clubInfo?.short_name || clubInfo?.club_name || player.club || '—';
+                      return (
+                        <div className="flex items-center gap-2 min-w-[150px]">
+                          <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-slate-50 ring-1 ring-slate-200">
+                            {clubLogo ? <img src={clubLogo} alt="" className="h-5 w-5 object-contain" /> : <span className="text-[10px] font-bold text-slate-400">{clubName?.[0] || '?'}</span>}
+                          </div>
+                          <span className="truncate font-medium text-slate-700">{clubName}</span>
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td className="px-4 py-3 hidden xl:table-cell text-slate-600">{player.competition || '—'}</td>
                   <td className="px-4 py-3">
                     <Badge className={SPORTING_STATUS_COLORS[player.availability_status] || 'bg-slate-100 text-slate-600 border-slate-200'}>
