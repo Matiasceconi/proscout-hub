@@ -72,12 +72,13 @@ export function EmptyState({ icon: Icon, title, description, action }) {
 export function PageHeader({ title, subtitle, actions }) {
   return (
     <div className="mb-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">{title}</h1>
-          {subtitle && <p className="text-sm text-slate-400 mt-0.5">{subtitle}</p>}
+          <p className="mb-1 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700">Score Fútbol</p>
+          <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">{title}</h1>
+          {subtitle && <p className="mt-1.5 text-sm text-slate-500">{subtitle}</p>}
         </div>
-        {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}
+        {actions && <div className="flex flex-wrap items-center gap-2 sm:flex-shrink-0">{actions}</div>}
       </div>
     </div>
   );
