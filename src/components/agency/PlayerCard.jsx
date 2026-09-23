@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { calculateAge, POSITION_LABELS, PLAYER_CATEGORIES, PLAYER_CATEGORY_COLORS, SPORTING_STATUS_LABELS, SPORTING_STATUS_COLORS, PORTAL_STATUS_LABELS, PORTAL_STATUS_COLORS } from '@/lib/roleUtils';
 import { Badge } from '@/components/shared/UIBits';
-import { Button } from '@/components/ui/button';
 import { MoreVertical } from 'lucide-react';
 import PlayerActionsMenu from './PlayerActionsMenu';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
@@ -72,7 +71,10 @@ export default function PlayerCard({ player, clubData, primaryColor, canManage, 
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:border-slate-300 transition-all flex flex-col">
+    <div
+      onClick={() => navigate(`/agency/players/${player.id}`)}
+      className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:-translate-y-0.5 hover:shadow-xl hover:border-emerald-200 transition-all duration-200 flex flex-col cursor-pointer"
+    >
       {/* Photo with category badge */}
       <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
         <ProfileAvatar
@@ -153,15 +155,13 @@ export default function PlayerCard({ player, clubData, primaryColor, canManage, 
           </Badge>
         </div>
 
-        {/* Button */}
-        <div className="mt-3 pt-3 border-t border-slate-100">
-          <Button
-            onClick={() => navigate(`/agency/players/${player.id}`)}
-            className="w-full text-xs h-8"
-            style={{ backgroundColor: primaryColor }}
-          >
-            Ver ficha completa
-          </Button>
+        <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+          <span className="text-[11px] font-semibold text-slate-400 group-hover:text-emerald-700">Abrir ficha</span>
+          {player.contract_end ? (
+            <span className="rounded-full bg-slate-50 px-2 py-1 text-[10px] font-semibold text-slate-500">Contrato · {new Date(player.contract_end + 'T12:00:00').toLocaleDateString('es-AR',{month:'short',year:'2-digit'})}</span>
+          ) : (
+            <span className="text-[10px] text-slate-300">Sin contrato registrado</span>
+          )}
         </div>
       </div>
 
