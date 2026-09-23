@@ -26,7 +26,7 @@ const accessModes = {
 };
 
 export default function Login() {
-  const { isAuthenticated, authChecked } = useAuth();
+  const { user, isAuthenticated, authChecked } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
