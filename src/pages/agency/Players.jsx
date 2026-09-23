@@ -15,6 +15,7 @@ import NewPlayerDialog from '@/components/agency/NewPlayerDialog';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
 
 const SPORTING_STATUS_OPTIONS = ['available', 'injured', 'rehabilitation', 'on_loan', 'transferred', 'no_club', 'inactive', 'available_with_restrictions', 'differentiated_training', 'partial_reintegration', 'medical_discharge', 'sport_discharge'];
+const normalizeClubName = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
 export default function Players() {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ export default function Players() {
   const canManage = isOrgAdmin(user);
 
   const [players, setPlayers] = useState([]);
+  const [clubEntities, setClubEntities] = useState([]);
   const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState(() => localStorage.getItem('playersView') || 'cards');
@@ -46,6 +48,7 @@ export default function Players() {
     if (orgId) {
       loadPlayers();
       loadStats();
+      base44.entities.Club.list('-club_name', 500).then(setClubEntities).catch(() => setClubEntities([]));
       base44.entities.Organization.get(orgId).then(setOrg).catch(() => {});
     }
   }, [orgId]);
@@ -65,7 +68,10 @@ export default function Players() {
     } catch (err) { console.error(err); }
   };
 
-  const clubs = useMemo(() => Array.from(new Set(players.map(p => p.club).filter(Boolean))).sort(), [players]);
+  const clubById = useMemo(() => Object.fromEntries(clubEntities.map(c => [c.id, c])), [clubEntities]);
+  const clubByName = useMemo(() => Object.fromEntries(clubEntities.map(c => [normalizeClubName(c.club_name), c])), [clubEntities]);
+  const resolvePlayerClub = (player) => statsData.players?.[player.id]?.club || clubById[player.current_club_id] || clubByName[normalizeClubName(player.club)] || null;
+  const clubs = useMemo(() => Array.from(new Set(players.map(p => resolvePlayerClub(p)?.club_name || p.club).filter(Boolean))).sort(), [players, clubById, clubByName, statsData]);
   const competitions = useMemo(() => Array.from(new Set(players.map(p => p.competition).filter(Boolean))).sort(), [players]);
   const representatives = useMemo(() => Array.from(new Set(players.map(p => p.representative_name).filter(Boolean))).sort(), [players]);
 
@@ -78,7 +84,7 @@ export default function Players() {
       }
       if (filters.category !== 'all' && p.category !== filters.category) return false;
       if (filters.position !== 'all' && p.position !== filters.position) return false;
-      if (filters.club !== 'all' && p.club !== filters.club) return false;
+      if (filters.club !== 'all' && (resolvePlayerClub(p)?.club_name || p.club) !== filters.club) return false;
       if (filters.competition !== 'all' && p.competition !== filters.competition) return false;
       if (filters.status !== 'all' && p.availability_status !== filters.status) return false;
       if (filters.representative !== 'all' && p.representative_name !== filters.representative) return false;
@@ -96,7 +102,7 @@ export default function Players() {
       if (quickView === 'integrated' && !hasIntegratedStats) return false;
       return true;
     });
-  }, [players, search, filters, statsData, quickView]);
+  }, [players, search, filters, statsData, quickView, clubById, clubByName]);
 
   const hasActiveFilters = search || quickView !== 'all' || Object.values(filters).some(v => v !== 'all');
 
@@ -242,7 +248,7 @@ export default function Players() {
       ) : view === 'cards' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {filtered.map(player => (
-            <PlayerCard key={player.id} player={player} primaryColor={primaryColor} canManage={canManage} onAction={handleAction} statsData={statsData.players[player.id]} seasonDisplay={statsData.season_display} />
+            <PlayerCard key={player.id} player={player} clubData={resolvePlayerClub(player)} primaryColor={primaryColor} canManage={canManage} onAction={handleAction} statsData={statsData.players[player.id]} seasonDisplay={statsData.season_display} />
           ))}
         </div>
       ) : (
@@ -284,7 +290,7 @@ export default function Players() {
                   <td className="px-4 py-3 hidden md:table-cell text-slate-600">{POSITION_LABELS[player.position] || player.position}</td>
                   <td className="px-4 py-3 hidden lg:table-cell text-slate-600">
                     {(() => {
-                      const clubInfo = statsData.players?.[player.id]?.club;
+                      const clubInfo = resolvePlayerClub(player);
                       const clubLogo = clubInfo?.internal_logo_url || clubInfo?.official_logo_url || statsData.players?.[player.id]?.provider_team_logo || player.club_logo_url;
                       const clubName = clubInfo?.short_name || clubInfo?.club_name || player.club || '—';
                       return (
