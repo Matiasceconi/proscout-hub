@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { getUserOrgId, calculateAge, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS, PLAYER_CATEGORIES, PORTAL_STATUS_LABELS, PORTAL_STATUS_COLORS, formatDate, isOrgAdmin, canEditMedical, canEditPhysical, canEditVideos, canEditStats } from '@/lib/roleUtils';
 import { Badge } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Users, BarChart3, Calendar, Video, ClipboardList, Pencil, UserPlus, Share2 } from 'lucide-react';
+import { ChevronLeft, Users, BarChart3, Calendar, Video, ClipboardList, Pencil, UserPlus, Share2, Building2, Trophy, ArrowUpRight } from 'lucide-react';
 import PlayerSummary from '@/components/agency/player-tabs/PlayerSummary';
 import PlayerCareerTab from '@/components/agency/player-tabs/PlayerCareerTab';
 import PlayerStatsTab from '@/components/agency/player-tabs/PlayerStatsTab';
@@ -18,7 +18,7 @@ import InvitePlayerDialog from '@/components/agency/InvitePlayerDialog';
 const TABS = [
   { id: 'summary', label: 'Resumen', icon: Users },
   { id: 'career', label: 'Trayectoria', icon: ClipboardList },
-  { id: 'calendar', label: 'Calendario', icon: Calendar },
+  { id: 'calendar', label: 'Actividad', icon: Calendar },
   { id: 'stats', label: 'Estadísticas', icon: BarChart3 },
   { id: 'video', label: 'Videos', icon: Video }
 ];
@@ -160,6 +160,17 @@ export default function PlayerProfile() {
           {player.representative_name && <span>Representante: {player.representative_name}</span>}
         </div>
       </ProfileCoverHeader>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {clubData ? (
+          <Link to={`/agency/clubs/${clubData.id}`} className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:border-emerald-200 hover:bg-emerald-50/30">
+            <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">{(clubData.internal_logo_url || clubData.official_logo_url) ? <img src={clubData.internal_logo_url || clubData.official_logo_url} alt="" className="h-8 w-8 object-contain" /> : <Building2 className="h-5 w-5 text-slate-500" />}</div><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Club actual</p><p className="mt-1 text-sm font-semibold text-slate-900">{clubData.club_name}</p></div></div><ArrowUpRight className="h-4 w-4 text-slate-300 group-hover:text-emerald-600" />
+          </Link>
+        ) : <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Club actual</p><p className="mt-2 text-sm font-semibold text-slate-700">{player.club || 'Sin club vinculado'}</p></div>}
+        <Link to="/agency/matches" className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:border-emerald-200"><Trophy className="h-5 w-5 text-emerald-700"/><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Contexto</p><p className="mt-1 text-sm font-semibold text-slate-900">Partidos</p></div></Link>
+        <button onClick={() => setActiveTab('stats')} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm hover:border-emerald-200"><BarChart3 className="h-5 w-5 text-emerald-700"/><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rendimiento</p><p className="mt-1 text-sm font-semibold text-slate-900">Estadísticas</p></div></button>
+        <Link to="/agency/intelligence" className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:border-emerald-200"><ClipboardList className="h-5 w-5 text-emerald-700"/><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Gestión</p><p className="mt-1 text-sm font-semibold text-slate-900">Seguimiento</p></div></Link>
+      </div>
 
       {canManage && (
         <div className="mt-4">
