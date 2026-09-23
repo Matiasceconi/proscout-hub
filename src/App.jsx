@@ -10,7 +10,6 @@ import RoleGuard from '@/components/RoleGuard';
 import AgencyLayout from '@/components/agency/AgencyLayout';
 import PlayerLayout from '@/components/player/PlayerLayout';
 import SuperadminLayout from '@/components/superadmin/SuperadminLayout';
-import Home from '@/pages/Home';
 import Onboarding from '@/pages/Onboarding';
 import CompanyAccess from '@/pages/CompanyAccess';
 import AgencyDashboard from '@/pages/agency/AgencyDashboard';
@@ -78,7 +77,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
