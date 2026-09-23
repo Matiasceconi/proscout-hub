@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail, Lock, Loader2, Users, UserRound, ArrowRight, ShieldCheck, BarChart3, CalendarDays } from 'lucide-react';
 import { safeReturnTo } from '@/lib/authReturnTo';
+import { getHomeRoute } from '@/lib/roleUtils';
 import { SCORE_FUTBOL_BRAND } from '@/lib/scoreFutbolBrand';
 
 const accessModes = {
@@ -41,7 +42,8 @@ export default function Login() {
   const returnToQuery = useMemo(() => encodeURIComponent(returnTo || '/'), [returnTo]);
 
   if (authChecked && isAuthenticated) {
-    return <Navigate to={returnTo} replace />;
+    const destination = returnTo && !['/', '/login'].includes(returnTo) ? returnTo : getHomeRoute(user);
+    return <Navigate to={destination} replace />;
   }
 
   const selectMode = (nextMode) => {
