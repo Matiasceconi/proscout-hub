@@ -18,21 +18,22 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const MENU_GROUPS = [
-  { type: 'item', to: '/agency/operations', icon: Trophy, label: 'Agenda y partidos', permission: 'matches' },
+  { type: 'item', to: '/agency/operations', icon: Trophy, label: 'Inicio', permission: 'matches' },
+  { type: 'item', to: '/agency/players', icon: Users, label: 'Jugadores', permission: 'players' },
+  { type: 'item', to: '/agency/clubs', icon: Building2, label: 'Clubes', permission: 'players' },
+  { type: 'item', to: '/agency/matches', icon: Trophy, label: 'Partidos', permission: 'matches' },
   { type: 'item', to: '/agency/intelligence', icon: ClipboardList, label: 'Seguimiento', permission: 'players' },
+  { type: 'item', to: '/agency/calendar', icon: Calendar, label: 'Calendario', permission: 'calendar' },
+  { type: 'item', to: '/agency/stats', icon: BarChart3, label: 'Estadísticas', permission: 'statistics' },
   {
     type: 'group',
-    label: 'Representados',
+    label: 'Más información',
     icon: ClipboardList,
     items: [
-      { to: '/agency/players', icon: Users, label: 'Jugadores', permission: 'players' },
-      { to: '/agency/directors', icon: GraduationCap, label: 'Directores Técnicos', permission: 'players' }
+      { to: '/agency/directors', icon: GraduationCap, label: 'Directores Técnicos', permission: 'players' },
+      { to: '/agency/documents', icon: FileText, label: 'Documentación', permission: 'documents' }
     ]
   },
-  { type: 'item', to: '/agency/calendar', icon: Calendar, label: 'Calendario', permission: 'calendar' },
-  { type: 'item', to: '/agency/matches', icon: Trophy, label: 'Partidos', permission: 'matches' },
-  { type: 'item', to: '/agency/stats', icon: BarChart3, label: 'Estadísticas', permission: 'statistics' },
-  { type: 'item', to: '/agency/documents', icon: FileText, label: 'Documentación', permission: 'documents' },
   { type: 'item', to: '/agency/team', icon: UserCog, label: 'Equipo de trabajo', adminOnly: true },
   { type: 'item', to: '/agency/settings', icon: Settings, label: 'Configuración', adminOnly: true }
 ];
