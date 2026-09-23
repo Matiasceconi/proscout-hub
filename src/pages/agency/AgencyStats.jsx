@@ -126,6 +126,13 @@ export default function AgencyStats() {
     return dates[0] || null;
   }, [portfolioRows]);
 
+  const leaders = useMemo(() => ({
+    minutes: [...portfolioRows].sort((a, b) => b.minutes - a.minutes)[0] || null,
+    ga: [...portfolioRows].sort((a, b) => b.ga - a.ga || b.minutes - a.minutes)[0] || null,
+    rating: [...portfolioRows].filter(r => r.rating != null).sort((a, b) => b.rating - a.rating)[0] || null,
+    starts: [...portfolioRows].sort((a, b) => b.lineups - a.lineups || b.minutes - a.minutes)[0] || null,
+  }), [portfolioRows]);
+
   const handleSync = async (scope) => {
     setSyncing(scope);
     try {
@@ -176,6 +183,21 @@ export default function AgencyStats() {
         <Metric icon={Star} label="Rating promedio" value={summary.rating} />
         <Metric icon={Trophy} label="Competencias" value={summary.competitions} />
       </div>
+
+      {portfolioRows.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div><p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Destacados de la cartera</p><h2 className="mt-1 text-lg font-bold text-slate-900">Lectura rápida de rendimiento</h2></div>
+            <p className="hidden text-xs text-slate-400 md:block">Temporada {SEASON} · según cobertura integrada disponible</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <LeaderCard icon={Clock3} title="Más minutos" row={leaders.minutes} value={leaders.minutes ? `${nf.format(leaders.minutes.minutes)} min` : '—'} onClick={() => leaders.minutes && navigate(`/agency/players/${leaders.minutes.player.id}`)} />
+            <LeaderCard icon={Target} title="Mayor G+A" row={leaders.ga} value={leaders.ga ? leaders.ga.ga : '—'} onClick={() => leaders.ga && navigate(`/agency/players/${leaders.ga.player.id}`)} />
+            <LeaderCard icon={Star} title="Mejor rating" row={leaders.rating} value={leaders.rating?.rating ?? '—'} onClick={() => leaders.rating && navigate(`/agency/players/${leaders.rating.player.id}`)} />
+            <LeaderCard icon={Trophy} title="Más titularidades" row={leaders.starts} value={leaders.starts ? leaders.starts.lineups : '—'} onClick={() => leaders.starts && navigate(`/agency/players/${leaders.starts.player.id}`)} />
+          </div>
+        </section>
+      )}
 
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="px-4 lg:px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
