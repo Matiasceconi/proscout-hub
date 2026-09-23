@@ -20,6 +20,7 @@ export default function Directors() {
   const canManage = isOrgAdmin(user);
 
   const [directors, setDirectors] = useState([]);
+  const [clubEntities, setClubEntities] = useState([]);
   const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState(() => localStorage.getItem('directorsView') || 'cards');
@@ -35,6 +36,7 @@ export default function Directors() {
   useEffect(() => {
     if (orgId) {
       loadDirectors();
+      base44.entities.Club.list('-club_name', 500).then(setClubEntities).catch(() => setClubEntities([]));
       base44.entities.Organization.get(orgId).then(setOrg).catch(() => {});
     }
   }, [orgId]);
@@ -47,8 +49,10 @@ export default function Directors() {
     setLoading(false);
   };
 
+  const clubById = useMemo(() => Object.fromEntries(clubEntities.map(c => [c.id, c])), [clubEntities]);
+  const directorClubName = (d) => clubById[d.current_club_id]?.club_name || d.current_club || d.last_club || '';
   const countries = useMemo(() => Array.from(new Set(directors.map(d => d.nationality).filter(Boolean))).sort(), [directors]);
-  const clubs = useMemo(() => Array.from(new Set(directors.map(d => d.current_club || d.last_club).filter(Boolean))).sort(), [directors]);
+  const clubs = useMemo(() => Array.from(new Set(directors.map(d => clubById[d.current_club_id]?.club_name || d.current_club || d.last_club).filter(Boolean))).sort(), [directors, clubById]);
   const competitions = useMemo(() => Array.from(new Set(directors.map(d => d.competition).filter(Boolean))).sort(), [directors]);
   const representatives = useMemo(() => Array.from(new Set(directors.map(d => d.representative_name).filter(Boolean))).sort(), [directors]);
 
@@ -62,12 +66,12 @@ export default function Directors() {
       if (filters.role !== 'all' && d.primary_role !== filters.role) return false;
       if (filters.status !== 'all' && d.professional_status !== filters.status) return false;
       if (filters.country !== 'all' && d.nationality !== filters.country) return false;
-      if (filters.club !== 'all' && (d.current_club || d.last_club) !== filters.club) return false;
+      if (filters.club !== 'all' && directorClubName(d) !== filters.club) return false;
       if (filters.competition !== 'all' && d.competition !== filters.competition) return false;
       if (filters.representative !== 'all' && d.representative_name !== filters.representative) return false;
       return true;
     });
-  }, [directors, search, filters]);
+  }, [directors, search, filters, clubById]);
 
   const hasActiveFilters = search || Object.values(filters).some(v => v !== 'all');
 
@@ -160,7 +164,7 @@ export default function Directors() {
       ) : view === 'cards' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {filtered.map(director => (
-            <DirectorCard key={director.id} director={director} primaryColor={primaryColor} canManage={canManage} onAction={handleAction} />
+            <DirectorCard key={director.id} director={director} clubData={clubById[director.current_club_id]} primaryColor={primaryColor} canManage={canManage} onAction={handleAction} />
           ))}
         </div>
       ) : (
@@ -195,7 +199,21 @@ export default function Directors() {
                     </div>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell text-slate-600">{DIRECTOR_ROLE_LABELS[director.primary_role] || '—'}</td>
-                  <td className="px-4 py-3 hidden lg:table-cell text-slate-600">{director.current_club || director.last_club || '—'}</td>
+                  <td className="px-4 py-3 hidden lg:table-cell text-slate-600">
+                    {(() => {
+                      const clubData = clubById[director.current_club_id];
+                      const logo = clubData?.internal_logo_url || clubData?.official_logo_url;
+                      const name = clubData?.short_name || clubData?.club_name || director.current_club || director.last_club || '—';
+                      return (
+                        <div className="flex items-center gap-2 min-w-[150px]">
+                          <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-slate-50 ring-1 ring-slate-200">
+                            {logo ? <img src={logo} alt="" className="h-5 w-5 object-contain" /> : <span className="text-[10px] font-bold text-slate-400">{name?.[0] || '?'}</span>}
+                          </div>
+                          <span className="truncate font-medium text-slate-700">{name}</span>
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td className="px-4 py-3 hidden xl:table-cell text-slate-600">{director.competition || '—'}</td>
                   <td className="px-4 py-3">
                     <Badge className={DIRECTOR_STATUS_COLORS[director.professional_status] || 'bg-slate-100 text-slate-600 border-slate-200'}>
