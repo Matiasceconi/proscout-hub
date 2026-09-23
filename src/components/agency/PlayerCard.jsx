@@ -91,6 +91,11 @@ export default function PlayerCard({ player, primaryColor, canManage, onAction, 
             {PLAYER_CATEGORIES[player.category] || 'Sin categoría'}
           </span>
         </div>
+        {clubLogo && (
+          <div className="absolute bottom-2 right-2 flex h-11 w-11 items-center justify-center rounded-xl border border-white/80 bg-white/95 p-1.5 shadow-lg backdrop-blur-sm" title={clubName}>
+            <img src={clubLogo} alt={clubName} className="h-full w-full object-contain" />
+          </div>
+        )}
         {canManage && (
           <div className="absolute top-2 right-2">
             <button
@@ -120,10 +125,14 @@ export default function PlayerCard({ player, primaryColor, canManage, onAction, 
         </div>
 
         {/* Club info */}
-        <div className="mt-2 flex items-center gap-1.5 min-w-0">
-          {clubLogo && <img src={clubLogo} alt="" className="w-4 h-4 object-contain flex-shrink-0" />}
-          <span className="text-xs text-slate-600 truncate">{clubName}</span>
-          {clubCountry && <span className="text-xs text-slate-400 truncate">· {clubCountry}</span>}
+        <div className="mt-2 flex items-center gap-2 min-w-0 rounded-lg bg-slate-50 px-2.5 py-2">
+          <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-white ring-1 ring-slate-200">
+            {clubLogo ? <img src={clubLogo} alt="" className="h-5 w-5 object-contain" /> : <span className="text-[10px] font-bold text-slate-400">{clubName?.[0] || '?'}</span>}
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-slate-700 truncate">{clubName}</p>
+            {clubCountry && <p className="text-[10px] text-slate-400 truncate">{clubCountry}</p>}
+          </div>
         </div>
 
         {/* Stats legend + values */}
