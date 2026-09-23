@@ -24,14 +24,10 @@ import ProfileCoverHeader from '@/components/shared/ProfileCoverHeader';
 
 const TABS = [
   { id: 'summary', label: 'Resumen', icon: GraduationCap },
-  { id: 'career', label: 'Trayectoria', icon: ClipboardList },
-  { id: 'staff', label: 'Cuerpo técnico', icon: Users },
-  { id: 'model', label: 'Modelo de juego', icon: Grid3x3 },
-  { id: 'stats', label: 'Estadísticas', icon: BarChart3 },
-  { id: 'videos', label: 'Videos', icon: Video },
-  { id: 'calendar', label: 'Calendario', icon: Calendar },
-  { id: 'documents', label: 'Documentación', icon: FileText },
-  { id: 'activity', label: 'Actividad', icon: History }
+  { id: 'career', label: 'Carrera', icon: ClipboardList },
+  { id: 'performance', label: 'Rendimiento', icon: BarChart3 },
+  { id: 'content', label: 'Contenido', icon: Video },
+  { id: 'management', label: 'Gestión', icon: Calendar }
 ];
 
 export default function DirectorProfile() {
@@ -147,13 +143,9 @@ export default function DirectorProfile() {
         <div className="p-4 lg:p-5">
           {activeTab === 'summary' && <DirectorSummary director={director} />}
           {activeTab === 'career' && <DirectorCareerTab director={director} canManage={canManage} />}
-          {activeTab === 'staff' && <DirectorStaffTab director={director} canManage={canManage} />}
-          {activeTab === 'model' && <DirectorGameModel director={director} canManage={canManage} />}
-          {activeTab === 'stats' && <DirectorStatsTab director={director} />}
-          {activeTab === 'videos' && <DirectorVideosTab director={director} canManage={canManage} />}
-          {activeTab === 'calendar' && <DirectorCalendarTab director={director} canManage={canManage} />}
-          {activeTab === 'documents' && <DirectorDocumentsTab director={director} canManage={canManage} />}
-          {activeTab === 'activity' && <DirectorActivityTab director={director} />}
+          {activeTab === 'performance' && <div className="space-y-6"><ProfileSectionTitle icon={Grid3x3} title="Modelo de juego" subtitle="Identidad, principios y estructura táctica"/><DirectorGameModel director={director} canManage={canManage} /><div className="border-t border-slate-100 pt-6"><ProfileSectionTitle icon={BarChart3} title="Estadísticas" subtitle="Rendimiento competitivo registrado"/><DirectorStatsTab director={director} /></div></div>}
+          {activeTab === 'content' && <div className="space-y-6"><ProfileSectionTitle icon={Video} title="Videos" subtitle="Material audiovisual y presentaciones"/><DirectorVideosTab director={director} canManage={canManage} /><div className="border-t border-slate-100 pt-6"><ProfileSectionTitle icon={FileText} title="Documentación" subtitle="Archivos asociados al perfil"/><DirectorDocumentsTab director={director} canManage={canManage} /></div></div>}
+          {activeTab === 'management' && <div className="space-y-6"><ProfileSectionTitle icon={Users} title="Cuerpo técnico" subtitle="Personas vinculadas a su estructura de trabajo"/><DirectorStaffTab director={director} canManage={canManage} /><div className="border-t border-slate-100 pt-6"><ProfileSectionTitle icon={Calendar} title="Calendario" subtitle="Agenda y próximos compromisos"/><DirectorCalendarTab director={director} canManage={canManage} /></div><div className="border-t border-slate-100 pt-6"><ProfileSectionTitle icon={History} title="Actividad" subtitle="Historial reciente del perfil"/><DirectorActivityTab director={director} /></div></div>}
         </div>
       </div>
 
