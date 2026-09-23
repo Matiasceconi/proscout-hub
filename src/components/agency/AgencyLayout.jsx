@@ -20,6 +20,7 @@ import {
 const MENU_GROUPS = [
   { type: 'item', to: '/agency/operations', icon: Trophy, label: 'Inicio', permission: 'matches' },
   { type: 'item', to: '/agency/players', icon: Users, label: 'Jugadores', permission: 'players' },
+  { type: 'item', to: '/agency/directors', icon: GraduationCap, label: 'Directores Técnicos', permission: 'players' },
   { type: 'item', to: '/agency/clubs', icon: Building2, label: 'Clubes', permission: 'players' },
   { type: 'item', to: '/agency/matches', icon: Trophy, label: 'Partidos', permission: 'matches' },
   { type: 'item', to: '/agency/intelligence', icon: ClipboardList, label: 'Seguimiento', permission: 'players' },
@@ -30,7 +31,6 @@ const MENU_GROUPS = [
     label: 'Más información',
     icon: ClipboardList,
     items: [
-      { to: '/agency/directors', icon: GraduationCap, label: 'Directores Técnicos', permission: 'players' },
       { to: '/agency/documents', icon: FileText, label: 'Documentación', permission: 'documents' }
     ]
   },
