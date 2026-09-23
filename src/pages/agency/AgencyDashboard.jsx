@@ -268,7 +268,7 @@ export default function AgencyDashboard() {
   };
 
   const handleViewMatch = (fixture) => {
-    navigate(`/agency/matches`);
+    navigate(fixture?.id ? `/agency/matches/${fixture.id}` : '/agency/matches');
   };
 
   const handleFollowUp = (fixture, person, existingStats) => {
