@@ -154,6 +154,15 @@ export default function DirectorProfile() {
   );
 }
 
+function ProfileSectionTitle({ icon: Icon, title, subtitle }) {
+  return (
+    <div className="mb-4 flex items-start gap-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Icon className="h-5 w-5" /></div>
+      <div><h3 className="font-bold text-slate-900">{title}</h3><p className="mt-0.5 text-xs text-slate-500">{subtitle}</p></div>
+    </div>
+  );
+}
+
 function EditDirectorDialog({ director, orgId, onClose, onSaved }) {
   const [form, setForm] = useState({
     first_name: director.first_name || '', last_name: director.last_name || '',
