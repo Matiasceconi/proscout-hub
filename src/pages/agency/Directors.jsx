@@ -12,6 +12,8 @@ import DirectorCard from '@/components/agency/DirectorCard';
 import NewDirectorDialog from '@/components/agency/NewDirectorDialog';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
 
+const normalizeClubName = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
 export default function Directors() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -50,9 +52,11 @@ export default function Directors() {
   };
 
   const clubById = useMemo(() => Object.fromEntries(clubEntities.map(c => [c.id, c])), [clubEntities]);
-  const directorClubName = (d) => clubById[d.current_club_id]?.club_name || d.current_club || d.last_club || '';
+  const clubByName = useMemo(() => Object.fromEntries(clubEntities.map(c => [normalizeClubName(c.club_name), c])), [clubEntities]);
+  const resolveDirectorClub = (d) => clubById[d.current_club_id] || clubByName[normalizeClubName(d.current_club)] || clubByName[normalizeClubName(d.last_club)] || null;
+  const directorClubName = (d) => resolveDirectorClub(d)?.club_name || d.current_club || d.last_club || '';
   const countries = useMemo(() => Array.from(new Set(directors.map(d => d.nationality).filter(Boolean))).sort(), [directors]);
-  const clubs = useMemo(() => Array.from(new Set(directors.map(d => clubById[d.current_club_id]?.club_name || d.current_club || d.last_club).filter(Boolean))).sort(), [directors, clubById]);
+  const clubs = useMemo(() => Array.from(new Set(directors.map(d => resolveDirectorClub(d)?.club_name || d.current_club || d.last_club).filter(Boolean))).sort(), [directors, clubById, clubByName]);
   const competitions = useMemo(() => Array.from(new Set(directors.map(d => d.competition).filter(Boolean))).sort(), [directors]);
   const representatives = useMemo(() => Array.from(new Set(directors.map(d => d.representative_name).filter(Boolean))).sort(), [directors]);
 
@@ -71,7 +75,7 @@ export default function Directors() {
       if (filters.representative !== 'all' && d.representative_name !== filters.representative) return false;
       return true;
     });
-  }, [directors, search, filters, clubById]);
+  }, [directors, search, filters, clubById, clubByName]);
 
   const hasActiveFilters = search || Object.values(filters).some(v => v !== 'all');
 
@@ -164,7 +168,7 @@ export default function Directors() {
       ) : view === 'cards' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {filtered.map(director => (
-            <DirectorCard key={director.id} director={director} clubData={clubById[director.current_club_id]} primaryColor={primaryColor} canManage={canManage} onAction={handleAction} />
+            <DirectorCard key={director.id} director={director} clubData={resolveDirectorClub(director)} primaryColor={primaryColor} canManage={canManage} onAction={handleAction} />
           ))}
         </div>
       ) : (
@@ -201,7 +205,7 @@ export default function Directors() {
                   <td className="px-4 py-3 hidden md:table-cell text-slate-600">{DIRECTOR_ROLE_LABELS[director.primary_role] || '—'}</td>
                   <td className="px-4 py-3 hidden lg:table-cell text-slate-600">
                     {(() => {
-                      const clubData = clubById[director.current_club_id];
+                      const clubData = resolveDirectorClub(director);
                       const logo = clubData?.internal_logo_url || clubData?.official_logo_url;
                       const name = clubData?.short_name || clubData?.club_name || director.current_club || director.last_club || '—';
                       return (
