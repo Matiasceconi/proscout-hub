@@ -1,0 +1,92 @@
+{
+  "name": "MarketOpportunity",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "player_id": {
+      "type": "string"
+    },
+    "club_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "opportunity_type": {
+      "type": "string",
+      "enum": [
+        "interest",
+        "offer",
+        "loan",
+        "transfer",
+        "renewal",
+        "trial",
+        "other"
+      ],
+      "default": "interest"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "monitoring",
+        "contacted",
+        "interest",
+        "negotiation",
+        "offer",
+        "closed_won",
+        "closed_lost"
+      ],
+      "default": "monitoring"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium"
+    },
+    "contact_id": {
+      "type": "string"
+    },
+    "estimated_value": {
+      "type": "string"
+    },
+    "next_action": {
+      "type": "string"
+    },
+    "next_action_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "responsible_name": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "organization_id",
+    "player_id",
+    "club_id",
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}
