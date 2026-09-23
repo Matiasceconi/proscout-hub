@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail, Lock, Loader2, Users, UserRound, ArrowRight, ShieldCheck, BarChart3, CalendarDays } from 'lucide-react';
-import GoogleIcon from '@/components/GoogleIcon';
 import { safeReturnTo } from '@/lib/authReturnTo';
 import { SCORE_FUTBOL_BRAND } from '@/lib/scoreFutbolBrand';
 
@@ -65,10 +64,6 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogle = () => {
-    base44.auth.loginWithProvider('google', returnTo);
   };
 
   return (
@@ -159,19 +154,6 @@ export default function Login() {
               </div>
             </div>
 
-            {!isPlayer && (
-              <>
-                <Button variant="outline" className="mb-5 h-11 w-full text-sm font-semibold" onClick={handleGoogle}>
-                  <GoogleIcon className="mr-2 h-5 w-5" />
-                  Continuar con Google
-                </Button>
-                <div className="relative mb-5">
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
-                  <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-wider"><span className="bg-white px-3 text-slate-400">o con correo</span></div>
-                </div>
-              </>
-            )}
-
             {error && <div className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -179,7 +161,7 @@ export default function Login() {
                 <Label htmlFor="email">Correo electrónico</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-                  <Input id="email" type="email" autoComplete="email" autoFocus placeholder={isPlayer ? 'tuemail@correo.com' : 'nombre@empresa.com'} value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 pl-10" required />
+                  <Input id="email" type="email" autoComplete="email" autoFocus placeholder={isPlayer ? 'tuemail@correo.com' : 'matiasceconi@gmail.com'} value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 pl-10" required />
                 </div>
               </div>
 
@@ -208,7 +190,6 @@ export default function Login() {
             </div>
           </div>
 
-          <Link to="/" className="mt-5 text-center text-xs font-semibold text-slate-500 hover:text-emerald-700">← Volver a la presentación de Score Fútbol</Link>
         </div>
       </main>
     </div>
