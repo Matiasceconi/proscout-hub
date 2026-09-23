@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
@@ -39,7 +39,6 @@ export default function Login() {
   const isPlayer = mode === 'player';
   const current = accessModes[mode];
 
-  const returnToQuery = useMemo(() => encodeURIComponent(returnTo || '/'), [returnTo]);
 
   if (authChecked && isAuthenticated) {
     const destination = returnTo && !['/', '/login'].includes(returnTo) ? returnTo : getHomeRoute(user);
@@ -163,7 +162,7 @@ export default function Login() {
                 <Label htmlFor="email">Correo electrónico</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-                  <Input id="email" type="email" autoComplete="email" autoFocus placeholder={isPlayer ? 'tuemail@correo.com' : 'matiasceconi@gmail.com'} value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 pl-10" required />
+                  <Input id="email" type="email" autoComplete="email" autoFocus placeholder="correo@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 pl-10" required />
                 </div>
               </div>
 
@@ -183,13 +182,11 @@ export default function Login() {
               </Button>
             </form>
 
-            <div className="mt-5 border-t border-slate-100 pt-4 text-center text-xs text-slate-500">
-              {isPlayer ? (
-                <span>Tu acceso personal es habilitado por Score Fútbol.</span>
-              ) : (
-                <span>¿Todavía no tenés una cuenta? <Link to={`/register?returnTo=${returnToQuery}`} className="font-bold text-emerald-700 hover:underline">Crear cuenta</Link></span>
-              )}
-            </div>
+            {isPlayer && (
+              <div className="mt-5 border-t border-slate-100 pt-4 text-center text-xs text-slate-500">
+                Tu acceso personal es habilitado por Score Fútbol.
+              </div>
+            )}
           </div>
 
         </div>
