@@ -25,6 +25,7 @@ const MENU_GROUPS = [
   { type: 'item', to: '/agency/clubs', icon: Building2, label: 'Clubes', permission: 'players' },
   { type: 'item', to: '/agency/matches', icon: Trophy, label: 'Partidos', permission: 'matches' },
   { type: 'item', to: '/agency/intelligence', icon: ClipboardList, label: 'Seguimiento', permission: 'players' },
+  { type: 'item', to: '/agency/scouting', icon: Radar, label: 'Captación', permission: 'players' },
   { type: 'item', to: '/agency/calendar', icon: Calendar, label: 'Calendario', permission: 'calendar' },
   { type: 'item', to: '/agency/stats', icon: BarChart3, label: 'Estadísticas', permission: 'statistics' },
   {
