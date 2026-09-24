@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Users, Calendar, Trophy, BarChart3,
   FileText, UserCog, Settings,
-  LogOut, Menu, X, GraduationCap, ClipboardList, Building2, ChevronUp, Radar
+  LogOut, Menu, X, GraduationCap, ClipboardList, Building2, ChevronUp, Radar, BriefcaseBusiness
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -25,6 +25,7 @@ const MENU_GROUPS = [
   { type: 'item', to: '/agency/clubs', icon: Building2, label: 'Clubes', permission: 'players' },
   { type: 'item', to: '/agency/matches', icon: Trophy, label: 'Partidos', permission: 'matches' },
   { type: 'item', to: '/agency/intelligence', icon: ClipboardList, label: 'Seguimiento', permission: 'players' },
+  { type: 'item', to: '/agency/market', icon: BriefcaseBusiness, label: 'Mercado & Scouting', permission: 'players' },
   { type: 'item', to: '/agency/scouting', icon: Radar, label: 'Captación', permission: 'players' },
   { type: 'item', to: '/agency/calendar', icon: Calendar, label: 'Calendario', permission: 'calendar' },
   { type: 'item', to: '/agency/stats', icon: BarChart3, label: 'Estadísticas', permission: 'statistics' },
