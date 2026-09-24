@@ -39,6 +39,8 @@ export default function Players() {
   const [editPlayer, setEditPlayer] = useState(null);
   const [statusPlayer, setStatusPlayer] = useState(null);
   const [deletePlayer, setDeletePlayer] = useState(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deleteError, setDeleteError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [statsData, setStatsData] = useState({ players: {}, season_display: '' });
@@ -140,7 +142,12 @@ export default function Players() {
     if (action === 'view') { navigate(`/agency/players/${player.id}`); return; }
     if (action === 'edit') { setEditPlayer(player); return; }
     if (action === 'status') { setStatusPlayer(player); return; }
-    if (action === 'delete') { setDeletePlayer(player); return; }
+    if (action === 'delete') {
+      setDeletePlayer(player);
+      setDeleteConfirmation('');
+      setDeleteError('');
+      return;
+    }
 
     setActionLoading(true);
     try {
@@ -157,15 +164,28 @@ export default function Players() {
 
   const handleDeletePlayer = async () => {
     if (!deletePlayer) return;
+    const fullName = `${deletePlayer.first_name || ''} ${deletePlayer.last_name || ''}`.trim();
+    if (deleteConfirmation !== fullName) {
+      setDeleteError(`Escribí exactamente “${fullName}” para confirmar.`);
+      return;
+    }
     setActionLoading(true);
+    setDeleteError('');
     try {
-      await base44.entities.Player.delete(deletePlayer.id);
+      const response = await base44.functions.invoke('deleteAgencyPlayer', {
+        organization_id: orgId,
+        player_id: deletePlayer.id,
+        confirmation: deleteConfirmation
+      });
+      const data = response.data || {};
+      if (!data.success) throw new Error(data.error || 'No se pudo eliminar el jugador.');
       setDeletePlayer(null);
+      setDeleteConfirmation('');
       await loadPlayers();
       loadStats();
     } catch (err) {
       console.error(err);
-      alert('Error al eliminar: ' + (err.message || ''));
+      setDeleteError(err.response?.data?.error || err.message || 'No se pudo eliminar el jugador.');
     }
     setActionLoading(false);
   };
