@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Radar, Search, Plus, X, Loader2, Trash2, Pencil, ArrowRight, Lightbulb, Target, TrendingUp, Eye, Calendar, ClipboardCheck } from 'lucide-react';
+import { Radar, Search, Plus, X, Loader2, Trash2, Pencil, ArrowRight, Calendar, ClipboardCheck } from 'lucide-react';
 import NewScoutingTargetDialog from '@/components/agency/NewScoutingTargetDialog';
 import NewScoutingObservationDialog from '@/components/agency/NewScoutingObservationDialog';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
@@ -47,14 +47,6 @@ const RECOMMENDATION_COLORS = {
   monitor: 'bg-amber-50 text-amber-700 border-amber-200',
   no: 'bg-red-50 text-red-700 border-red-200'
 };
-
-const IMPROVEMENTS = [
-  { icon: Target, title: 'Matching con necesidades de clubes', desc: 'Cruzar objetivos de captación con las necesidades reales de clubes registrados en la mesa de mercado, mostrando coincidencias por posición y categoría.' },
-  { icon: TrendingUp, title: 'Conversión a jugador representado', desc: 'Al marcar un objetivo como "Firmado", crear automáticamente la ficha de jugador con los datos ya cargados y vincularlo mediante converted_player_id.' },
-  { icon: Calendar, title: 'Seguimiento con calendario', desc: 'Agendar la próxima acción de cada objetivo directamente en el calendario operativo, con recordatorios y responsable asignado.' },
-  { icon: Eye, title: 'Integración con API-Football', desc: 'Vincular objetivos con perfiles de API-Football para importar estadísticas y partidos automáticamente, igual que con jugadores representados.' },
-  { icon: Radar, title: 'Informes de scouting exportables', desc: 'Generar PDFs de captación con foto, datos, fortalezas/debilidades y video highlights para compartir con socios o clubes interesados.' }
-];
 
 export default function Scouting() {
   const { user } = useAuth();
@@ -306,30 +298,6 @@ export default function Scouting() {
         ) : (
           <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">Todavía no hay observaciones registradas. Abrí un prospecto y cargá la primera evaluación.</div>
         )}
-      </div>
-
-      {/* Propuestas de mejora */}
-      <div className="mt-8 rounded-2xl bg-slate-900 text-white p-6">
-        <div className="flex items-center gap-2 mb-1">
-          <Lightbulb className="w-5 h-5 text-amber-400" />
-          <h2 className="text-lg font-bold">Propuestas de mejora para el módulo</h2>
-        </div>
-        <p className="text-sm text-slate-300 mb-5">Evoluciones planificadas para potenciar la captación, conectándola con el resto de la plataforma.</p>
-        <div className="grid md:grid-cols-2 gap-3">
-          {IMPROVEMENTS.map((item, i) => (
-            <div key={i} className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                  <item.icon className="w-4.5 h-4.5 text-emerald-400" style={{ width: 18, height: 18 }} />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-sm">{item.title}</h3>
-                  <p className="text-xs text-slate-300 mt-1 leading-5">{item.desc}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
       {showNew && <NewScoutingTargetDialog open={showNew} onClose={() => setShowNew(false)} onSaved={() => { setShowNew(false); loadTargets(); }} orgId={orgId} primaryColor={primaryColor} />}
