@@ -51,6 +51,7 @@ import ModulePermissionGuard from '@/components/ModulePermissionGuard';
 import AcceptInvitation from '@/pages/AcceptInvitation';
 import ActivatePortal from '@/pages/portal/ActivatePortal';
 import AgencyIntelligence from '@/pages/agency/AgencyIntelligence';
+import Scouting from '@/pages/agency/Scouting';
 // Add page imports here
 
 function AdminClubMappingRedirect() {
