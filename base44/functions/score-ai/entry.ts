@@ -40,6 +40,35 @@ function extractText(response: any) {
   return chunks.join('\n').trim();
 }
 
+async function validateOpenAIConnection(apiKey: string, model: string) {
+  try {
+    const response = await fetch(`https://api.openai.com/v1/models/${encodeURIComponent(model)}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${apiKey}` }
+    });
+    if (response.ok) return { ok: true, status: response.status };
+
+    const payload = await response.json().catch(() => ({}));
+    const providerCode = payload?.error?.code || payload?.error?.type || null;
+    console.error('OpenAI healthcheck error', response.status, providerCode || 'unknown');
+    return {
+      ok: false,
+      status: response.status,
+      code: providerCode,
+      error: response.status === 401
+        ? 'La clave de OpenAI no fue aceptada.'
+        : response.status === 403
+          ? 'La clave existe, pero el proyecto no tiene acceso al modelo configurado.'
+          : response.status === 404
+            ? 'La clave funciona, pero el modelo configurado no está disponible para este proyecto.'
+            : 'OpenAI no pudo validar la conexión en este momento.'
+    };
+  } catch (error: any) {
+    console.error('OpenAI healthcheck network error', error?.message || error);
+    return { ok: false, status: 0, error: 'No se pudo conectar con OpenAI desde el servidor.' };
+  }
+}
+
 const tools = [
   {
     type: 'function',
@@ -126,7 +155,28 @@ export default async function(req: Request): Promise<Response> {
     const apiKey = secrets.get('OPENAI_API_KEY');
     const model = secrets.get('OPENAI_MODEL') || 'gpt-5.6-terra';
     if (body.action === 'status') {
-      return Response.json({ success: true, configured: Boolean(apiKey), model, mode: 'read_only', provider: 'OpenAI Responses API' });
+      if (!apiKey) {
+        return Response.json({
+          success: true,
+          configured: false,
+          model,
+          mode: 'read_only',
+          provider: 'OpenAI Responses API',
+          status_message: 'Falta OPENAI_API_KEY en los secretos del servidor.'
+        });
+      }
+
+      const health = await validateOpenAIConnection(apiKey, model);
+      return Response.json({
+        success: true,
+        configured: health.ok,
+        model,
+        mode: 'read_only',
+        provider: 'OpenAI Responses API',
+        openai_status: health.status,
+        status_message: health.ok ? 'Conexión con OpenAI validada.' : health.error,
+        status_code: health.code || null
+      });
     }
     if (!apiKey) return Response.json({ success: false, error: 'La integración de OpenAI todavía no está configurada en Score.' }, { status: 503 });
 
