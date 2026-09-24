@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Users, Search, LayoutGrid, Table as TableIcon, Plus, X, Loader2, Download } from 'lucide-react';
+import { Users, Search, LayoutGrid, Table as TableIcon, Plus, X, Loader2, Download, Trash2 } from 'lucide-react';
 import PlayerCard from '@/components/agency/PlayerCard';
 import NewPlayerDialog from '@/components/agency/NewPlayerDialog';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
@@ -38,6 +38,7 @@ export default function Players() {
   const [showNew, setShowNew] = useState(searchParams.get('action') === 'new');
   const [editPlayer, setEditPlayer] = useState(null);
   const [statusPlayer, setStatusPlayer] = useState(null);
+  const [deletePlayer, setDeletePlayer] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [statsData, setStatsData] = useState({ players: {}, season_display: '' });
@@ -139,6 +140,7 @@ export default function Players() {
     if (action === 'view') { navigate(`/agency/players/${player.id}`); return; }
     if (action === 'edit') { setEditPlayer(player); return; }
     if (action === 'status') { setStatusPlayer(player); return; }
+    if (action === 'delete') { setDeletePlayer(player); return; }
 
     setActionLoading(true);
     try {
@@ -150,6 +152,21 @@ export default function Players() {
       await loadPlayers();
       loadStats();
     } catch (err) { console.error(err); }
+    setActionLoading(false);
+  };
+
+  const handleDeletePlayer = async () => {
+    if (!deletePlayer) return;
+    setActionLoading(true);
+    try {
+      await base44.entities.Player.delete(deletePlayer.id);
+      setDeletePlayer(null);
+      await loadPlayers();
+      loadStats();
+    } catch (err) {
+      console.error(err);
+      alert('Error al eliminar: ' + (err.message || ''));
+    }
     setActionLoading(false);
   };
 
@@ -324,6 +341,23 @@ export default function Players() {
       {showNew && <NewPlayerDialog open={showNew} onClose={() => { setShowNew(false); setSearchParams({}); }} orgId={orgId} onCreated={(id) => { setShowNew(false); navigate(`/agency/players/${id}`); }} />}
       {editPlayer && <EditPlayerDialog player={editPlayer} orgId={orgId} primaryColor={primaryColor} onClose={() => setEditPlayer(null)} onSaved={() => { setEditPlayer(null); loadPlayers(); }} />}
       {statusPlayer && <StatusDialog player={statusPlayer} orgId={orgId} primaryColor={primaryColor} onClose={() => setStatusPlayer(null)} onSaved={() => { setStatusPlayer(null); loadPlayers(); }} />}
+      {deletePlayer && (
+        <Dialog open onOpenChange={() => !actionLoading && setDeletePlayer(null)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader><DialogTitle>Eliminar jugador</DialogTitle></DialogHeader>
+            <p className="text-sm text-slate-600">
+              ¿Seguro que querés eliminar definitivamente a <strong>{deletePlayer.first_name} {deletePlayer.last_name}</strong> del sistema? Esta acción no se puede deshacer y se perderán todos sus datos asociados.
+            </p>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDeletePlayer(null)} disabled={actionLoading}>Cancelar</Button>
+              <Button type="button" variant="destructive" onClick={handleDeletePlayer} disabled={actionLoading}>
+                {actionLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />}
+                Eliminar definitivamente
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

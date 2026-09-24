@@ -5,7 +5,8 @@ import { useAuth } from '@/lib/AuthContext';
 import { getUserOrgId, calculateAge, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS, PLAYER_CATEGORIES, PORTAL_STATUS_LABELS, PORTAL_STATUS_COLORS, formatDate, isOrgAdmin, canEditMedical, canEditPhysical, canEditVideos, canEditStats } from '@/lib/roleUtils';
 import { Badge } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Users, BarChart3, Calendar, Video, ClipboardList, Pencil, UserPlus, Share2, Building2, Trophy, ArrowUpRight } from 'lucide-react';
+import { ChevronLeft, Users, BarChart3, Calendar, Video, ClipboardList, Pencil, UserPlus, Share2, Building2, Trophy, ArrowUpRight, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import PlayerSummary from '@/components/agency/player-tabs/PlayerSummary';
 import PlayerCareerTab from '@/components/agency/player-tabs/PlayerCareerTab';
 import PlayerStatsTab from '@/components/agency/player-tabs/PlayerStatsTab';
@@ -33,6 +34,8 @@ export default function PlayerProfile() {
   const [activeTab, setActiveTab] = useState('summary');
   const [videoSubtab, setVideoSubtab] = useState('own');
   const [showInvite, setShowInvite] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (id) loadPlayer();
@@ -81,6 +84,17 @@ export default function PlayerProfile() {
       navigator.clipboard.writeText(url);
       alert('Enlace copiado al portapapeles');
     }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await base44.entities.Player.delete(player.id);
+      navigate('/agency/players');
+    } catch (err) {
+      alert('Error al eliminar: ' + (err.message || ''));
+    }
+    setDeleting(false);
   };
 
   if (loading) {
@@ -144,6 +158,7 @@ export default function PlayerProfile() {
               </Button>
             )}
             <Button size="sm" variant="outline" onClick={handleShare}><Share2 className="w-3.5 h-3.5 mr-1" /> Compartir perfil</Button>
+            <Button size="sm" variant="outline" onClick={() => setShowDelete(true)} className="text-red-600 hover:bg-red-50 border-red-200"><Trash2 className="w-3.5 h-3.5 mr-1" /> Eliminar</Button>
           </>
         ) : undefined}
         canEditPhoto={canManage}
@@ -211,6 +226,24 @@ export default function PlayerProfile() {
           onClose={() => setShowInvite(false)}
           onDone={() => { setShowInvite(false); loadPlayer(); }}
         />
+      )}
+
+      {showDelete && (
+        <Dialog open onOpenChange={(o) => { if (!o && !deleting) setShowDelete(false); }}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader><DialogTitle>Eliminar jugador</DialogTitle></DialogHeader>
+            <p className="text-sm text-slate-600">
+              ¿Seguro que querés eliminar definitivamente a <strong>{player.first_name} {player.last_name}</strong> del sistema? Esta acción no se puede deshacer y se perderán todos sus datos asociados.
+            </p>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDelete(false)} disabled={deleting}>Cancelar</Button>
+              <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                {deleting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-1" /> : <Trash2 className="w-3.5 h-3.5 mr-1" />}
+                Eliminar definitivamente
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

@@ -16,7 +16,8 @@ export default function PlayerActionsMenu({ player, canManage, onClose, onAction
     { id: 'view', label: 'Ver ficha', icon: Eye, always: true },
     { id: 'edit', label: 'Editar jugador', icon: Pencil, staff: true },
     { id: 'status', label: 'Cambiar estado deportivo', icon: RefreshCw, staff: true },
-    { id: 'archive', label: 'Archivar jugador', icon: Archive, staff: true }
+    { id: 'archive', label: 'Archivar jugador', icon: Archive, staff: true },
+    { id: 'delete', label: 'Eliminar jugador', icon: Trash2, staff: true, danger: true }
   ];
 
   const portalActions = [
@@ -42,7 +43,7 @@ export default function PlayerActionsMenu({ player, canManage, onClose, onAction
           <button
             key={action.id}
             onClick={() => onAction(action.id)}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left text-slate-700 hover:bg-slate-50 transition-colors"
+            className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors ${action.danger ? 'text-red-600 hover:bg-red-50' : 'text-slate-700 hover:bg-slate-50'}`}
           >
             <action.icon className="w-4 h-4 flex-shrink-0" />
             <span>{action.label}</span>
