@@ -6,6 +6,7 @@ import { getUserOrgId, getUserRole, isOrgAdmin } from '@/lib/roleUtils';
 import { getDefaultPermissions } from '@/components/agency/settings/accessPermissions';
 import { useOrganizationBranding } from '@/hooks/use-organization-branding';
 import { SCORE_FUTBOL_BRAND } from '@/lib/scoreFutbolBrand';
+import ScoreAIAssistant from '@/components/agency/ScoreAIAssistant';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Users, Calendar, Trophy, BarChart3,
@@ -256,6 +257,8 @@ export default function AgencyLayout() {
           <Outlet />
         </main>
       </div>
+
+      <ScoreAIAssistant />
     </div>
   );
 }
