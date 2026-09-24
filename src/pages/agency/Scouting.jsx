@@ -337,6 +337,8 @@ function FilterSelect({ value, onChange, placeholder, options }) {
 function ScoutingCard({ target, canManage, primaryColor, observationCount, onObserve, onEdit, onDelete, onConvert }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const age = calculateAge(target.birth_date);
+  let marketSnapshot = null;
+  try { marketSnapshot = target.market_snapshot ? JSON.parse(target.market_snapshot) : null; } catch { marketSnapshot = null; }
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
@@ -388,7 +390,16 @@ function ScoutingCard({ target, canManage, primaryColor, observationCount, onObs
         </Badge>
         {target.category && <Badge className="bg-slate-100 text-slate-500 border-slate-200">{PLAYER_CATEGORIES[target.category] || target.category}</Badge>}
         <Badge className="bg-violet-50 text-violet-700 border-violet-200">{observationCount || 0} obs.</Badge>
+        {target.market_demo_source && <Badge className="bg-amber-50 text-amber-700 border-amber-200">Mercado Demo</Badge>}
       </div>
+
+      {marketSnapshot && (
+        <div className="mx-4 mb-3 grid grid-cols-5 gap-1.5 rounded-xl bg-slate-50 p-2">
+          {[['PJ', marketSnapshot.appearances], ['MIN', marketSnapshot.minutes], ['G', marketSnapshot.goals], ['A', marketSnapshot.assists], ['RAT', marketSnapshot.rating != null ? Number(marketSnapshot.rating).toFixed(1) : '—']].map(([label,value]) => (
+            <div key={label} className="text-center"><p className="text-[9px] font-bold text-slate-400">{label}</p><p className="text-xs font-black text-slate-800">{value ?? '—'}</p></div>
+          ))}
+        </div>
+      )}
 
       {(target.strengths || target.next_action || target.contract_end || target.estimated_value) && (
         <div className="px-4 pb-4 pt-2 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
