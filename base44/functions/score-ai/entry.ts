@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { secrets } from 'base44:runtime';
 import { requireAgencyMember, hasAgencyPermission } from '../../shared/agencyAccess.ts';
 import { scopedPlayers } from '../../shared/agencyData.ts';
 
@@ -122,8 +123,8 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ success: false, error: 'No tienes acceso a esta cartera.' }, { status: 403 });
     }
 
-    const apiKey = typeof Deno !== 'undefined' ? Deno.env.get('OPENAI_API_KEY') : undefined;
-    const model = (typeof Deno !== 'undefined' && Deno.env.get('OPENAI_MODEL')) || 'gpt-5.6-terra';
+    const apiKey = secrets.get('OPENAI_API_KEY');
+    const model = secrets.get('OPENAI_MODEL') || 'gpt-5.6-terra';
     if (body.action === 'status') {
       return Response.json({ success: true, configured: Boolean(apiKey), model, mode: 'read_only', provider: 'OpenAI Responses API' });
     }
