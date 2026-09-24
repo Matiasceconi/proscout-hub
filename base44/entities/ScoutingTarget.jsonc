@@ -1,0 +1,188 @@
+{
+  "name": "ScoutingTarget",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "birth_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "nationality": {
+      "type": "string"
+    },
+    "position": {
+      "type": "string",
+      "enum": [
+        "GK",
+        "CB",
+        "LB",
+        "RB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ]
+    },
+    "secondary_position": {
+      "type": "string",
+      "enum": [
+        "GK",
+        "CB",
+        "LB",
+        "RB",
+        "CDM",
+        "CM",
+        "CAM",
+        "LW",
+        "RW",
+        "ST",
+        "CF"
+      ]
+    },
+    "preferred_foot": {
+      "type": "string",
+      "enum": [
+        "left",
+        "right",
+        "both"
+      ]
+    },
+    "current_club": {
+      "type": "string"
+    },
+    "club_logo_url": {
+      "type": "string"
+    },
+    "competition": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "primera_division",
+        "segunda_division",
+        "ascenso",
+        "reserva",
+        "juveniles",
+        "futbol_femenino",
+        "sin_club"
+      ],
+      "default": "primera_division"
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "scouting_status": {
+      "type": "string",
+      "enum": [
+        "monitoring",
+        "contacted",
+        "interest",
+        "negotiation",
+        "signed",
+        "rejected",
+        "archived"
+      ],
+      "default": "monitoring"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "recommendation",
+        "tournament",
+        "platform",
+        "agency_referral",
+        "social_media",
+        "direct_observation",
+        "other"
+      ],
+      "default": "recommendation"
+    },
+    "scout_name": {
+      "type": "string",
+      "description": "Qui\u00e9n detect\u00f3 o recomend\u00f3 al jugador"
+    },
+    "estimated_value": {
+      "type": "string"
+    },
+    "contract_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "height": {
+      "type": "number"
+    },
+    "weight": {
+      "type": "number"
+    },
+    "strengths": {
+      "type": "string",
+      "description": "Atributos destacados del jugador"
+    },
+    "weaknesses": {
+      "type": "string",
+      "description": "Aspectos a mejorar o riesgos"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "Enlace a video de highlights"
+    },
+    "next_action": {
+      "type": "string"
+    },
+    "next_action_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "converted_player_id": {
+      "type": "string",
+      "description": "Si fue firmado, vincula al Player creado"
+    },
+    "created_by_user_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "organization_id",
+    "first_name",
+    "last_name",
+    "position"
+  ],
+  "rls": {
+    "read": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}
