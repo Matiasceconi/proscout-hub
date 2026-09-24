@@ -2,14 +2,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { getUserOrgId, isOrgAdmin, calculateAge, POSITION_LABELS, PLAYER_CATEGORIES } from '@/lib/roleUtils';
+import { getUserOrgId, getUserRole, calculateAge, POSITION_LABELS, PLAYER_CATEGORIES } from '@/lib/roleUtils';
 import { PageHeader, Badge, EmptyState } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Radar, Search, Plus, X, Loader2, Trash2, Pencil, ArrowRight, Lightbulb, Target, TrendingUp, Eye, Calendar } from 'lucide-react';
+import { Radar, Search, Plus, X, Loader2, Trash2, Pencil, ArrowRight, Lightbulb, Target, TrendingUp, Eye, Calendar, ClipboardCheck } from 'lucide-react';
 import NewScoutingTargetDialog from '@/components/agency/NewScoutingTargetDialog';
+import NewScoutingObservationDialog from '@/components/agency/NewScoutingObservationDialog';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
 
 const SCOUTING_STATUS_LABELS = {
@@ -52,15 +53,18 @@ export default function Scouting() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const orgId = getUserOrgId(user);
-  const canManage = isOrgAdmin(user);
+  const role = getUserRole(user);
+  const canManage = ['organization_owner', 'organization_admin', 'representative'].includes(role);
 
   const [targets, setTargets] = useState([]);
+  const [observations, setObservations] = useState([]);
   const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({ status: 'all', priority: 'all', position: 'all', category: 'all' });
   const [showNew, setShowNew] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
+  const [observationTarget, setObservationTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -69,6 +73,7 @@ export default function Scouting() {
   useEffect(() => {
     if (orgId) {
       loadTargets();
+      loadObservations();
       base44.entities.Organization.get(orgId).then(setOrg).catch(() => {});
     }
   }, [orgId]);
@@ -79,6 +84,16 @@ export default function Scouting() {
       setTargets(data.filter(t => t.scouting_status !== 'archived'));
     } catch (err) { console.error(err); }
     setLoading(false);
+  };
+
+  const loadObservations = async () => {
+    try {
+      const data = await base44.entities.ScoutingObservation.filter({ organization_id: orgId }, '-observation_date', 500);
+      setObservations(data);
+    } catch (err) {
+      console.error(err);
+      setObservations([]);
+    }
   };
 
   const filtered = useMemo(() => {
