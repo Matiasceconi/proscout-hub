@@ -37,7 +37,7 @@ export default function ScoreAIAssistant() {
   const orgId = getUserOrgId(user);
   const [open, setOpen] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
-  const [status, setStatus] = useState({ configured: false, mode: 'read_only' });
+  const [status, setStatus] = useState({ configured: false, mode: 'read_only', statusMessage: '' });
   const [question, setQuestion] = useState('');
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -57,9 +57,10 @@ export default function ScoreAIAssistant() {
         mode: data.mode || 'read_only',
         provider: data.provider || 'OpenAI',
         model: data.model || null,
+        statusMessage: data.status_message || '',
       });
     } catch (err) {
-      setStatus({ configured: false, mode: 'read_only' });
+      setStatus({ configured: false, mode: 'read_only', statusMessage: '' });
       setError(err.response?.data?.error || err.message || 'No se pudo verificar el estado de Score IA.');
     }
     setStatusLoading(false);
@@ -144,9 +145,11 @@ export default function ScoreAIAssistant() {
                   <div>
                     <p className="text-sm font-bold text-slate-900">{statusLoading ? 'Verificando conexión…' : status.configured ? 'IA conectada' : 'Conexión pendiente'}</p>
                     <p className="mt-1 text-xs leading-5 text-slate-600">
-                      {status.configured
-                        ? 'Modo consulta: puede leer información habilitada de Score sin modificar registros.'
-                        : 'La interfaz ya está lista. Falta cargar la API para habilitar las consultas.'}
+                      {statusLoading
+                        ? 'Probando la conexión segura con OpenAI…'
+                        : status.statusMessage || (status.configured
+                          ? 'Modo consulta: puede leer información habilitada de Score sin modificar registros.'
+                          : 'La conexión con OpenAI todavía no pudo validarse.')}
                     </p>
                   </div>
                 </div>
