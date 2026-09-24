@@ -174,7 +174,7 @@ export default function PlayerProfile() {
               </Button>
             )}
             <Button size="sm" variant="outline" onClick={handleShare}><Share2 className="w-3.5 h-3.5 mr-1" /> Compartir perfil</Button>
-            <Button size="sm" variant="outline" onClick={() => setShowDelete(true)} className="text-red-600 hover:bg-red-50 border-red-200"><Trash2 className="w-3.5 h-3.5 mr-1" /> Eliminar</Button>
+            <Button size="sm" variant="outline" onClick={() => { setDeleteConfirmation(''); setDeleteError(''); setShowDelete(true); }} className="text-red-600 hover:bg-red-50 border-red-200"><Trash2 className="w-3.5 h-3.5 mr-1" /> Eliminar</Button>
           </>
         ) : undefined}
         canEditPhoto={canManage}
@@ -245,15 +245,23 @@ export default function PlayerProfile() {
       )}
 
       {showDelete && (
-        <Dialog open onOpenChange={(o) => { if (!o && !deleting) setShowDelete(false); }}>
-          <DialogContent className="max-w-sm">
-            <DialogHeader><DialogTitle>Eliminar jugador</DialogTitle></DialogHeader>
-            <p className="text-sm text-slate-600">
-              ¿Seguro que querés eliminar definitivamente a <strong>{player.first_name} {player.last_name}</strong> del sistema? Esta acción no se puede deshacer y se perderán todos sus datos asociados.
-            </p>
+        <Dialog open onOpenChange={(o) => { if (!o && !deleting) { setShowDelete(false); setDeleteConfirmation(''); setDeleteError(''); } }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader><DialogTitle>Eliminar jugador definitivamente</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                Se eliminarán la ficha de <strong>{player.first_name} {player.last_name}</strong> y sus datos asociados del sistema. El acceso del portal quedará desvinculado. <strong>Esta acción no se puede deshacer.</strong>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Para confirmar, escribí exactamente:</Label>
+                <p className="rounded-md bg-slate-100 px-3 py-2 text-sm font-bold text-slate-800">{player.first_name} {player.last_name}</p>
+                <Input value={deleteConfirmation} onChange={e => { setDeleteConfirmation(e.target.value); setDeleteError(''); }} placeholder="Nombre y apellido" autoComplete="off" />
+              </div>
+              {deleteError && <p className="text-sm text-red-600">{deleteError}</p>}
+            </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDelete(false)} disabled={deleting}>Cancelar</Button>
-              <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              <Button variant="outline" onClick={() => { setShowDelete(false); setDeleteConfirmation(''); setDeleteError(''); }} disabled={deleting}>Cancelar</Button>
+              <Button variant="destructive" onClick={handleDelete} disabled={deleting || deleteConfirmation !== `${player.first_name || ''} ${player.last_name || ''}`.trim()}>
                 {deleting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-1" /> : <Trash2 className="w-3.5 h-3.5 mr-1" />}
                 Eliminar definitivamente
               </Button>
