@@ -1,0 +1,106 @@
+{
+  "name": "ScoutingObservation",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "scouting_target_id": {
+      "type": "string"
+    },
+    "target_name": {
+      "type": "string"
+    },
+    "observation_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "observation_type": {
+      "type": "string",
+      "enum": [
+        "live",
+        "video",
+        "data",
+        "background",
+        "meeting"
+      ],
+      "default": "live"
+    },
+    "competition": {
+      "type": "string"
+    },
+    "opponent": {
+      "type": "string"
+    },
+    "minutes_observed": {
+      "type": "number"
+    },
+    "technical_rating": {
+      "type": "number"
+    },
+    "tactical_rating": {
+      "type": "number"
+    },
+    "physical_rating": {
+      "type": "number"
+    },
+    "mentality_rating": {
+      "type": "number"
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": [
+        "strong_yes",
+        "yes",
+        "monitor",
+        "no"
+      ],
+      "default": "monitor"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "strengths": {
+      "type": "string"
+    },
+    "risks": {
+      "type": "string"
+    },
+    "created_by_user_id": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "organization_id",
+    "scouting_target_id",
+    "observation_date",
+    "observation_type",
+    "recommendation"
+  ],
+  "rls": {
+    "read": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "create": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "update": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    },
+    "delete": {
+      "data.organization_id": "{{user.data.organization_id}}"
+    }
+  }
+}
