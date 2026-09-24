@@ -167,6 +167,20 @@
     },
     "created_by_user_id": {
       "type": "string"
+    },
+    "market_provider": {
+      "type": "string"
+    },
+    "market_provider_player_id": {
+      "type": "string"
+    },
+    "market_demo_source": {
+      "type": "boolean",
+      "default": false
+    },
+    "market_snapshot": {
+      "type": "string",
+      "description": "JSON snapshot of market metrics when the prospect entered Captaci\u00f3n"
     }
   },
   "required": [
