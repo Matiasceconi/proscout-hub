@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Eye, Pencil, Send, Mail, Ban, RefreshCw, Archive, RotateCcw } from 'lucide-react';
+import { Eye, Pencil, Send, Mail, Ban, RefreshCw, Archive, RotateCcw, Trash2 } from 'lucide-react';
 
 export default function PlayerActionsMenu({ player, canManage, onClose, onAction }) {
   const ref = useRef(null);
