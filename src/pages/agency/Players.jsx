@@ -362,15 +362,39 @@ export default function Players() {
       {editPlayer && <EditPlayerDialog player={editPlayer} orgId={orgId} primaryColor={primaryColor} onClose={() => setEditPlayer(null)} onSaved={() => { setEditPlayer(null); loadPlayers(); }} />}
       {statusPlayer && <StatusDialog player={statusPlayer} orgId={orgId} primaryColor={primaryColor} onClose={() => setStatusPlayer(null)} onSaved={() => { setStatusPlayer(null); loadPlayers(); }} />}
       {deletePlayer && (
-        <Dialog open onOpenChange={() => !actionLoading && setDeletePlayer(null)}>
-          <DialogContent className="max-w-sm">
-            <DialogHeader><DialogTitle>Eliminar jugador</DialogTitle></DialogHeader>
-            <p className="text-sm text-slate-600">
-              ¿Seguro que querés eliminar definitivamente a <strong>{deletePlayer.first_name} {deletePlayer.last_name}</strong> del sistema? Esta acción no se puede deshacer y se perderán todos sus datos asociados.
-            </p>
+        <Dialog open onOpenChange={() => {
+          if (!actionLoading) {
+            setDeletePlayer(null);
+            setDeleteConfirmation('');
+            setDeleteError('');
+          }
+        }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader><DialogTitle>Eliminar jugador definitivamente</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                Esta acción elimina la ficha de <strong>{deletePlayer.first_name} {deletePlayer.last_name}</strong>, sus estadísticas, seguimientos, documentos, registros físicos/médicos, videos y vínculo del portal. <strong>No se puede deshacer.</strong>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Para confirmar, escribí exactamente:</Label>
+                <p className="rounded-md bg-slate-100 px-3 py-2 text-sm font-bold text-slate-800">{deletePlayer.first_name} {deletePlayer.last_name}</p>
+                <Input
+                  value={deleteConfirmation}
+                  onChange={e => { setDeleteConfirmation(e.target.value); setDeleteError(''); }}
+                  placeholder="Nombre y apellido"
+                  autoComplete="off"
+                />
+              </div>
+              {deleteError && <p className="text-sm text-red-600">{deleteError}</p>}
+            </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setDeletePlayer(null)} disabled={actionLoading}>Cancelar</Button>
-              <Button type="button" variant="destructive" onClick={handleDeletePlayer} disabled={actionLoading}>
+              <Button type="button" variant="outline" onClick={() => { setDeletePlayer(null); setDeleteConfirmation(''); setDeleteError(''); }} disabled={actionLoading}>Cancelar</Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDeletePlayer}
+                disabled={actionLoading || deleteConfirmation !== `${deletePlayer.first_name || ''} ${deletePlayer.last_name || ''}`.trim()}
+              >
                 {actionLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />}
                 Eliminar definitivamente
               </Button>
