@@ -25,7 +25,7 @@ function StatsMessage({ message }) {
   );
 }
 
-export default function PlayerCard({ player, clubData, primaryColor, canManage, onAction, statsData, seasonDisplay }) {
+export default function PlayerCard({ player, clubData, canManage, onAction, statsData, seasonDisplay }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = React.useState(false);
 
