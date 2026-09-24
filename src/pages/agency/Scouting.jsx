@@ -271,6 +271,43 @@ export default function Scouting() {
         </div>
       )}
 
+      {/* Historial reciente de observaciones */}
+      <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div>
+            <div className="flex items-center gap-2"><ClipboardCheck className="h-5 w-5 text-violet-600" /><h2 className="text-lg font-bold text-slate-900">Observaciones recientes</h2></div>
+            <p className="mt-1 text-sm text-slate-500">Historial de evaluaciones antes de incorporar un jugador a la cartera.</p>
+          </div>
+        </div>
+        {latestObservations.length ? (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {latestObservations.map(observation => (
+              <article key={observation.id} className="rounded-xl border border-slate-200 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">{observation.target_name || 'Prospecto'}</p>
+                    <p className="mt-1 text-xs text-slate-500">{observation.observation_date ? new Date(observation.observation_date + 'T12:00:00').toLocaleDateString('es-AR') : 'Sin fecha'} · {observation.observation_type || 'observación'}</p>
+                  </div>
+                  <Badge className={RECOMMENDATION_COLORS[observation.recommendation] || RECOMMENDATION_COLORS.monitor}>
+                    {RECOMMENDATION_LABELS[observation.recommendation] || 'Seguir observando'}
+                  </Badge>
+                </div>
+                {(observation.technical_rating || observation.tactical_rating || observation.physical_rating || observation.mentality_rating) && (
+                  <div className="mt-3 grid grid-cols-4 gap-2">
+                    {[['Téc',observation.technical_rating],['Tác',observation.tactical_rating],['Fís',observation.physical_rating],['Men',observation.mentality_rating]].map(([label,value]) => (
+                      <div key={label} className="rounded-lg bg-slate-50 px-2 py-2 text-center"><p className="text-[10px] uppercase text-slate-400">{label}</p><p className="text-sm font-bold text-slate-800">{value ?? '—'}</p></div>
+                    ))}
+                  </div>
+                )}
+                {observation.summary && <p className="mt-3 text-xs leading-5 text-slate-600 line-clamp-3">{observation.summary}</p>}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">Todavía no hay observaciones registradas. Abrí un prospecto y cargá la primera evaluación.</div>
+        )}
+      </div>
+
       {/* Propuestas de mejora */}
       <div className="mt-8 rounded-2xl bg-slate-900 text-white p-6">
         <div className="flex items-center gap-2 mb-1">
@@ -297,6 +334,7 @@ export default function Scouting() {
 
       {showNew && <NewScoutingTargetDialog open={showNew} onClose={() => setShowNew(false)} onSaved={() => { setShowNew(false); loadTargets(); }} orgId={orgId} primaryColor={primaryColor} />}
       {editTarget && <NewScoutingTargetDialog open={!!editTarget} target={editTarget} onClose={() => setEditTarget(null)} onSaved={() => { setEditTarget(null); loadTargets(); }} orgId={orgId} primaryColor={primaryColor} />}
+      {observationTarget && <NewScoutingObservationDialog open target={observationTarget} orgId={orgId} user={user} primaryColor={primaryColor} onClose={() => setObservationTarget(null)} onSaved={() => { setObservationTarget(null); Promise.all([loadTargets(), loadObservations()]); }} />}
       {deleteTarget && (
         <Dialog open onOpenChange={() => !actionLoading && setDeleteTarget(null)}>
           <DialogContent className="max-w-sm">
@@ -328,7 +366,7 @@ function FilterSelect({ value, onChange, placeholder, options }) {
   );
 }
 
-function ScoutingCard({ target, canManage, primaryColor, onEdit, onDelete, onConvert }) {
+function ScoutingCard({ target, canManage, primaryColor, observationCount, onObserve, onEdit, onDelete, onConvert }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const age = calculateAge(target.birth_date);
 
@@ -359,6 +397,7 @@ function ScoutingCard({ target, canManage, primaryColor, onEdit, onDelete, onCon
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
                   <div className="absolute right-0 top-8 z-50 w-44 bg-white rounded-lg shadow-xl border border-slate-200 py-1">
+                    <button onClick={() => { setMenuOpen(false); onObserve(); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-violet-700 hover:bg-violet-50"><ClipboardCheck className="w-4 h-4" /> Nueva observación</button>
                     <button onClick={() => { setMenuOpen(false); onEdit(); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-slate-700 hover:bg-slate-50"><Pencil className="w-4 h-4" /> Editar</button>
                     {target.scouting_status !== 'signed' && (
                       <button onClick={() => { setMenuOpen(false); onConvert(); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-emerald-700 hover:bg-emerald-50"><ArrowRight className="w-4 h-4" /> Convertir en jugador</button>
@@ -380,6 +419,7 @@ function ScoutingCard({ target, canManage, primaryColor, onEdit, onDelete, onCon
           {PRIORITY_LABELS[target.priority] || 'Media'}
         </Badge>
         {target.category && <Badge className="bg-slate-100 text-slate-500 border-slate-200">{PLAYER_CATEGORIES[target.category] || target.category}</Badge>}
+        <Badge className="bg-violet-50 text-violet-700 border-violet-200">{observationCount || 0} obs.</Badge>
       </div>
 
       {(target.strengths || target.next_action || target.contract_end || target.estimated_value) && (
