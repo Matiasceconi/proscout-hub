@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Users, Calendar, Trophy, BarChart3,
   FileText, UserCog, Settings,
-  LogOut, Menu, X, GraduationCap, ClipboardList, Building2, ChevronUp
+  LogOut, Menu, X, GraduationCap, ClipboardList, Building2, ChevronUp, Radar
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
