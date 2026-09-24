@@ -40,6 +40,13 @@ const PRIORITY_COLORS = {
 };
 
 const PRIORITY_LABELS = { high: 'Alta', medium: 'Media', low: 'Baja' };
+const RECOMMENDATION_LABELS = { strong_yes: 'Prioridad alta', yes: 'Recomendable', monitor: 'Seguir observando', no: 'No avanzar' };
+const RECOMMENDATION_COLORS = {
+  strong_yes: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  yes: 'bg-green-50 text-green-700 border-green-200',
+  monitor: 'bg-amber-50 text-amber-700 border-amber-200',
+  no: 'bg-red-50 text-red-700 border-red-200'
+};
 
 const IMPROVEMENTS = [
   { icon: Target, title: 'Matching con necesidades de clubes', desc: 'Cruzar objetivos de captación con las necesidades reales de clubes registrados en la mesa de mercado, mostrando coincidencias por posición y categoría.' },
@@ -114,21 +121,32 @@ export default function Scouting() {
   const hasActiveFilters = search || Object.values(filters).some(v => v !== 'all');
   const clearFilters = () => { setSearch(''); setFilters({ status: 'all', priority: 'all', position: 'all', category: 'all' }); };
 
+  const observationCountByTarget = useMemo(() => {
+    const counts = {};
+    observations.forEach(o => { counts[o.scouting_target_id] = (counts[o.scouting_target_id] || 0) + 1; });
+    return counts;
+  }, [observations]);
+
+  const latestObservations = useMemo(() => observations.slice(0, 8), [observations]);
+
   const stats = useMemo(() => ({
     total: targets.length,
     monitoring: targets.filter(t => t.scouting_status === 'monitoring').length,
     contacted: targets.filter(t => ['contacted', 'interest', 'negotiation'].includes(t.scouting_status)).length,
     signed: targets.filter(t => t.scouting_status === 'signed').length,
-    highPriority: targets.filter(t => t.priority === 'high').length
-  }), [targets]);
+    highPriority: targets.filter(t => t.priority === 'high').length,
+    observations: observations.length
+  }), [targets, observations]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setActionLoading(true);
     try {
+      const relatedObservations = await base44.entities.ScoutingObservation.filter({ organization_id: orgId, scouting_target_id: deleteTarget.id }, '-created_date', 500).catch(() => []);
+      for (const observation of relatedObservations) await base44.entities.ScoutingObservation.delete(observation.id);
       await base44.entities.ScoutingTarget.delete(deleteTarget.id);
       setDeleteTarget(null);
-      await loadTargets();
+      await Promise.all([loadTargets(), loadObservations()]);
     } catch (err) { console.error(err); }
     setActionLoading(false);
   };
@@ -179,11 +197,12 @@ export default function Scouting() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-4">
         {[
           { label: 'Total objetivos', value: stats.total, color: 'text-slate-800' },
           { label: 'En monitoreo', value: stats.monitoring, color: 'text-slate-600' },
           { label: 'En gestión', value: stats.contacted, color: 'text-blue-600' },
+          { label: 'Observaciones', value: stats.observations, color: 'text-violet-600' },
           { label: 'Firmados', value: stats.signed, color: 'text-green-600' },
           { label: 'Prioridad alta', value: stats.highPriority, color: 'text-rose-600' }
         ].map(s => (
@@ -237,7 +256,17 @@ export default function Scouting() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map(target => (
-            <ScoutingCard key={target.id} target={target} canManage={canManage} primaryColor={primaryColor} onEdit={() => setEditTarget(target)} onDelete={() => setDeleteTarget(target)} onConvert={() => handleConvert(target)} />
+            <ScoutingCard
+              key={target.id}
+              target={target}
+              canManage={canManage}
+              primaryColor={primaryColor}
+              observationCount={observationCountByTarget[target.id] || 0}
+              onObserve={() => setObservationTarget(target)}
+              onEdit={() => setEditTarget(target)}
+              onDelete={() => setDeleteTarget(target)}
+              onConvert={() => handleConvert(target)}
+            />
           ))}
         </div>
       )}
