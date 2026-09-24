@@ -5,6 +5,8 @@ import { useAuth } from '@/lib/AuthContext';
 import { getUserOrgId, calculateAge, POSITION_LABELS, AVAILABILITY_LABELS, AVAILABILITY_COLORS, PLAYER_CATEGORIES, PORTAL_STATUS_LABELS, PORTAL_STATUS_COLORS, formatDate, isOrgAdmin, canEditMedical, canEditPhysical, canEditVideos, canEditStats } from '@/lib/roleUtils';
 import { Badge } from '@/components/shared/UIBits';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ChevronLeft, Users, BarChart3, Calendar, Video, ClipboardList, Pencil, UserPlus, Share2, Building2, Trophy, ArrowUpRight, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import PlayerSummary from '@/components/agency/player-tabs/PlayerSummary';
@@ -35,6 +37,8 @@ export default function PlayerProfile() {
   const [videoSubtab, setVideoSubtab] = useState('own');
   const [showInvite, setShowInvite] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -87,12 +91,24 @@ export default function PlayerProfile() {
   };
 
   const handleDelete = async () => {
+    const fullName = `${player.first_name || ''} ${player.last_name || ''}`.trim();
+    if (deleteConfirmation !== fullName) {
+      setDeleteError(`Escribí exactamente “${fullName}” para confirmar.`);
+      return;
+    }
     setDeleting(true);
+    setDeleteError('');
     try {
-      await base44.entities.Player.delete(player.id);
+      const response = await base44.functions.invoke('deleteAgencyPlayer', {
+        organization_id: getUserOrgId(user),
+        player_id: player.id,
+        confirmation: deleteConfirmation
+      });
+      const data = response.data || {};
+      if (!data.success) throw new Error(data.error || 'No se pudo eliminar el jugador.');
       navigate('/agency/players');
     } catch (err) {
-      alert('Error al eliminar: ' + (err.message || ''));
+      setDeleteError(err.response?.data?.error || err.message || 'No se pudo eliminar el jugador.');
     }
     setDeleting(false);
   };
