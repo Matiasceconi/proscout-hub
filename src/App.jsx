@@ -51,8 +51,6 @@ import ModulePermissionGuard from '@/components/ModulePermissionGuard';
 import AcceptInvitation from '@/pages/AcceptInvitation';
 import ActivatePortal from '@/pages/portal/ActivatePortal';
 import AgencyIntelligence from '@/pages/agency/AgencyIntelligence';
-import Scouting from '@/pages/agency/Scouting';
-import MarketScoutingDemo from '@/pages/agency/MarketScoutingDemo';
 // Add page imports here
 
 function AdminClubMappingRedirect() {
@@ -99,8 +97,6 @@ const AuthenticatedApp = () => {
           <Route path="/agency" element={<Navigate to="/agency/operations" replace />} />
           <Route path="/agency/operations" element={<ModulePermissionGuard permission="matches"><AgencyDashboard /></ModulePermissionGuard>} />
           <Route path="/agency/intelligence" element={<ModulePermissionGuard permission="players"><AgencyIntelligence /></ModulePermissionGuard>} />
-          <Route path="/agency/market" element={<ModulePermissionGuard permission="players"><MarketScoutingDemo /></ModulePermissionGuard>} />
-          <Route path="/agency/scouting" element={<ModulePermissionGuard permission="players"><Scouting /></ModulePermissionGuard>} />
           <Route path="/agency/players" element={<ModulePermissionGuard permission="players"><Players /></ModulePermissionGuard>} />
           <Route path="/agency/players/:id" element={<ModulePermissionGuard permission="players"><PlayerProfile /></ModulePermissionGuard>} />
           <Route path="/agency/clubs" element={<ModulePermissionGuard permission="players"><Clubs /></ModulePermissionGuard>} />
